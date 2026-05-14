@@ -97,6 +97,62 @@ Choose custom code only when OOTB/configuration cannot meet the acceptance crite
 - **Browser/UI**: use when visual rendering, UI-only builders, plugin activation, credential setup, protected admin steps, or Workspace/Portal behavior cannot be verified through APIs.
 - **Manual admin steps**: call out when the action requires licensing, Store/plugin install, secrets/credentials, SSO, MID Server, production approvals, or UI-only guided setup.
 
+## Import Sets And Transform Maps
+
+When Simen uploads Excel, CSV, XML, or JSON data for import, operate like a senior ServiceNow admin: use native Data Sources, Import Set tables, Transform Maps, Field Maps, and import run history before considering manual file parsing outside ServiceNow.
+
+Verified ServiceNow-native model:
+
+- A Data Source (`sys_data_source`) defines where the import data comes from. For user-uploaded files, prefer `type=File` with `file_retrieval_method=Attachment` and attach the file to the Data Source record.
+- Loading the Data Source creates or reuses an Import Set staging table and a `sys_import_set` run. Do not manually add columns to Import Set tables; let `Test Load 20 Records` or `Load All Records` generate columns from the file headers.
+- A Transform Map (`sys_transform_map`) maps one Import Set table to one target table. Field Maps / Transform Entries (`sys_transform_entry`) do the normal field movement. Use scripts only for logic that cannot be expressed safely with OOTB field mapping.
+- Transform run details live in `sys_import_set_run`; row states and row comments are on the Import Set table rows, and row errors are in `sys_import_set_row_error`.
+
+Default import workflow:
+
+1. Find the Data Source by exact or near-exact name in `sys_data_source`; confirm `type`, `format`, `file_retrieval_method`, `import_set_table_name`, `header_row`, and attachment count before loading.
+2. Inspect the attached file metadata through `sys_attachment`; if there are multiple attachments, ask which file to load unless one is clearly newest and intended.
+3. Load a small sample first when the UI option is available. For API/Xplore work, use `GlideImportSetLoader` against the Data Source and inspect the resulting Import Set table columns and sample rows before creating mappings.
+4. Identify or confirm the target table. If the target is a business-critical table such as users, companies, departments, locations, rooms, CIs, HR profiles, or production task tables, do not transform without explicit target/mapping confirmation.
+5. Suggest the safest field mapping in plain language: direct maps, likely references, choice/date cleanup, required fields, and a proposed coalesce key. Never guess unclear target fields.
+6. Create or update the Transform Map and Field Maps. Prefer direct source-to-target field maps for strings, numbers, booleans, dates already in platform format, and reference display values that can be resolved reliably.
+7. Use coalesce only on stable unique keys: external IDs, employee numbers, emails when they are unique, asset tags, CI serials with class/source context, or an agreed natural key. Do not coalesce on display names, descriptions, departments, locations, or non-unique labels unless Simen explicitly accepts the duplicate/update risk.
+8. Set reference field `choice_action` deliberately. Prefer `ignore` or `reject` for references where new foreign records would be risky. Use `create` only when creating missing referenced records is intentional and reviewed.
+9. For choice fields, map to stored choice values, not loose labels, where possible. Normalize known aliases before transform; do not let imports create new choices unless that is explicitly desired.
+10. For dates, inspect source formats and normalize only when needed. Prefer ISO `yyyy-MM-dd` / platform-compatible values. If mixed date formats exist, test representative rows before full import.
+11. Add transform scripts only for small, deterministic cleanup or validation that OOTB mapping cannot handle: trimming, alias normalization, parsing dates, deriving a field, or rejecting/ignoring invalid rows with a clear message. Avoid broad GlideRecord lookups per row when Field Map reference resolution or a pre-cleaned lookup table can handle it.
+12. Run a one-row or small-batch transform first. Inspect `sys_import_set_run` counts and row-level `sys_import_state`, target record, comments, and `sys_import_set_row_error` before the full transform.
+13. Run the full transform only after the test result is clean or accepted. Report inserted, updated, ignored, skipped, and error counts back to Simen, plus the first few row errors if any.
+
+Import cleanup rules:
+
+- Clean data before transforming when it reduces risk: trim whitespace, normalize casing for choices, normalize date formats, detect duplicate coalesce keys, and flag missing required/reference values.
+- Prefer source/data cleanup and Field Map configuration over transform scripts. Use scripts as a narrow exception, not the default import engine.
+- Never mass-import into important target tables without a small tested transform first.
+- Never guess sys_ids for references. Resolve by display value only when display is unique and intentional, or by a known unique field such as `user_name`, `email`, `employee_number`, `code`, `number`, `external_id`, or an agreed coalesce key.
+- Avoid duplicate users, companies, departments, locations, rooms, CIs, and HR profile data. For CMDB imports, consider IRE/Identification rules rather than simple Transform Map coalesce when CI identity matters.
+- Keep Import Set data temporary. Be aware that scheduled cleanup removes old import sets and associated rows; avoid manually adding columns to staging tables because it can interfere with cleanup.
+
+Programmatic pattern for PDI demos and controlled admin work:
+
+```javascript
+var ds = new GlideRecord('sys_data_source');
+ds.get('<data_source_sys_id>');
+
+var loader = new GlideImportSetLoader();
+var importSet = loader.getImportSetGr(ds);
+loader.loadImportSetTable(importSet, ds);
+importSet.state = 'loaded';
+importSet.update();
+
+var transformer = new GlideImportSetTransformer();
+transformer.setMapID('<transform_map_sys_id>');
+transformer.setSyncImport(true);
+transformer.transformAllMaps(importSet, '<optional_import_row_sys_id>');
+```
+
+For result reporting, query the latest `sys_import_set_run` for the import set and transform map, then inspect staging rows for `sys_import_state`, target sys_id, row comments, and `sys_import_set_row_error`.
+
 ## API Rules
 
 - Prefer `-DisplayValue false` for automation, `true` for user-facing summaries, and `all` when both display values and `sys_id`s matter.
@@ -232,6 +288,8 @@ Portal/workspace tables: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp
 HRSD lifecycle tables: `sn_hr_core_service`, `sn_hr_core_template`, `sn_hr_le_type`, `sn_jny_journey_config`, `sn_hr_le_activity_set`, `sn_hr_le_activity`, `sn_hr_le_activity_field_mapping`, `sc_cat_item_producer`, `item_option_new`, `question_choice`, `sn_doc_html_template`.
 
 Integration tables: `sys_rest_message`, `sys_rest_message_fn`, `sys_rest_message_headers`, `sys_rest_message_fn_headers`, `sys_rest_message_fn_param_defs`, `sys_outbound_http_log`, `sys_alias`, `sys_connection`, `http_connection`, `sys_auth_profile_basic`, `oauth_entity_profile`.
+
+Import tables: `sys_data_source`, `sys_attachment`, `sys_import_set`, `sys_import_set_row`, `sys_import_set_run`, `sys_import_set_row_error`, `sys_transform_map`, `sys_transform_entry`.
 
 Known IDs:
 - Admin user: `Simen Admin`, sys_id `6816f79cc0a8016401c5a33be04be441`
