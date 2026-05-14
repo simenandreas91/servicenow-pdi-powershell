@@ -65,22 +65,8 @@ function Resolve-ServiceNowConnection {
   }
 
   $resolvedInstance = $Instance
-  if ([string]::IsNullOrWhiteSpace($resolvedInstance)) {
-    $resolvedInstance = $env:SN_INSTANCE
-  }
-  if ([string]::IsNullOrWhiteSpace($resolvedInstance) -and $dotEnv.ContainsKey('SN_INSTANCE')) {
-    $resolvedInstance = $dotEnv['SN_INSTANCE']
-  }
-
-  $userName = $env:SN_USER
-  if ([string]::IsNullOrWhiteSpace($userName) -and $dotEnv.ContainsKey('SN_USER')) {
-    $userName = $dotEnv['SN_USER']
-  }
-
-  $password = $env:SN_PASS
-  if ([string]::IsNullOrWhiteSpace($password) -and $dotEnv.ContainsKey('SN_PASS')) {
-    $password = $dotEnv['SN_PASS']
-  }
+  $userName = $null
+  $password = $null
 
   if (-not [string]::IsNullOrWhiteSpace($Profile)) {
     $normalizedProfile = ($Profile -replace '[^A-Za-z0-9_]', '_').ToUpperInvariant()
@@ -88,15 +74,45 @@ function Resolve-ServiceNowConnection {
     $profileUserKey = "SN_${normalizedProfile}_USER"
     $profilePassKey = "SN_${normalizedProfile}_PASS"
 
+    if ([string]::IsNullOrWhiteSpace($resolvedInstance) -and -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($profileInstanceKey))) {
+      $resolvedInstance = [Environment]::GetEnvironmentVariable($profileInstanceKey)
+    }
     if ([string]::IsNullOrWhiteSpace($resolvedInstance) -and $dotEnv.ContainsKey($profileInstanceKey)) {
       $resolvedInstance = $dotEnv[$profileInstanceKey]
+    }
+    if ([string]::IsNullOrWhiteSpace($userName) -and -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($profileUserKey))) {
+      $userName = [Environment]::GetEnvironmentVariable($profileUserKey)
     }
     if ([string]::IsNullOrWhiteSpace($userName) -and $dotEnv.ContainsKey($profileUserKey)) {
       $userName = $dotEnv[$profileUserKey]
     }
+    if ([string]::IsNullOrWhiteSpace($password) -and -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($profilePassKey))) {
+      $password = [Environment]::GetEnvironmentVariable($profilePassKey)
+    }
     if ([string]::IsNullOrWhiteSpace($password) -and $dotEnv.ContainsKey($profilePassKey)) {
       $password = $dotEnv[$profilePassKey]
     }
+  }
+
+  if ([string]::IsNullOrWhiteSpace($resolvedInstance)) {
+    $resolvedInstance = $env:SN_INSTANCE
+  }
+  if ([string]::IsNullOrWhiteSpace($resolvedInstance) -and $dotEnv.ContainsKey('SN_INSTANCE')) {
+    $resolvedInstance = $dotEnv['SN_INSTANCE']
+  }
+
+  if ([string]::IsNullOrWhiteSpace($userName)) {
+    $userName = $env:SN_USER
+  }
+  if ([string]::IsNullOrWhiteSpace($userName) -and $dotEnv.ContainsKey('SN_USER')) {
+    $userName = $dotEnv['SN_USER']
+  }
+
+  if ([string]::IsNullOrWhiteSpace($password)) {
+    $password = $env:SN_PASS
+  }
+  if ([string]::IsNullOrWhiteSpace($password) -and $dotEnv.ContainsKey('SN_PASS')) {
+    $password = $dotEnv['SN_PASS']
   }
 
   if ([string]::IsNullOrWhiteSpace($resolvedInstance)) {

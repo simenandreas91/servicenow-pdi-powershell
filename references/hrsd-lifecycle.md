@@ -15,6 +15,39 @@ Use this for HR Services built through Lifecycle Event / Journey Designer. A man
 - Intake variables and choices: `item_option_new`, `question_choice`.
 - Optional generated document/service support: `sn_doc_html_template`, secondary `sn_hr_core_service` with `fulfillment_type=simple`.
 
+## Script Include Orientation
+
+PDI inventory checked 2026-05-14 for the four main HRSD/Journey scopes. Use these as first stops before broad searches.
+
+Counts:
+- Journey designer (`sn_jny`): 63 Script Includes.
+- Journey Accelerator (`sn_ja`): 36 Script Includes.
+- Human Resources: Core (`sn_hr_core`): 127 Script Includes.
+- Human Resources: Lifecycle Events (`sn_hr_le`): 36 Script Includes.
+
+General pattern:
+- Many customer-facing Script Includes wrap a read-only `*SNC` version. Prefer reading both before deciding whether behavior is intended to be overridden.
+- Client-callable records usually end in `Ajax`, `AJAX`, or are explicit UI helpers. Server-side process logic is usually in non-client-callable utilities.
+
+Where to look first:
+- Journey creation/configuration: `sn_jny.jny_JourneyCreation`, `sn_jny.jny_JourneyConfigService`, `sn_jny.jny_JourneyConfigServiceAjax`, `sn_jny.jny_JourneyConfigManagerTables`.
+- Journey template/stage/task metadata: `sn_jny.jny_JourneyTemplateUtils`, `sn_jny.jny_JourneyTemplateActivityUtils`, `sn_jny.jny_JourneyTemplateDetails`.
+- Journey portal and progress display: `sn_jny.jny_JourneyPortalDetails`, `sn_jny.jny_journeyDetailsPageUtils`, `sn_jny.jny_JourneyProgressUtils`, `sn_jny.jny_UJEStateHandler`.
+- Journey field mappings and HR case population: `sn_jny.jny_FieldMappingFromTables`, `sn_jny.jny_FieldMappingToTables`, `sn_jny.jny_HRPopulateCaseFields`.
+- Leave of Absence producer/detail logic: `sn_jny.LeaveOfAbsenceUtil`.
+- Offboarding knowledge transfer: `sn_jny.hrAIA_KnowledgeTransferUtils`, `sn_jny.KnowledgeTransferSearchUtils`, `sn_jny.KnowledgeTransferShareUtil`, `sn_jny.jny_KnowledgeTransferPortalDetails`.
+- Lifecycle Event activity sets, activities, triggers, and builder logic: `sn_hr_le.hr_LEType`, `sn_hr_le.hr_ActivitySet`, `sn_hr_le.hr_ActivityUtils`, `sn_hr_le.hr_BuilderUtils`, `sn_hr_le.hr_ActivitySetTrigger`, `sn_hr_le.hr_TriggerUtil`, `sn_hr_le.HRActivitySetTableUtil`.
+- Lifecycle Event flow activities: `sn_hr_le.hr_LEActivityFlow`.
+- Lifecycle Event portal/case access: `sn_hr_le.hr_JourneyPortalUtil`, `sn_hr_le.hr_LECaseAccess`, `sn_hr_le.hr_EnterpriseAccess`, `sn_hr_le.hr_LERefQual`.
+- Lifecycle Event logging and emails: `sn_hr_le.LifecycleEventLogger`, `sn_hr_le.LifecycleEventLoggerSNC`, `sn_hr_le.le_EmailUtil`.
+- HR case creation from services/producers: `sn_hr_core.hr_ServicesUtil`, `sn_hr_core.hr_CaseCreation`, `sn_hr_core.hr_CaseCreator`, `sn_hr_core.hr_ProducerUtils`, `sn_hr_core.hr_ServiceConfigUtil`.
+- HR case/task/template behavior: `sn_hr_core.hr_Case`, `sn_hr_core.hr_CaseUtils`, `sn_hr_core.hr_Task`, `sn_hr_core.hr_TemplateUtils`, `sn_hr_core.hr_ServiceTemplate`, `sn_hr_core.hr_ServiceTemplateBase`, `sn_hr_core.hr_ServiceActivityRecursionChecker`.
+- HR assignment, approvals, criteria, and security: `sn_hr_core.hr_AssignmentAPI`, `sn_hr_core.hr_AssignmentUtil`, `sn_hr_core.hr_ApprovalUtil`, `sn_hr_core.hr_Criteria`, `sn_hr_core.hr_SecurityUtils`, `sn_hr_core.COESecurityDiagnosticsUtil`, `sn_hr_core.HRApprovalAccessUtils`.
+- HR profile/user synchronization: `sn_hr_core.hr_Profile`, `sn_hr_core.hr_SysUser`, `sn_hr_core.hr_Synchronize`, `sn_hr_core.hr_UserToProfileMigration`.
+- HR notifications/documents: `sn_hr_core.hr_EmailUtil`, `sn_hr_core.NotificationDeeplinkUtil`, `sn_hr_core.HRDocumentTemplateUtils`, `sn_hr_core.HRDocumentTemplateAjax`, `sn_hr_core.hr_PdfUtils`, `sn_hr_core.CaseCommentEmailNotificationHelper`.
+- Journey Accelerator plan/stage/task logic: `sn_ja.ja_PlanUtils`, `sn_ja.ja_StageUtils`, `sn_ja.ja_TaskUtils`, `sn_ja.ja_ModelTaskUtils`, `sn_ja.ja_JourneyTemplateAjax`, `sn_ja.JAActivityConfigurations`.
+- Journey Accelerator portal/security/calendar: `sn_ja.ja_JourneyPortalUtil`, `sn_ja.ja_PlanPortalUtils`, `sn_ja.ja_PortalUtils`, `sn_ja.ja_UJEInterface`, `sn_ja.ja_Security`, `sn_ja.ja_CalendarUtils`.
+
 ## Creation Order
 
 1. Create the intake record producer (`sc_cat_item_producer`) on the target HR case table, usually a `sn_hr_core_case*` table.
@@ -114,6 +147,11 @@ HR service card:
 ## Lessons Learned
 
 - `sn_jny` scoped Xplore blocks some reflection helpers such as `getFields()`. Use global Xplore for schema exploration or query `sys_dictionary` with explicit fields.
+- In the PDI demo data, Xplore can fail to see imported HRSD/Journey records that are readable through Table API by exact `sys_id`. For HRSD metadata study, prefer Table API graph reads first and use Xplore only as a secondary behavior check.
+- `sn_hr_le_activity` inherits user-facing `title` from `sn_hr_le_activity_base`; the card sequence field is `order_number`, not `display_order`. Activity sets use `display_order`.
+- Activity field mappings have a `valid` flag. Several baseline/demo Journey mappings point to generic targets such as `sn_hr_core_case` or request fields and show `valid=false`; do not clone those blindly. For new build work, map to the concrete generated table/field or variable/flow input and verify `valid=true` where the platform supports validation.
+- Record producers for Journey HR Services commonly do more than call the generic case creation utility. Examples from the PDI demos: New Hire calls `sn_hr_le.hr_ActivityUtils().createCaseFromProducer`; Parental Leave also creates and links a Leave of Absence detail record through `sn_jny.LeaveOfAbsenceUtil`; Voluntary Separation updates the subject person's HR profile `employment_end_date` from the producer variable.
+- Date-triggered Journey sets can target related fields, not only direct case fields. Demo examples include `subject_person_job.job_start_date`, `leave_of_absence.first_day_of_leave`, and `leave_of_absence.estimated_last_day_of_leave`.
 - Creating `sn_hr_core_service` and `sn_hr_le_activity` with server-side GlideRecord can fail with an empty `getLastErrorMessage()`. Prefer Table API `POST/PATCH` for these records, then verify capture in the Journey Designer update set.
 - HR templates (`sn_hr_core_template`) can have scope/visibility differences between global and `sn_jny`; if a read path is inconsistent, verify by sys_id and use the creation path that captures in the active Journey Designer update set.
 - Creating a journey service can auto-create placeholder `Activity Set 1/2/3` records. Delete unintended placeholder activity sets and their `sys_update_xml` rows before delivery.
@@ -123,3 +161,5 @@ HR service card:
 - If Lifecycle Event activity sets need date milestones based on intake variables, copy the intake date into real HR case date fields in the producer script. Date triggers should point to normal fields such as `first_day_of_leave`; variables in `payload` are not good date trigger fields.
 - Date-triggered activity sets do not reliably use the activity set `condition` as a gate. Put conditional logic on the activities inside the date-triggered set; if the condition is false, the set can launch and finish without creating tasks.
 - For end-to-end lifecycle tests, use one current/future-date case to verify awaiting date milestones, one old-date positive case to verify date milestones launch, and one old-date negative case to verify activity-level conditions suppress task creation.
+- A scripting-first integration demo can use an HR Task activity as the Lifecycle Event-visible trigger, with a narrow async Business Rule on generated `sn_hr_core_task.sn_hr_le_activity=<activity sys_id>` calling a Script Include/REST Message wrapper. This avoids hand-building Flow Designer snapshots while keeping the integration code testable and isolated. Use a Flow activity/subflow/action when a human-maintained Flow wrapper is required; avoid creating Flow Designer metadata directly through table writes.
+- For record-producer submissions through API, use `/api/sn_sc/servicecatalog/items/<producer_sys_id>/submit_producer`; `/order_now` can return a 500 for producers. In this PDI, `submit_producer` created the New Hire LE case, but the HR Activity Set Launcher completed without creating activity set contexts/tasks for that demo case, so verify runtime generation separately before relying on producer API tests as full Journey end-to-end proof.

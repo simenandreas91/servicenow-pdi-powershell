@@ -217,7 +217,9 @@ Before final response:
 ## Token Efficiency Rules
 
 - Keep reads narrow and summarize results. Do not load large reference files unless the task needs them.
-- Start with `SKILL.md`, then load only the relevant reference: debugging, official docs, tables, integrations, HRSD lifecycle, portal lessons, SOW lessons, incident lessons, catalog lessons, or examples. For SOW/Workspace action-bar buttons, modals, or Declarative Actions, load `references/lessons-sow.md` before designing records.
+- Start with `SKILL.md`, then load only the relevant reference: debugging, official docs, tables, integrations, HRSD lifecycle, Now Assist, SN Pro Tips, portal lessons, SOW lessons, incident lessons, catalog lessons, or examples. For SOW/Workspace action-bar buttons, modals, or Declarative Actions, load `references/lessons-sow.md` before designing records.
+- For Now Assist, Now Assist for HRSD, Now Assist Skill Kit, AI Search Genius Results, model-provider, or AI privacy/safety work, load `references/now-assist.md` before designing or changing configuration.
+- For practical ServiceNow development pitfalls around GlideRecord, Business Rules, ACLs, Query Business Rules, client scripts, Service Portal/catalog, update sets, notifications, or SN Pro Tips tools, load `references/snprotips.md` as a secondary/community source.
 - Use command outputs for facts, not broad prose. Query exact records before broad searches.
 - Ask at most one focused clarification question when blocked; otherwise state assumptions and proceed.
 
@@ -271,6 +273,8 @@ Escalate manual steps when the task requires Store/plugin installation, MID Serv
 - `references/vaar-energi-design.md`: Vaar Energi portal design, theming, widgets, headers.
 - `references/integrations.md`: outbound REST, SAP SuccessFactors, public API practice integrations.
 - `references/hrsd-lifecycle.md`: HR Services created with Lifecycle Event / Journey Designer.
+- `references/now-assist.md`: Now Assist, Now Assist for HRSD, Now Assist Skill Kit, AI Search Genius Results, model providers, and privacy/safety controls.
+- `references/snprotips.md`: secondary/community notes from SN Pro Tips for ServiceNow development pitfalls, performance, debugging, update sets, catalog/portal, and practical utilities.
 - `references/examples.md`: longer Table API/Xplore command examples.
 - `references/lessons-sow.md`: Service Operations Workspace lessons.
 - `references/lessons-personellsikkerhet.md`: FFI Personellsikkerhet app lessons, including helper profile use, event notification pitfalls, update-set hygiene, and app-specific table/process notes.
