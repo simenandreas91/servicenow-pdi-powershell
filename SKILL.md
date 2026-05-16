@@ -1,6 +1,6 @@
 ---
 name: servicenow-pdi
-description: Work with Simen's ServiceNow Personal Developer Instance and ServiceNow development tasks through Table API helpers, Xplore verification, update sets, and story-style delivery. Use when Codex needs to analyze, design, implement, inspect, create, update, relate, export, test, or verify ServiceNow records and behavior, including ITSM, HRSD, CSM, Service Portal, Employee Center, Workspace, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, dictionary metadata, Business Rules, Script Includes, UI Policies, Client Scripts, Fix Scripts, REST integrations, users, stories, scopes, preferences, and update sets.
+description: Work with Simen's ServiceNow Personal Developer Instance and ServiceNow development tasks through Table API helpers, Xplore verification, update sets, and story-style delivery. Use when Codex needs to analyze, design, implement, inspect, create, update, relate, export, test, or verify ServiceNow records and behavior, including ITSM, HRSD, CSM, Service Portal, Employee Center, Workspace, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, dictionary metadata, Business Rules, Script Includes, UI Policies, Client Scripts, Fix Scripts, REST integrations, users, stories, scopes, preferences, update sets, or custom React/Vite front-end apps hosted inside ServiceNow with Andrew Pishchulin's single-file SPA pattern.
 ---
 
 # ServiceNow PDI
@@ -68,6 +68,8 @@ For a ServiceNow story, bug, enhancement, or technical task:
 
 Load `references/development.md` when the compact workflow is not enough, especially for story-state handling, complex scripts, Business Rules, Script Includes, update-set edge cases, or Xplore/background patterns.
 
+For HRSD Lifecycle Event, Journey Designer, HR Service, or Flow activity work, load `references/hrsd-lifecycle.md` before creating or changing metadata. It contains the known-good Flow activity pattern, update-set split rules, and layered test sequence for subflow/action Script step integrations.
+
 For the FFI Personellsikkerhet app (`x_personellsikkerh`), load `references/lessons-personellsikkerhet.md` before changing records, notifications, scheduled jobs, or process logic.
 
 ## OOTB-First Decision Process
@@ -96,6 +98,54 @@ Choose custom code only when OOTB/configuration cannot meet the acceptance crite
 - **Update sets / XML exports**: use update sets for instance-delivered changes; export XML/update XML when Simen asks for portable artifacts, reviewable records, or migration packaging.
 - **Browser/UI**: use when visual rendering, UI-only builders, plugin activation, credential setup, protected admin steps, or Workspace/Portal behavior cannot be verified through APIs.
 - **Manual admin steps**: call out when the action requires licensing, Store/plugin install, secrets/credentials, SSO, MID Server, production approvals, or UI-only guided setup.
+
+## Custom React Front-End Workflow
+
+Use this workflow when Simen wants a distinctive custom UI, interactive tool, dashboard, map, booking app, game-like workflow, visual planner, or other experience that would be awkward in native forms, lists, Portal widgets, or Workspace configuration.
+
+Preferred starting point:
+
+```powershell
+git clone https://github.com/elinsoftware/servicenow-react-app.git <project-name>
+cd <project-name>
+npm install
+npm run dev
+```
+
+Follow the boilerplate README first, then adapt the app:
+
+1. Keep ServiceNow as the backend and source of data. Use scoped custom tables, Table API, Scripted REST APIs only where justified, ACLs, Business Rules, Flows, and update sets normally.
+2. Keep the frontend a normal React/Vite app. Add React libraries freely when they materially improve the UI, interaction model, visualization, mapping, forms, charts, canvas/SVG/Three.js, drag-and-drop, validation, or state management.
+3. Configure local development through Vite proxy:
+   - Route `/api` to the target ServiceNow instance in `vite.config.ts` / `vite.config.js`.
+   - Put development-only ServiceNow credentials in `.env` as `VITE_REACT_APP_USER` and `VITE_REACT_APP_PASSWORD`.
+   - Never commit real credentials or print them in final output.
+4. Initialize API authentication before rendering the app:
+   - In development, set `axios.defaults.auth` from the Vite env credentials.
+   - In ServiceNow-hosted production, call the lightweight token Scripted REST GET endpoint, then set the returned session token on the request header used by the boilerplate.
+5. Use normal ServiceNow APIs from the frontend during development, usually `/api/now/table/<table>`, with narrow `sysparm_fields`, encoded queries, limits, and display value choices.
+6. Use `HashRouter` for React routing. Do not use `BrowserRouter`, because ServiceNow serves the SPA from a Scripted REST URL and cannot handle client-side path refreshes.
+7. Build with `npm run build`. The `vite-plugin-singlefile` setup should emit one self-contained `dist/index.html`.
+8. ServiceNow hosting pattern:
+   - Store the full `dist/index.html` content in a string system property.
+   - Serve it from a Scripted REST `GET` resource as `text/html` using `response.getStreamWriter().writeString(gs.getProperty('<property>'))`.
+   - Keep this HTML-serving GET endpoint unauthenticated if following the boilerplate pattern.
+9. Token endpoint pattern:
+   - Create a lightweight Scripted REST `GET` resource returning `gs.getSession().getSessionToken()` and `gs.getUserName()`.
+   - Keep it unauthenticated when following the README pattern; an unauthenticated visitor receives only a guest token, while an authenticated ServiceNow user receives their own session token.
+10. Verify both local and ServiceNow-hosted paths:
+   - Run `npm run lint` and `npm run build`.
+   - Start the local dev server and visually inspect with Browser or Playwright when UI quality matters.
+   - Verify ServiceNow table/API reads and writes with the PDI helpers or browser flow.
+   - Confirm update-set capture for ServiceNow artifacts and restore developer preferences.
+
+Design and architecture guidance:
+
+- Prefer this React pattern for highly custom UX, but keep business rules, security constraints, duplicate prevention, and data integrity server-side in ServiceNow.
+- Model UI placement/configuration data in ServiceNow tables when business users or admins should maintain it, such as floor-plan coordinates, resource metadata, colors, capacities, or feature flags.
+- Use client-side availability and interaction feedback for speed, but back it with server-side validation when conflicts, permissions, approvals, or booking collisions matter.
+- Keep the React app scoped to the intended product surface; avoid replacing broad ServiceNow platform capabilities that native configuration handles well.
+- Treat `dist/index.html` as a deployable artifact handled by Simen unless the task explicitly asks Codex to update the ServiceNow property.
 
 ## Import Sets And Transform Maps
 
