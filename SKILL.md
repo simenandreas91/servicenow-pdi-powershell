@@ -346,7 +346,9 @@ Escalate manual steps when the task requires Store/plugin installation, MID Serv
 
 Core tables: `sys_user`, `sys_scope`, `sys_user_preference`, `sys_dictionary`, `sys_db_object`, `sys_properties`, `sys_plugins`, `sys_update_set`, `sys_update_xml`, `rm_story`, `sys_script`, `sys_script_include`, `sys_ui_policy`, `sys_ui_policy_action`, `sys_script_client`, `sysauto_script`, `sysevent_register`, `sysevent_email_action`, `sys_security_acl`, `sys_hub_flow`, `sys_hub_action_type_definition`.
 
-Portal/workspace tables: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp_theme`, `sp_header_footer`, `sys_ux_app_config`, `sys_ux_list_menu_config`, `sys_ux_list_category`, `sys_ux_list`, `sys_declarative_action_assignment`, `sys_declarative_action_payload_definition`, `sys_declarative_action_model_definition`, `sys_ux_action_config`, `sys_ux_form_action`, `sys_ux_form_action_layout`, `sys_ux_form_action_layout_group`, `sys_ux_form_action_layout_item`, `sys_ux_addon_event_mapping`, `sys_ux_macroponent`, `sys_ux_app_route`.
+Portal/workspace tables: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp_theme`, `sp_header_footer`, `sys_ux_page_registry`, `sys_ux_app_config`, `sys_ux_app_route`, `sys_ux_screen_type`, `sys_ux_screen`, `sys_ux_page_property`, `sys_ux_macroponent`, `sys_ux_applicability`, `sys_ux_applicability_m2m_list`, `sys_ux_list_menu_config`, `sys_ux_list_category`, `sys_ux_list`, `sys_ux_ribbon_config`, `m2m_app_config_theme`, `sys_declarative_action_assignment`, `sys_declarative_action_payload_definition`, `sys_declarative_action_model_definition`, `sys_ux_action_config`, `sys_ux_form_action`, `sys_ux_form_action_layout`, `sys_ux_form_action_layout_group`, `sys_ux_form_action_layout_item`, `sys_ux_addon_event_mapping`.
+
+Workspace search tables: `sys_search_context_config`, `sys_search_source`, `sys_search_filter`, `m2m_search_context_config_search_source`, `ais_search_profile`, `ais_dictionary`, `ais_datasource`, `ais_search_profile_ais_dictionary_m2m`, `ais_search_profile_ais_search_source_m2m`, `sys_suggestion_reader_group`, `m2m_sys_suggestion_reader_sys_suggestion_reader_group`.
 
 Platform Analytics dashboard tables: `par_dashboard`, `par_dashboard_tab`, `par_dashboard_canvas`, `par_dashboard_widget`, `par_dashboard_user_metadata`, `par_dashboard_permission`, `par_dashboard_visibility`, `par_visualization`, `par_component`, `sys_ux_macroponent`.
 
@@ -379,3 +381,5 @@ Known IDs:
 ## Lesson Hygiene
 
 After ServiceNow work, capture only durable, non-obvious lessons. Add a one-line routing pointer to `SKILL.md` only if it changes future workflow selection; put detailed lessons in the relevant `references/lessons-*.md` file.
+
+When Simen asks to publish skill updates, the canonical repository is `https://github.com/simenandreas91/servicenow-pdi.git`. Use the GitHub publish workflow: inspect `git status` and diff, stage only intended skill files, commit with a terse lesson/update message, push to `origin`, and report the branch and commit. Do not silently push unrelated local changes.
