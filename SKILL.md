@@ -281,7 +281,7 @@ Before final response:
 ## Token Efficiency Rules
 
 - Keep reads narrow and summarize results. Do not load large reference files unless the task needs them.
-- Start with `SKILL.md`, then load only the relevant reference: debugging, official docs, tables, integrations, HRSD lifecycle, Now Assist, SN Pro Tips, portal lessons, UI16 lessons, SOW lessons, incident lessons, catalog lessons, or examples. For UI16 popup/modal work, load `references/lessons-ui16.md` before designing records. For SOW/Workspace action-bar buttons, modals, or Declarative Actions, load `references/lessons-sow.md` before designing records.
+- Start with `SKILL.md`, then load only the relevant reference: debugging, official docs, tables, integrations, HRSD lifecycle, Now Assist, SN Pro Tips, portal lessons, UI16 lessons, Workspace modal lessons, SOW lessons, incident lessons, catalog lessons, or examples. For UI16 popup/modal work, load `references/lessons-ui16.md` before designing records. For SOW/Workspace action-bar buttons, modals, or Declarative Actions, load both `references/lessons-sow.md` and `references/lessons-workspace-modals.md` before designing records.
 - For Now Assist, Now Assist for HRSD, Now Assist Skill Kit, AI Search Genius Results, model-provider, or AI privacy/safety work, load `references/now-assist.md` before designing or changing configuration.
 - For practical ServiceNow development pitfalls around GlideRecord, Business Rules, ACLs, Query Business Rules, client scripts, Service Portal/catalog, update sets, notifications, or SN Pro Tips tools, load `references/snprotips.md` as a secondary/community source.
 - Use command outputs for facts, not broad prose. Query exact records before broad searches.
@@ -344,6 +344,7 @@ Escalate manual steps when the task requires Store/plugin installation, MID Serv
 - `references/snprotips.md`: secondary/community notes from SN Pro Tips for ServiceNow development pitfalls, performance, debugging, update sets, catalog/portal, and practical utilities.
 - `references/examples.md`: longer Table API/Xplore command examples.
 - `references/lessons-sow.md`: Service Operations Workspace lessons.
+- `references/lessons-workspace-modals.md`: Now Experience Workspace modal pattern with Declarative Actions, `g_modal.showFields`, UX form actions/layouts, visibility rules, scoped form-layout capture, and testing.
 - `references/lessons-ui16.md`: UI16 popup/modal pattern with UI Pages, `GlideDialogWindow`, GlideAjax save handlers, inherited choice handling, and classic form testing.
 - `references/lessons-personellsikkerhet.md`: FFI Personellsikkerhet app lessons, including helper profile use, event notification pitfalls, update-set hygiene, and app-specific table/process notes.
 - `references/lessons-incident.md`: incident process lessons.

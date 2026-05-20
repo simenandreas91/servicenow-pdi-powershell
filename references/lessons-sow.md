@@ -23,6 +23,7 @@ Durable notes from the PDI `FFI Workspace` update set (`0c81844cc301075065eefdec
 
 ## Declarative Actions And SOW Form Modals
 
+- For a step-by-step Workspace modal build checklist, especially when using `g_modal.showFields(...)`, also load `references/lessons-workspace-modals.md`.
 - In SOW and other Configurable Workspaces, prefer form Declarative Actions over legacy UI Actions when the button must appear in the Workspace action bar, list header, related list header, field decorator, or attachment area. Legacy UI Actions can appear in the Workspace form action bar, but Declarative Actions are the upgrade-safe pattern for Next Experience pages and do not require taking ownership of the base UI Builder page.
 - For a form button that opens a modal, use a `sys_declarative_action_assignment` with model `Form`, table-specific conditions, and `Implemented as = UXF Client Action`. A plain `Server Script` action is appropriate for immediate server-side updates, but it cannot collect modal input by itself.
 - For SOW-style form modals, reuse the OOTB form-modal route when available instead of building a custom modal page. The common SOW payload shape is:
