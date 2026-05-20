@@ -10,3 +10,65 @@
 - Example item `Bestilling av standard IT-utstyr` (`sc_cat_item=2a577c71c34b62106b68770d05013123`) is Global, active, category `IT`, and uses Step based request fulfillment. It has manager approval stage order `100` and task stage order `200`.
 - RITM requester logic should not assume `caller_id`; `sc_req_item` uses `requested_for`, then `request.requested_for`, with `opened_by` as a fallback. `sc_req_item.state` inherits `task.state`, so table-specific choices can relabel inherited values such as `-5` without changing task-wide state semantics.
 - For RITM UI Policies, always set `sys_ui_policy_action.table=sc_req_item` on action rows. A blank table can still make the policy fire, but dynamic show/hide may reinsert the field at the bottom of the classic form, especially around split layouts and `activity.xml`.
+
+## Catalog Item Flow Designer Fulfillment
+
+Use a Flow, not a subflow, when a catalog item should run directly from the Process Engine tab. The catalog item stores the selected flow in `sc_cat_item.flow_designer_flow`; resolve the item first and verify that field before editing any flow metadata.
+
+Recommended discovery sequence:
+
+1. Query the catalog item by exact name in `sc_cat_item`; capture `sys_id`, `flow_designer_flow`, `delivery_plan`, category, and active state.
+2. Query `item_option_new` and `question_choice` for the item to understand variable names, stored values, and labels. In Flow Designer, the `Get Catalog Variables` action references these variables by sys_id/name.
+3. Resolve the selected flow in `sys_hub_flow` by `sys_id`; check `name`, `internal_name`, `type`, `active`, `published`, `latest_snapshot`, and scope. For catalog item execution the flow `type` should be `flow`.
+4. Inspect the flow trigger in `sys_hub_trigger_instance_v2`; service catalog triggers normally include inputs for the request item and requested catalog item context.
+5. Inspect `sys_hub_action_instance_v2` for actions and `sys_hub_flow_logic_instance_v2` for if/else branches. Sort by `order`; use `parent` and `ui_id` to understand nesting.
+6. Inspect the active snapshot equivalents as well as editable design records. Runtime can execute the published snapshot, so patching only the editable design record may not affect tests until the flow is republished.
+7. Check `sys_flow_trigger_plan` for the flow/snapshot linkage when runtime behavior does not match design-time metadata.
+
+Flow Designer action and logic instance `values` are often gzip-compressed base64 JSON. Decode them before reasoning about conditions or inputs, edit the JSON/text deliberately, then gzip/base64 encode the result and PATCH the same field. Do not do blind string replacement until the decoded content has been inspected and the target token is unique.
+
+PowerShell helpers for decoding and encoding Flow Designer `values`:
+
+```powershell
+function Decode-GzipBase64([string]$b64) {
+  $bytes = [Convert]::FromBase64String($b64)
+  $ms = New-Object IO.MemoryStream(,$bytes)
+  $gz = New-Object IO.Compression.GzipStream($ms,[IO.Compression.CompressionMode]::Decompress)
+  $sr = New-Object IO.StreamReader($gz)
+  return $sr.ReadToEnd()
+}
+
+function Encode-GzipBase64([string]$text) {
+  $out = New-Object IO.MemoryStream
+  $gz = New-Object IO.Compression.GzipStream($out,[IO.Compression.CompressionMode]::Compress)
+  $sw = New-Object IO.StreamWriter($gz)
+  $sw.Write($text)
+  $sw.Close()
+  return [Convert]::ToBase64String($out.ToArray())
+}
+```
+
+Manager approval flow pattern that worked:
+
+- Trigger: Service Catalog trigger for the target catalog item.
+- Action 1: `Get Catalog Variables` for the current requested item.
+- Action 2: `Ask For Approval` against `{{Service Catalog_1.request_item}}`, table `sc_req_item`, approval field `approval`, journal field `approval_history`, approver rule using `{{Service Catalog_1.request_item.requested_for.manager}}`.
+- Approved branch: condition on Ask For Approval output `approval_state=approved`; update `sc_req_item` state to `2` (Work in Progress) and set assignment fields as needed.
+- Rejected branch: condition on Ask For Approval output `approval_state=rejected`; update `sc_req_item` state to `4` (Closed Incomplete).
+
+Important limitation: the OOTB Ask For Approval action may expose only `approval_state` as a clean flow output. The approver's rejection comment/reason is stored as journal data on the `sysapproval_approver` record, not as a convenient flow data pill. If the rejection reason must be copied onto the RITM, use a narrow Business Rule on `sysapproval_approver` after update when `state` changes to `rejected`:
+
+- Guard to approvals whose `sysapproval` is an `sc_req_item` for the intended catalog item.
+- Query the latest `sys_journal_field` where `element_id=current.sys_id` and `element=comments`.
+- Append a short, readable rejection message to the RITM comments.
+- Set `sc_req_item.state=4` and `approval=rejected` if the flow update might race or miss the field.
+
+Update-set capture warning: Table API edits to Flow Designer child metadata such as action/logic instances may not create obvious customer updates. After changing a flow, confirm `sys_update_xml`. If the flow did not capture but the change is legitimate, force a customer update for the parent `sys_hub_flow` with `Save-ServiceNowCustomerUpdate.ps1`. Then confirm the update set contains both the flow parent and any supporting Business Rule/Script Include artifacts.
+
+Runtime test sequence for catalog approval flows:
+
+1. Submit the catalog item as a user who has a manager.
+2. Wait for the flow context and `sysapproval_approver` row to be created for the generated RITM.
+3. Approve the approval row and verify the RITM reaches Work in Progress (`state=2`), assignment fields are set, and `approval=approved`.
+4. Submit another request, reject the approval with a clear comment, and verify the RITM reaches Closed Incomplete (`state=4`), `approval=rejected`, and the RITM comments include the rejection reason.
+5. Check `approval_history`, `sys_journal_field`, and `sys_flow_context` if the visible RITM state does not match expectations.

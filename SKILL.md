@@ -76,6 +76,8 @@ For HRSD HR Service, Lifecycle Event, Journey Designer, activity type, HR task t
 
 For new HRSD HR Service design or COE/table selection, load `references/hrsd-coe-selection.md` before choosing `sn_hr_core_service.service_table`, templates, record producers, or topic categories. It contains the COE decision tree, base table guide, PDI field inventory, and cautions for custom COE fields.
 
+For catalog item Flow Designer fulfillment, manager approvals, generated RITMs, catalog variables, or rejection handling, load `references/lessons-catalog.md` before changing flow metadata. It contains the known-good flow table map, gzip/base64 value editing pattern, update-set capture warning, and request/approval runtime test sequence.
+
 HR approval notification lesson: service-specific initial approval emails can usually be handled with an additive `sysapproval_approver` notification on event `approval.inserted`, condition `state=requested`, an HR Service/Journey-specific condition, and recipient `approver`. If it should replace OOTB `Approval Request`, give the custom notification a higher weight and verify the generic email is ignored for the same approval.
 
 For Platform Analytics dashboard work, load `references/lessons-platform-analytics.md` before creating or changing `par_dashboard` records, widgets, tabs, canvases, visibility, permissions, or dashboard metadata. It contains the fast dashboard skeleton, widget JSON pattern, known macroponent IDs, and update-set pitfalls.
@@ -350,6 +352,8 @@ Escalate manual steps when the task requires Store/plugin installation, MID Serv
 
 Core tables: `sys_user`, `sys_scope`, `sys_user_preference`, `sys_dictionary`, `sys_db_object`, `sys_properties`, `sys_plugins`, `sys_update_set`, `sys_update_xml`, `rm_story`, `sys_script`, `sys_script_include`, `sys_ui_policy`, `sys_ui_policy_action`, `sys_script_client`, `sysauto_script`, `sysevent_register`, `sysevent_email_action`, `sys_security_acl`, `sys_hub_flow`, `sys_hub_action_type_definition`.
 
+Flow Designer tables: `sys_hub_flow`, `sys_hub_flow_base`, `sys_hub_flow_snapshot`, `sys_hub_trigger_instance_v2`, `sys_hub_action_instance_v2`, `sys_hub_flow_logic_instance_v2`, `sys_hub_action_input`, `sys_hub_action_output`, `sys_flow_trigger_plan`, `sys_flow_context`, `sys_flow_runtime_value`.
+
 Portal/workspace tables: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp_theme`, `sp_header_footer`, `sys_ux_page_registry`, `sys_ux_app_config`, `sys_ux_app_route`, `sys_ux_screen_type`, `sys_ux_screen`, `sys_ux_page_property`, `sys_ux_macroponent`, `sys_ux_applicability`, `sys_ux_applicability_m2m_list`, `sys_ux_list_menu_config`, `sys_ux_list_category`, `sys_ux_list`, `sys_ux_ribbon_config`, `m2m_app_config_theme`, `sys_declarative_action_assignment`, `sys_declarative_action_payload_definition`, `sys_declarative_action_model_definition`, `sys_ux_action_config`, `sys_ux_form_action`, `sys_ux_form_action_layout`, `sys_ux_form_action_layout_group`, `sys_ux_form_action_layout_item`, `sys_ux_addon_event_mapping`.
 
 Workspace search tables: `sys_search_context_config`, `sys_search_source`, `sys_search_filter`, `m2m_search_context_config_search_source`, `ais_search_profile`, `ais_dictionary`, `ais_datasource`, `ais_search_profile_ais_dictionary_m2m`, `ais_search_profile_ais_search_source_m2m`, `sys_suggestion_reader_group`, `m2m_sys_suggestion_reader_sys_suggestion_reader_group`.
@@ -375,7 +379,7 @@ Known IDs:
 ## Example Story Patterns
 
 - **Incident routing**: inspect assignment rules, data lookup, groups, dictionary choices, existing Business Rules, and flows; prefer assignment/data lookup configuration before scripting; test with throwaway incidents and expected groups.
-- **Catalog item fulfillment**: inspect catalog item variables, UI policies, client scripts, fulfillment flow, step-based fulfillment registry, approvals, and tasks; prefer Flow Designer/catalog fulfillment config; test request submission and generated RITM/tasks.
+- **Catalog item fulfillment**: load `references/lessons-catalog.md`; inspect catalog item variables, UI policies, client scripts, `sc_cat_item.flow_designer_flow`, step-based fulfillment registry, approvals, flow triggers/actions/branches, and tasks; prefer Flow Designer/catalog fulfillment config; test request submission and generated RITM/tasks plus approval and rejection paths.
 - **HRSD HR Service design**: load `references/hrsd-development-guide.md`; load `references/hrsd-coe-selection.md` before choosing the service table, topic category/detail, template table, or producer table; for Lifecycle Event/Journey work also load `references/hrsd-lifecycle.md`. Verify service/table/topic/template alignment and generated case behavior.
 - **ACL/security visibility**: inspect roles, groups, table/field ACLs, user criteria, before-query rules, and UI hiding; verify with role-aware Table API and `GlideRecordSecure`; document least-privilege changes.
 - **Workspace change**: inspect target workspace app config, lists, declarative actions, form views, and existing client scripts; prefer declarative UX records; test in Workspace and classic UI if both are in scope.
