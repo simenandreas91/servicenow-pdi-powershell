@@ -124,6 +124,64 @@ update_set=<sys_update_set.sys_id>
 - `sys_update_xml.name` for a Service Portal widget is usually `sp_widget_<sp_widget.sys_id>`. Query this when verifying that a cloned widget was captured.
 - A useful final update-set check is: exactly one `sys_update_xml` row for the target record exists in the intended update set, its payload contains the latest changed script or marker string, and every row in that update set has `sys_update_xml.application` equal to `sys_update_set.application`.
 
+### Update Set Batches
+
+- Update set batching is represented directly on `sys_update_set` in this PDI:
+  - parent batch record: `parent` empty, `base_update_set` points to itself, usually `application=global`
+  - child update sets: both `parent` and `base_update_set` point to the batch update set sys_id
+- Before batching story update sets, query all similarly named update sets and summarize each candidate with `Get-ServiceNowUpdateSetSummary.ps1`. It is common to find earlier probe, empty, or mixed-scope update sets with the same story name.
+- If the user asks to batch "these update sets" or refers to a matching story/name without narrowing the scope, include every matching update set. Do not silently omit empty, probe, stale, or mixed-scope-looking sets; ask first or include them and report the risk.
+- Only exclude empty update sets, throwaway probe sets, stale duplicates, or mixed-scope sets when the user explicitly agrees to exclude them.
+- For multi-scope story delivery, batch the per-scope update sets rather than merging scopes into one update set. Example pattern:
+
+```powershell
+$batch = @{
+  name = 'STRY0013657 - Endring av personaltilhorighet Batch'
+  application = 'global'
+  state = 'in progress'
+  description = 'Batch for STRY0013657 deployable update sets.'
+} | ConvertTo-Json
+
+& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
+  -Method POST `
+  -Table sys_update_set `
+  -BodyJson $batch `
+  -Fields 'sys_id,name,state,application,parent,base_update_set,description' `
+  -DisplayValue all `
+  -ExcludeReferenceLink `
+  -Profile pdi
+```
+
+- After creating the batch, patch the batch's own `base_update_set` to its sys_id. Then patch each included child update set with both `parent=<batch_sys_id>` and `base_update_set=<batch_sys_id>`.
+- Verify with a readback query:
+
+```text
+sys_id=<batch_sys_id>^ORparent=<batch_sys_id>
+```
+
+- If similar named sets remain unbatched, report why they were skipped.
+
+### Cross-Scope Privileges And Restricted Caller Access
+
+- A `ScopeAccessNotGrantedException: write access to <table> not granted` can require a concrete `sys_scope_privilege` even when `sys_restricted_caller_access` already has an allowed source-scope-to-target-scope row.
+- Inspect both tables before writing:
+  - `sys_restricted_caller_access`: useful for caller restriction records, with integer `status` values such as Allowed = `2`
+  - `sys_scope_privilege`: concrete cross-scope privilege rows, with string `status` values such as `allowed`
+- For table writes, the narrow `sys_scope_privilege` shape is:
+
+```json
+{
+  "target_name": "sn_hr_core_case",
+  "target_type": "sys_db_object",
+  "target_scope": "<target scope sys_id>",
+  "operation": "write",
+  "status": "allowed"
+}
+```
+
+- Set the current application/update set context to the source scope before creating the privilege so `source_scope` defaults correctly and the privilege captures in the intended scoped update set.
+- Verify the created privilege by reading `sys_scope_privilege`, then verify update capture as `type=Cross scope privilege` in `sys_update_xml`.
+
 ## Service Portal Theming
 
 - Prefer changing portal theme records through Table API, then verifying compiled assets with an authenticated GET.

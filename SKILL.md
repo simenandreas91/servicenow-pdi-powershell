@@ -47,7 +47,7 @@ Helpers load credentials from the nearest workspace `.env`. Use `SN_PROFILE=pdi`
 Known profiles:
 
 - `pdi`: Simen's PDI, `https://dev396302.service-now.com`
-- `other`: Vår Energi test/DEV, `https://varenergitest.service-now.com`
+- `other`: Vår Energi DEV, `https://varenergidev.service-now.com`
 
 Vår Energi PROD can be reached by passing `-Instance 'https://varenergiprod.service-now.com'` with `other` credentials, but treat PROD as read-only unless Simen explicitly authorizes a write. Vår Energi stories usually live in PROD and are implemented first in DEV.
 
@@ -218,7 +218,7 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 - FFI Personellsikkerhet app (`x_personellsikkerh`): load `references/lessons-personellsikkerhet.md`.
 - Service Operations Workspace, action bar buttons, modals, or Declarative Actions: load `references/lessons-sow.md`; for modal/action implementation also load `references/lessons-workspace-modals.md`.
 - UI16 popup/modal work, UI Pages, `GlideDialogWindow`, classic Client Scripts, UI Actions, or GlideAjax modal saves: load `references/lessons-ui16.md`.
-- Now Assist, Now Assist for HRSD, Skill Kit, AI Search Genius Results, model providers, or AI privacy/safety: load `references/now-assist.md`.
+- Now Assist, Now Assist for HRSD, Skill Kit, AI Search Genius Results, AI agents, AI Agent Studio, agentic workflows, MCP tools, AI Control Tower, model providers, or AI privacy/safety: load `references/now-assist.md`.
 - Integrations, REST messages, SAP SuccessFactors, import/export, auth profiles, or connection aliases: load `references/integrations.md`; use `references/lessons-integrations.md` for durable local import/integration lessons.
 - Debugging ACLs, hidden records, role visibility, before-query rules, or user criteria: load `references/debugging.md`.
 - Portal/Employee Center widgets/themes/pages: load `references/tables.md`, then `references/lessons-portal.md` if behavior is tricky.

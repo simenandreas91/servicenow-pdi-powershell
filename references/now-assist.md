@@ -1,8 +1,8 @@
-# Now Assist And Genius Results
+# Now Assist, AI Search, And AI Agents
 
-Use this when Vår Energi work touches Now Assist, Now Assist for HRSD, AI Search Genius Results, Now Assist Skill Kit, model providers, prompt/privacy controls, or HRSD generative AI skills.
+Use this when work touches Now Assist, Now Assist for HRSD, AI Search Genius Results, Now Assist Skill Kit, AI agents, AI Agent Studio, agentic workflows, MCP tools, AI Control Tower, model providers, prompt/privacy controls, or HRSD generative AI skills.
 
-Research baseline: ServiceNow Australia documentation reviewed 2026-05-14. Now Assist changes quickly; before implementing in a client instance, verify entitlements, installed plugin versions, data-center/regional restrictions, and the actual options shown in Now Assist Admin.
+Research baseline: ServiceNow Australia documentation reviewed 2026-05-22 from the public `ServiceNow/ServiceNowDocs` Australia branch. The repository is the preferred LLM research source for current AI Platform docs; search `markdown/intelligent-experiences`, `markdown/platform-administration/ai-search`, and the target product publication before broad web research. AI features change quickly; before implementing in a client instance, verify entitlements, installed plugin versions, data-center/regional restrictions, and the actual options shown in Now Assist Admin, AI Agent Studio, or AI Control Tower.
 
 ## Mental Model
 
@@ -12,6 +12,17 @@ Research baseline: ServiceNow Australia documentation reviewed 2026-05-14. Now A
 - Generative AI Controller / AI Control Tower govern model-provider availability, model versions, and policy controls. Skill-level choices depend on what the organization and region allow.
 - Now Assist in AI Search adds LLM-generated or LLM-selected answer cards to search experiences through Genius Result configurations.
 - AI Search remains the retrieval layer. Keep knowledge, catalog items, search sources, search profiles, and result improvement rules healthy before blaming Now Assist output.
+- AI Agent Studio is the build/test surface for AI agents and agentic workflows. Treat a workflow as the orchestrated business outcome, an AI agent as a specialized reasoning role, and tools as the bounded actions or retrieval capabilities the agent can select.
+- AI Control Tower is the governance/inventory surface when work expands to AI assets, approvals, risk/compliance, model providers, AI Gateway, evaluations, or MCP connections across the organization.
+
+## Fast Decision Path
+
+1. Inspect packaged Now Assist skills, product AI agents, search features, and existing workflow metadata before designing custom AI.
+2. Use AI Search/Genius Results when the job is permissioned retrieval and answer presentation from indexed content.
+3. Use a packaged Now Assist skill when ServiceNow already owns the product workflow and its prompt/output shape is acceptable.
+4. Use Skill Kit for a custom generative skill with a prompt, retriever, tool, deployment surface, or Flow/UI invocation that does not need autonomous multi-step planning.
+5. Use AI Agent Studio for agentic workflows that need orchestrated planning across specialized agents and tools. Do not use an AI agent to hide a deterministic Flow, approval, ACL, import, or integration that normal platform configuration handles better.
+6. Route model-provider, data handling, readiness, Guardian, governance, AI asset inventory, AI Gateway, or third-party/MCP questions through the admin/governance surfaces before promising a build path.
 
 ## Roles To Check
 
@@ -20,6 +31,7 @@ Research baseline: ServiceNow Australia documentation reviewed 2026-05-14. Now A
 - Journey generation for managers: `sn_jny.admin` and `sn_nowassist_admin.nsa_admin`.
 - Now Assist Skill Kit authoring: `sn_skill_builder.admin`.
 - Skill Kit custom model administration: `sn_skill_builder.sb_model_admin`.
+- AI Agent Studio execution tests: `sn_aia_admin` plus access required by the tested AI agent and every downstream component ACL.
 - AI Search / Genius Results: `ais_admin` for search profile work; `esc_admin` can use the Employee Center setup page for portal/mobile Now Assist Genius Results.
 - Data privacy policies: `sn_generative_ai.data_steward`.
 
@@ -124,6 +136,30 @@ Notes:
 - UI Action deployment creates an inactive UI Action by default.
 - Flow deployment exposes the skill through the **Execute Skill** action in Workflow Studio.
 
+## AI Agents And Agentic Workflows
+
+Use AI Agent Studio only after the decision path points to autonomous multi-step reasoning. Keep normal ServiceNow records, ACLs, Flows, integrations, and update sets visible; an agentic wrapper does not replace platform engineering.
+
+Build path:
+1. Define the business outcome, tasks the workflow must handle, records/content it may use, execution surface, fallback behavior, and human oversight point.
+2. Inspect ready-made AI agents, agentic workflows, and product AI features before creating custom agents.
+3. Design narrow agents and tools:
+   - write agent instructions as a step-by-step operational algorithm
+   - give each tool one purpose rather than mode switches or unrelated actions
+   - make tool descriptions say what the tool does, when to call it, when not to call it, and what domain terms mean
+   - return useful error messages so the agent can recover or choose another path
+4. Choose interactive execution when the agent may ask a user for missing context. Choose non-interactive/background execution only when fallback behavior and final user-visible output are defined without relying on a chat prompt.
+5. Configure Guardian/privacy/model-provider controls before broad exposure, especially for HR, security, employment, legal, finance, and infrastructure decisions.
+6. Test execution and access before rollout:
+   - AI Agent Studio manual test for a known record/task, selected version, decision log, and tool executions
+   - AI Agent Studio **Test access** plus non-admin runtime roles for agent and downstream-tool ACLs
+   - dataset-based agentic evaluations when repeated executions, quality trends, or deployment evidence matter
+7. Use Activity/execution plans, messages, tool executions, analytics, and evaluation results to debug behavior. Fix content, records, tool definitions, ACLs, and deterministic platform logic before stretching prompts.
+
+MCP caution:
+- Adding an MCP server in AI Agent Studio can use OAuth 2.1, API key, or an existing Connection and Credential Alias path. Authenticate users with the MCP server before exposing its tools to an AI agent.
+- Treat MCP tools like integrations: validate authentication, least privilege, tool descriptions, input/output contract, error behavior, auditability, and data egress before enabling autonomous use.
+
 ## Now Assist In AI Search / Genius Results
 
 Now Assist in AI Search (`sn_ais_assist`) combines AI Search retrieval with LLM generated/selected answer cards. It can appear in Service Portal, Virtual Agent, Employee Center, global search, and workspace search depending on search-profile configuration.
@@ -172,10 +208,19 @@ Configuration checks:
    - Sensitive/employee-relations cases where availability should be restricted.
    - Domain-separated or HR criteria constrained data if used.
 8. For Genius Results, test exact, broad, ambiguous, no-result, restricted-content, and non-English queries.
-9. Capture final configuration records, roles, plugin versions, search profiles, and rollback/deactivation steps.
+9. For AI agents, test one known record/task manually, one access-denied or restricted-role path, the selected workflow/agent version, tool execution/error behavior, and automated evaluations when result quality must be compared across cases.
+10. Capture final configuration records, roles, plugin versions, search profiles, workflow/agent versions, model/provider assumptions, and rollback/deactivation steps.
 
 ## Official Sources
 
+- ServiceNowDocs repository and release map: https://github.com/ServiceNow/ServiceNowDocs and `llms.txt`
+- ServiceNowDocs AI publication: `markdown/intelligent-experiences/index.md`
+- Configure AI agents: `markdown/intelligent-experiences/configuring-ai-agents.md`
+- AI Agent Studio: `markdown/intelligent-experiences/ai-agent-studio.md`
+- Manual AI agent execution test: `markdown/intelligent-experiences/test-ai-agent.md`
+- Agentic evaluations: `markdown/intelligent-experiences/agentic-evals.md`
+- Add MCP server in AI Agent Studio: `markdown/intelligent-experiences/add-mcp-client-on-ai-agent-studio.md`
+- AI Control Tower: `markdown/intelligent-experiences/ai-control-tower/ai-control-tower-landing.md`
 - Configure Now Assist settings in Now Assist Center: https://www.servicenow.com/docs/r/intelligent-experiences/now-assist-center-configure-admin-settings.html
 - Install and configure Now Assist plugins: https://www.servicenow.com/docs/r/intelligent-experiences/install-configure-essential-now-assist-plugins.html
 - Configure Now Assist for HRSD: https://www.servicenow.com/docs/r/employee-service-management/now-assist-for-hrsd/configure-now-assist-hr.html

@@ -6,15 +6,17 @@ Use this file before starting Vår Energi stories. It captures practical instanc
 
 ## Instance Workflow
 
-- Vår Energi stories are usually reviewed in PROD (`https://varenergiprod.service-now.com`) and implemented first in DEV/test (`https://varenergitest.service-now.com`, profile `other`).
+- Vår Energi stories are usually reviewed in PROD (`https://varenergiprod.service-now.com`) and implemented first in DEV (`https://varenergidev.service-now.com`, profile `other`).
 - PROD access has been verified with the same credentials as profile `other` by passing `-Instance 'https://varenergiprod.service-now.com'` to the helpers. Use PROD read-only unless Simen explicitly requests a production change.
 - For assigned story review in PROD, query `rm_story` assigned to `simen.knudsen@varenergi.no`. PROD user sys_id seen on 2026-05-19: `8ea85e6b29544f50ac341b4947cfc297`.
+- Use the ASCII login form `simen.knudsen@varenergi.no` for the `other` profile unless a live credential source says otherwise. A typed `vårenergi.no` username did not authenticate through the helper path on 2026-05-22.
 - Do not create `rm_story` records unless Simen explicitly asks. Treat PROD stories as source requirements and DEV update sets as the working delivery vehicle.
+- Re-read the PROD story immediately before continuing prior DEV work. Stories can change after an update set already exists; inspect the current DEV update set summary and target artifacts before deciding whether to revise, add, or leave prior captured rows.
 - When editing Vår Energi story fields, keep `description` as plain text with normal line breaks. Do not put HTML tags in `description`. HTML/list formatting is acceptable in `acceptance_criteria`, which is a rich-text field in the story form.
 
 ## DEV Context
 
-- DEV profile is `other`; instance URL is `https://varenergitest.service-now.com`.
+- DEV profile is `other`; instance URL is `https://varenergidev.service-now.com`.
 - Xplore is available in DEV after Xplore: Developer Toolkit 5.02 was installed. Prefer Xplore for compact read-only verification and constrained behavior checks.
 - Current DEV API/Xplore user sys_id seen on 2026-05-19: `38c17f3fcc980310b214a0b7a2acbbef` (`simen.knudsen@varenergi.no`).
 - The default user sys_id in `Set-ServiceNowUpdateSetContext.ps1` is not correct for Vår Energi DEV. Pass `-UserSysId '38c17f3fcc980310b214a0b7a2acbbef'`.
@@ -23,6 +25,7 @@ Use this file before starting Vår Energi stories. It captures practical instanc
 ## Update Set Practice
 
 - Create one update set per story and per application scope.
+- If the user names an existing story update set or asks to continue prior work, query `sys_update_set` by story prefix first and switch to that exact record with `Set-ServiceNowUpdateSetContext.ps1 -UpdateSetSysId <sys_id>`. Do not create a replacement update set just because the requirement changed.
 - Confirm update capture with `Get-ServiceNowUpdateSetSummary.ps1`.
 - If update XML rows appear under `global`, inspect payload scope/package before doing anything else; earlier Document Templates work captured payloads with correct scoped app metadata even when update-row metadata needed cleanup.
 - For HR Core story work, use scope/application `Human Resources: Core` (`sn_hr_core`, sys_id `d4ac3fff5b311200a4656ede91f91af2`).
@@ -142,33 +145,37 @@ if (gr.get('<batch_update_set_sys_id>')) {
 
 Use this when a Vår Energi story asks for an HR case SLA, response time, resolution time, or service level target.
 
-STRY0010050 lesson: service-specific HR SLAs can overlap with generic base HR Case SLAs. A General Inquiry-specific 5 business day response SLA initially would also match the generic HR Case 4-hour and VIP 2-hour SLAs unless those generic start conditions exclude the specific HR Service.
+STRY0010050 lessons:
+
+- Service-specific HR SLAs can overlap with generic base HR Case SLAs. General Inquiry-specific SLAs would also match the generic HR Case 4-hour and VIP 2-hour SLAs unless those generic start conditions exclude the specific HR Service.
+- PROD story requirements can move after an initial update-set pass. STRY0010050 changed from a single 5-business-day response SLA to a 1-business-day response SLA plus a separate 5-business-day resolution SLA while the original DEV update set was still in progress.
 
 Step-by-step:
 
-1. Read the story from PROD `rm_story` and check `references/vaar-energi-design.md` for SLA wording. STRY0010050 mapped to design text: `HR General Inquiry SLA: 5 business days response time`.
+1. Read the story from PROD `rm_story` and check `references/vaar-energi-design.md` for SLA wording. Treat PROD story `description` and `acceptance_criteria` as the latest requirement when they differ from earlier design notes or existing DEV update-set names. On 2026-05-22, STRY0010050 required `1 day` General Inquiry response plus `5 day` resolution.
 2. Resolve the target HR Service in DEV, usually `sn_hr_core_service`, and confirm `service_table`. General Inquiry in DEV: sys_id `6628cde49f331200d9011977677fcf0b`, table `sn_hr_core_case`.
 3. Inspect existing `contract_sla` rows for the target table and nearby COE tables. Capture `name`, `collection`, `type`, `target`, `duration`, `schedule`, `start_condition`, `stop_condition`, `pause_condition`, and scope/package.
-4. Check `sys_choice` for `contract_sla.target` before setting target values. Response target uses stored value `response`.
-5. Prefer the customer's existing HR schedule pattern unless the story says calendar days. For Vår Energi HR Core SLAs, the existing schedule is `8-5 weekdays excluding holidays` (`090eecae0a0a0b260077e1dfa71da828`), with one span Monday-Friday 08:00-17:00. Five business days on that schedule is 45 scheduled hours, stored as duration `1970-01-02 21:00:00`.
-6. Create or reuse a story update set in the relevant scope, usually `Human Resources: Core` (`sn_hr_core`, sys_id `d4ac3fff5b311200a4656ede91f91af2`), and snapshot/restore preferences around the work.
-7. Create the service-specific `contract_sla` with a short name that fits the field length. For General Inquiry, use:
+4. Check `sys_choice` for `contract_sla.target` before setting target values. General Inquiry response uses stored target value `response`; resolution uses `resolution`.
+5. Prefer the customer's existing HR schedule pattern unless the story says calendar days. For Vår Energi HR Core SLAs, the existing schedule is `8-5 weekdays excluding holidays` (`090eecae0a0a0b260077e1dfa71da828`), with one span Monday-Friday 08:00-17:00. One business day is 9 scheduled hours, stored as duration `1970-01-01 09:00:00`; five business days is 45 scheduled hours, stored as `1970-01-02 21:00:00`.
+6. Create or reuse a story update set in the relevant scope, usually `Human Resources: Core` (`sn_hr_core`, sys_id `d4ac3fff5b311200a4656ede91f91af2`), and snapshot/restore preferences around the work. When revising existing story work, pass the existing update set sys_id to the context helper.
+7. Create or revise the service-specific `contract_sla` rows with short names that fit the field length. For General Inquiry use the common fields:
    - `collection=sn_hr_core_case`
    - `type=SLA`
-   - `target=response`
-   - `duration=1970-01-02 21:00:00`
    - `schedule=090eecae0a0a0b260077e1dfa71da828`
    - `start_condition=active=true^hr_service=<service_sys_id>^EQ`
    - `stop_condition=active=false^EQ`
    - `pause_condition=sla_suspended=true^EQ`
    - `when_to_cancel=on_condition`
+   For the current STRY0010050 target set, keep separate rows:
+   - response: `target=response`, `duration=1970-01-01 09:00:00`
+   - resolution: `target=resolution`, `duration=1970-01-02 21:00:00`
 8. Prevent overlap. If generic table-level SLAs would also start for the service, update their start conditions to exclude the service, for example `hr_service!=<service_sys_id>`. Capture these changes in the same scoped update set when they are in the same application.
 9. Runtime verification is required. Create a temporary case for the HR Service, query `task_sla`, and verify:
-   - the intended SLA attached
+   - each intended service SLA attached
    - generic conflicting SLAs did not attach
    - `planned_end_time` reflects the requested business/calendar target
 10. Clean up temporary cases and `task_sla` rows. Avoid leaving test HR cases unless Simen asks to inspect them.
-11. Confirm update capture with `Get-ServiceNowUpdateSetSummary.ps1`. For STRY0010050, a clean update set had three `SLA Definition` rows: the new service SLA plus two generic HR Case SLA condition updates, all in HR Core with no mixed scope.
+11. Confirm update capture with `Get-ServiceNowUpdateSetSummary.ps1`. After the 2026-05-22 STRY0010050 update, a clean existing update set had four `SLA Definition` rows: 1-business-day response, 5-business-day resolution, and the two generic HR Case SLA exclusion updates, all in HR Core with no mixed scope.
 12. Final response should include story interpretation, update set name/sys_id/scope, SLA definition details, overlap prevention, runtime verification result, cleanup, and restored preferences.
 
 ## Document Template Signing Date Lesson

@@ -9,6 +9,8 @@ Load this file when creating, reviewing, or testing integrations from ServiceNow
 - Direct outbound REST from the PDI works. Verified with `sn_ws.RESTMessageV2()` against `https://jsonplaceholder.typicode.com/users/1`; the instance returned HTTP `200` and parsed user `Leanne Graham`.
 - Outbound HTTP logging works. Verified log table: `sys_outbound_http_log`, with a JSONPlaceholder row showing `method=GET`, `response_status=200`, and `response_time`.
 - The admin user can create and write `sys_rest_message`, `sys_rest_message_fn`, `sys_rest_message_headers`, `sys_rest_message_fn_headers`, `sys_rest_message_fn_param_defs`, `sys_alias`, `sys_connection`, `sys_auth_profile_basic`, and `sys_atf_test`.
+- REST API Explorer is available in the PDI at `/$restapi.do`. Verified 2026-05-22 through the `System Web Services` module and a read-only Table API `GET` against `incident`; the Explorer returned `200 OK` and exposes namespaces, APIs, versions, methods, parameters, code samples, response detail, and OpenAPI export for inbound ServiceNow REST discovery.
+- Postman MCP access is available for the personal `ServiceNow integration` workspace. Verified 2026-05-22; its `ServiceNow` collection is the preferred shared client-side home for repeatable integration requests when requests, examples, environments, or exported OpenAPI definitions should outlive an ad hoc probe.
 - Practice integration created in Global scope:
   - Story: `STRY0010006`, `Practice outbound REST integration with public APIs`.
   - Update set: `CODX - Public API practice integration`.
@@ -16,7 +18,7 @@ Load this file when creating, reviewing, or testing integrations from ServiceNow
   - Script Include: `global.CodexPublicApiPractice`, sys_id `429afdefc3608bd06b68770d050131a5`.
   - Methods: `get jsonplaceholder user`, `post httpbin anything`, `get reqres user requires key`.
   - Test evidence: JSONPlaceholder GET returned `200`, httpbin POST returned `200`, and ReqRes without `x-api-key` returned `401` with `missing_api_key`.
-- On the Vår Energi `other` profile, Table API works but Xplore is not installed or not accessible, so use Table API reads and avoid server-side snippets unless Scripts - Background is available.
+- On the Vår Energi `other` DEV profile, Table API works and Xplore has been available in recent HRSD work. Prefer Table API for narrow record reads/writes and Xplore for compact read-only verification or constrained behavior checks; verify access if an instance endpoint changes.
 
 ## Choosing the Pattern
 
@@ -30,6 +32,45 @@ Prefer this order:
 6. For inbound calls into ServiceNow, prefer a Scripted REST API over exposing broad Table API access when the payload spans multiple tables, needs validation, or should return a controlled contract.
 
 For SAP SuccessFactors specifically, start from its OData API contract and authentication mode. Current SAP docs state that SuccessFactors supports OAuth 2.0 for API users and recommend moving away from less secure authentication methods. Model the ServiceNow side around OAuth credentials/profiles or an IntegrationHub connection where possible, not hardcoded basic credentials in script.
+
+## Integration Test Method
+
+Use the tool that proves the layer under test. Do not treat one successful request as proof that every integration layer works.
+
+| Tool | Best use | Not enough by itself |
+| --- | --- | --- |
+| ServiceNow Table API helpers | Inspect ServiceNow records, metadata, credentials/config references, target state, logs, imports, update capture, and narrow disposable setup data. | Proving an external caller can use an inbound contract or that ServiceNow can reach a vendor endpoint. |
+| REST API Explorer | Discover ServiceNow inbound APIs actually exposed in the current instance, select API/version/method/parameters, send first bounded requests, inspect request/response details, and export OpenAPI. | Repeatable external-client coverage, vendor API coverage, or outbound transport from the ServiceNow runtime. |
+| Postman | Keep canonical client requests, environments, examples, negative cases, imported OpenAPI, external-caller tests for inbound ServiceNow APIs, and vendor sandbox tests before ServiceNow outbound configuration exists. | Proving ServiceNow TLS, MID/proxy, credential alias, REST Message, Flow, logging, retries, mapping, or persistence works. |
+
+### Recommended Test Order
+
+1. Start with the contract.
+   - Capture endpoint family, auth mode, request and response schema, identifiers, pagination/delta semantics, rate limits, error semantics, and data classification.
+   - Keep sanitized payload examples and a correlation strategy. Never move HR secrets, bearer tokens, certificate material, or sensitive employee payloads into skill docs, scripts, update sets, or Postman variables that are not secret-scoped.
+
+2. For inbound calls into ServiceNow:
+   - Prefer a Scripted REST API when validation, orchestration, multiple tables, stable error semantics, or a controlled contract matter. Use Table API only when broad record CRUD is truly the intended contract and ACL/web-service exposure is acceptable.
+   - Use REST API Explorer first to prove the ServiceNow API surface, version, method, parameters, bounded read behavior, and OpenAPI export. Default the first request to `GET` and use a disposable target for writes.
+   - Move the request into Postman for repeatable service-consumer tests: auth mode, headers, valid payload, invalid payload, duplicate/idempotent call, missing field, unauthorized caller, and expected error body.
+   - Use Table API helpers after each inbound test to verify ServiceNow side effects, ACL-visible target state, staging/import rows, events/logs, and update-set artifacts. REST API Explorer and Postman prove the request contract; Table API proves what the platform changed.
+   - Add ATF inbound REST steps or other repeatable platform tests when the API contract can be tested without unstable external dependencies.
+
+3. For outbound calls from ServiceNow:
+   - Use Postman against the vendor sandbox or a controlled mock first when the vendor contract is still being learned. This isolates vendor URL, auth, query/body shape, response examples, and error handling from ServiceNow configuration.
+   - Then test from the ServiceNow runtime. Start with a recordless read-only `RESTMessageV2` Xplore probe when safe, then test the chosen REST Message, IntegrationHub action/spoke, Flow, or Script Include wrapper.
+   - Use Table API helpers to inspect REST Message records, aliases/auth profile references without exposing secrets, target tables, staging/import state, update capture, and `sys_outbound_http_log`.
+   - Compare Postman and ServiceNow requests field by field when one succeeds and the other fails. Focus on hostname, OAuth audience/scope, certificates, headers, URL encoding, redirect behavior, MID/proxy path, IP allowlisting, timeout, and response parsing.
+
+4. For handoff:
+   - Keep long-lived external-client requests in the Postman `ServiceNow integration` workspace when access is available.
+   - Keep ServiceNow implementation and runtime proof in the instance: scoped artifacts, update sets, ATF where useful, HTTP logs, import/transform evidence, and concise story notes.
+   - Report the layer proven by each test. Example: "Postman vendor sandbox GET 200", "ServiceNow recordless REST GET 200", "REST Message wrapper mapped one sanitized response", and "Table API verified target row/update capture".
+
+### SuccessFactors And Compendia Starting Point
+
+- For SuccessFactors, decide file-based ingestion versus API-based ingestion before creating ServiceNow REST artifacts. If the API path is selected, use Postman for OData/OAuth contract discovery with the SAP sandbox, then test the ServiceNow Spoke/IntegrationHub or REST Message path from the instance, and use Table API/import evidence to verify staging, transform, HR Profile mapping, idempotency, and logs.
+- For Compendia HR knowledge inbound to ServiceNow, obtain the standard API contract and content ownership rules first. Use Postman to preserve vendor request/response examples, use the ServiceNow runtime to prove the scheduled/inbound implementation path, and use Table API helpers to verify knowledge staging/target records, source identifiers, update behavior, and sanitized operational logs.
 
 ## SAP SuccessFactors Readiness
 
@@ -81,8 +122,9 @@ Ask the SAP/SuccessFactors team for these inputs up front:
    - Resolve whether the integration belongs in Global, Employee Center, HR Integrations, or a custom app scope before creating records.
    - Set `apps.current_app` to the intended scope before creating REST Messages or Script Includes, then start a new transaction before inserting. In this PDI, records created while the user's current app was Employee Center landed in Employee Center even when the Xplore script itself ran globally.
 
-3. Prototype with a recordless read-only call.
-   - Use Xplore on the PDI for a small `GET` request to prove network, TLS, auth, and response shape.
+3. Prototype the contract before persistent ServiceNow config.
+   - For inbound ServiceNow APIs, use REST API Explorer for the first bounded request and Postman for the repeatable external-client request set.
+   - For outbound vendor APIs, use Postman against a vendor sandbox or controlled mock to learn request/response semantics, then use Xplore on the PDI for a small recordless `GET` request to prove ServiceNow network, TLS, auth, and response shape.
    - Keep the first test non-mutating.
    - Use public APIs such as JSONPlaceholder for fake JSON resources and httpbin for echo/status/header behavior when no vendor sandbox is ready.
 
@@ -110,7 +152,7 @@ Ask the SAP/SuccessFactors team for these inputs up front:
    - For scheduled imports, keep checkpoints such as `lastSuccessfulRun`, external cursor, or last modified timestamp in a property or integration state table.
 
 7. Test at three levels.
-   - Transport test: direct `RESTMessageV2` call returns expected status, headers, and minimal body shape.
+   - Contract/transport test: Postman proves the external request contract where useful, and direct `RESTMessageV2` or the selected IntegrationHub/Spoke path proves ServiceNow runtime transport with expected status, headers, and minimal body shape.
    - Mapping test: Script Include converts a representative external payload into the intended ServiceNow fields without writing, or writes to a known disposable test record.
    - Persistence test: create/update behavior is idempotent and handles missing required fields, duplicates, empty pages, 401/403, 404, 429, and 5xx responses.
 
@@ -247,6 +289,9 @@ getUser: function (externalUserId) {
 
 - ServiceNow Docs, RESTMessageV2 API: https://www.servicenow.com/docs/r/api-reference/server-api-reference/c_RESTMessageV2API.html
 - ServiceNow Docs, Outbound REST web service: https://www.servicenow.com/docs/r/api-reference/web-services/c_OutboundRESTWebService.html
+- ServiceNowDocs, REST API Explorer overview: https://github.com/ServiceNow/ServiceNowDocs/blob/australia/markdown/api-reference/rest-api-explorer/c_RESTAPI.md
+- ServiceNowDocs, Access the REST API Explorer: https://github.com/ServiceNow/ServiceNowDocs/blob/australia/markdown/api-reference/rest-api-explorer/t_GetStartedAccessExplorer.md
+- ServiceNowDocs, Export REST API OpenAPI specification: https://github.com/ServiceNow/ServiceNowDocs/blob/australia/markdown/api-reference/rest-api-explorer/export-openapi-specification.md
 - ServiceNow Docs, Create a REST message: https://www.servicenow.com/docs/r/api-reference/web-services/t_ConfiguringARESTMessage.html
 - ServiceNow Docs, Define a REST message HTTP method: https://www.servicenow.com/docs/r/api-reference/web-services/t_DefineAnHTTPMethod.html
 - ServiceNow Docs, Outbound REST authentication: https://www.servicenow.com/docs/r/api-reference/web-services/c_OutboundRESTAuth.html

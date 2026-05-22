@@ -54,6 +54,17 @@ Search `index.md` files first. They are dense tables of contents with raw topic 
 - `markdown/application-development/c_ApplicationFiles.md`: application files, `sys_metadata`, and update set capture in `sys_update_xml`.
 - `markdown/application-development/best-practices-use-source-control.md`: when source control/Application Repository is preferred and when System Update Sets still make sense.
 
+## High-Value AI Paths
+
+- `markdown/intelligent-experiences/index.md`: current AI publication map for Now Assist, AI agents, Skill Kit, model providers, safety, analytics, and readiness.
+- `markdown/intelligent-experiences/configuring-ai-agents.md`: AI Agent Studio design rules for workflows, agent instructions, single-purpose tools, tool descriptions, tool errors, background channel execution, and interactive vs non-interactive execution.
+- `markdown/intelligent-experiences/ai-agent-studio.md`: AI Agent Studio create/manage, activity, manual testing, access testing, automated evaluations, Guardian settings, and analytics surfaces.
+- `markdown/intelligent-experiences/test-ai-agent.md` and `markdown/intelligent-experiences/agentic-evals.md`: execution tests, ACL-sensitive test prerequisites, decision logs, and dataset-based evaluation.
+- `markdown/intelligent-experiences/now-assist-skill-kit/now-assist-skill-kit-landing.md`: custom skill scoping, prompt work, retrievers/tools, publishing, activation, and evaluations.
+- `markdown/intelligent-experiences/ai-control-tower/ai-control-tower-landing.md`: AI Control Tower inventory, governance, model/provider, AI Gateway, evaluation, and MCP references.
+- `markdown/intelligent-experiences/add-mcp-client-on-ai-agent-studio.md`: MCP server authentication paths before exposing MCP tools to AI agents.
+- `markdown/intelligent-experiences/now-assist-readiness-evaluation/now-assist-readiness-evaluation-landing-page.md`: readiness assessment workflow before broad Now Assist or agentic AI rollout.
+
 ## Practical Guidance To Carry Into PDI Work
 
 - Match the docs branch to the instance family when known. If the instance family is unknown, use `australia` for this skill unless the task asks for a different release, then state the release assumption when it matters.
