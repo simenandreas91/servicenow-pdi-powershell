@@ -30,6 +30,15 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 
 ## Activity Types
 
+Use this decision ladder before creating a Lifecycle Event activity:
+
+1. If a decision must approve/reject or gate downstream work, create an **Approval** activity.
+2. If the activity is only communication with no completion tracking, create a **Notification** activity for email or a **Content** activity for scheduled informational content.
+3. If the activity must run automation, integration, provisioning, or reusable logic, create a **Flow** activity backed by a published/compiled subflow.
+4. If a human must do something, choose **Employee** when the actor is the subject person, opened-for user, manager, mentor, or another employee-facing participant. Choose **Fulfiller** when the actor is HR, IT, Facilities, Payroll, Legal, or another support team.
+5. For Employee/Fulfiller human work, use **HR Task** plus an HR task template when the result is a to-do. Use **HR Service**, **Catalog Item**, or **Order Guide** when completion should create a formal child case/request.
+6. Use **Activity container** only when multiple activities inside the same activity set must be grouped and ordered together. Prefer normal activity sets for major journey stages.
+
 | Activity type | Value | Use when | PDI examples / notes |
 | --- | --- | --- | --- |
 | Approval | `approval` | A manager, group, or HR approval must block or govern downstream work. | Use `approvers`, `approver_users`, or `approver_groups`; tune `approval_accept_option`, rejection behavior, missing approver behavior, and `wait_for_generated_tasks_to_complete`. OOTB example: Manager approval. |
@@ -40,28 +49,75 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 | Content | `content` | The journey needs display-only content, banner, guidance, or informational material. | PDI example: Separations Banner. Use for read-only information rather than a task. |
 | Activity container | `activity_container` | Activities need grouping/nesting under a parent card/container. | PDI examples include Initiate Separation Activities and Onboarding Swag Request. Use sparingly; prefer normal Activity Sets for stages. |
 
+Implementation notes:
+- Employee and Fulfiller activities inherit most runtime behavior from the selected HR task template when `fulfiller_activity=HR Task`.
+- Fulfiller activity configuration can also expose HR Service, Catalog Item, Order Guide, Flow, Incident, Template, Workflow, and custom activity types. Prefer the OOTB configuration type that creates the target artifact directly.
+- Activity-level audience criteria personalize which subject persons receive the activity. Activity set audience/trigger logic runs first; activity audience is evaluated after the set triggers.
+- For generated child records and Flow inputs, create `sn_hr_le_activity_field_mapping` records. Map to the concrete target table/field or flow input and verify `valid=true` when available.
+- Australia docs also include Pulse Survey as a lifecycle activity type. Use it when the requirement is specifically a pulse survey; otherwise use HR task type `take_survey` or `collect_Information` depending on the data model required.
+
 ## HR Task Types
 
-The active `sn_hr_core_task.hr_task_type` choices in the PDI are:
+The active `sn_hr_core_task.hr_task_type` choices in the PDI are below. Choose these only after deciding that the Lifecycle Event should create an Employee/Fulfiller HR Task rather than a direct Approval, Flow, HR Service, Catalog Item, Order Guide, Notification, or Content activity.
 
-| HR task type | Value | Practical use |
-| --- | --- | --- |
-| HR Service | `hr_service` | Creates or guides the user into another HR Service from a to-do. Set `hr_service` in the template. Good for child HR Services such as benefit enrollment, payroll setup, or profile completion. |
-| Submit Catalog Item | `submit_catalog_item` | Launches a catalog item/request from the journey. Set `sc_cat_item`; map requested-for data when needed. Good for IT equipment, access, or facilities requests. |
-| Submit Order Guide | `submit_order_guide` | Launches an order guide. Set `order_guide`. Good when the assignee must choose from a bundle of related items, such as new-hire equipment. |
-| Collect Employee Input | `collect_Information` | Presents an HR employee form. Set `employee_form`. Good for structured employee input that is not a full HR case. |
-| Checklist | `checklist` | Creates a checklist-style task. Good for manual multi-step work by HR, manager, IT, or facilities. |
-| E-signature | `e_sign` | Creates an e-signature task. Set the e-signature configuration field in the template. The old `e_signature` choice exists but is inactive; use `e_sign`. |
-| Schedule a meeting | `meeting` | Creates a meeting-oriented task. Use meeting fields such as subject, details, attendees, scheduling method, start/end dates. No active OOTB template was found in the inspected PDI, but the type and fields are present. |
-| Mark When Complete | `mark_when_complete` | Simple acknowledgement/manual completion task. Good for "confirm/update/do this outside the platform" tasks. |
-| Take Survey | `take_survey` | Assigns a survey. Set `survey`. Good for onboarding, leave, satisfaction, and manager feedback. |
-| Upload Documents | `upload_documents` | Asks the user to attach files. Good for leave certification, return-to-work release, receipts, transcripts, or profile documents. |
-| URL | `url` | Provides a link to external site, portal page, knowledge article, video host, or third-party process. Set `url` and descriptive text. |
-| View Video | `view_video` | Presents a video to watch. Set `url` to the embed/video URL. |
-| Auto-close integration task | `action_url` | Integration-style task that can close through an external/action URL pattern. PDI example uses `integrating_system=cicplus` for tax forms. |
-| Create Journey Accelerator Action Plan | `create_JA_plan` | Starts a Journey Accelerator plan/action-plan flow. Set JA plan-related fields such as plan type/name/description or auto-create behavior as required. |
+| HR task type | Value | Use when | Required / important fields |
+| --- | --- | --- | --- |
+| HR Service | `hr_service` | A to-do should guide the assignee into another HR Service or create a child HR case. Good for benefit enrollment, payroll setup, profile completion, or child COE work. Prefer a direct Fulfiller `HR Service` activity if no intermediate to-do is needed. | `hr_service`; field mappings from LE case to generated case, such as `subject_person` and `opened_for`; set `wait_for_generated_tasks_to_complete` if the parent activity must wait for the child case. |
+| Submit Catalog Item | `submit_catalog_item` | A to-do should submit one catalog item/request, usually IT, access, equipment, facilities, or workplace service. Prefer direct Fulfiller `Catalog Item` activity if no employee/agent action is needed first. | `sc_cat_item`; field mappings such as `subject_person -> requested_for`; wait flag if request completion gates the journey. |
+| Submit Order Guide | `submit_order_guide` | The assignee needs a bundle of catalog items, such as new-hire equipment/access packages. Prefer direct Fulfiller `Automated Order Guide` when the order guide can be submitted automatically. | `order_guide`; request/requested-for mappings; wait flag if request completion gates the journey. |
+| Collect Employee Input | `collect_Information` | Structured answers are needed from an employee, manager, opened-for user, or another case participant. Good for upstream branching and downstream activity creation from responses. | `employee_form`; assignee/assignment fields; verify survey/employee form visibility and who can respond. |
+| Checklist | `checklist` | Manual multi-step work must be tracked in one task for HR, manager, IT, Facilities, or Payroll. | `checklist_items`; assignment group/user; short description with actionable text. |
+| E-signature | `e_sign` | The user must electronically sign a managed document, knowledge article, or HR document template. | E-signature template or HR document template e-signature configuration; use current `e_sign`, not deprecated `credential`, `e_signature`, or `sign_document`. |
+| Schedule a meeting | `meeting` | A meeting invite must be scheduled from HR case/task, such as new-hire check-in, return-to-work meeting, or manager conversation. | Meeting subject/details/attendees/start/end/scheduling fields; Microsoft Outlook spoke is required for calendar scheduling capability. |
+| Mark When Complete | `mark_when_complete` | Simple acknowledgement/manual completion is enough. Best default for "confirm this", "do this outside ServiceNow", or lightweight manager/employee tasks. | Short description and description; task moves to Closed Complete when the user clicks Complete. Prefer this over Checklist when there are no real checklist items. |
+| Take Survey | `take_survey` | A survey/assessment record is required for feedback, satisfaction, onboarding/leave pulse, or manager feedback. | `survey`; confirm whether the subject person or other case-access users can answer in lifecycle context. |
+| Upload Documents | `upload_documents` | The assignee must attach files such as leave certification, return-to-work release, receipts, transcripts, tax forms, or profile documents. | Clear short description/instructions; task must be Ready or Work in Progress for upload. |
+| URL | `url` | The task is to visit a link and acknowledge access, such as external policy, portal page, knowledge article, vendor site, or third-party process. | `url`; short description that explains the expected action. |
+| View Video | `view_video` | The task is specifically to watch a video. | `url` to video/embed location; short description. |
+| Auto-close integration task | `action_url` | An external integration/vendor flow should close the task through an action URL or integration callback pattern. Good for tax/e-sign/vendor tasks where ServiceNow waits on an external system. | `integrating_system` and action URL/integration fields; verify external closure path and avoid using this for normal manual work. |
+| Create Journey Accelerator Action Plan | `create_JA_plan` | A manager-led Journey Accelerator plan/action plan should be created or reviewed, often for onboarding, internal mobility, mentoring, promotion, or career transition. | JA plan type/name/description/publish/auto-create fields as required. If not auto-created, the manager receives a to-do to create/review the plan. |
 
 Inactive PDI choices observed: Credential (`credential`), old E-signature (`e_signature`), and Sign Document (`sign_document`). Do not use them for new demos unless a plugin/customer requirement explicitly reactivates the pattern.
+
+HR task type selection shortcuts:
+- Use `mark_when_complete` for the simplest manual acknowledgement.
+- Use `checklist` only when multiple checklist items must be tracked inside one task.
+- Use `collect_Information` when the response data should be structured and can drive downstream logic.
+- Use `take_survey` when the artifact should be a survey response, not an employee form.
+- Use `upload_documents` when the primary output is attachments.
+- Use `url` or `view_video` for learning/reading/watching tasks that only need acknowledgement.
+- Use `hr_service`, `submit_catalog_item`, or `submit_order_guide` when the task launches a child service/request and consider whether the Lifecycle Event activity should wait for that child artifact to complete.
+- Use `action_url` only for integration-owned tasks that can auto-close from the external process.
+- Use `create_JA_plan` only when Journey Accelerator is the desired manager/mentor action-plan experience, not for normal Lifecycle Event task lists.
+
+## Employee/Fulfiller HR Task Configuration
+
+Use this pattern when the selected activity type is Employee or Fulfiller and the card should create an HR Task.
+
+1. Create or reuse an `sn_hr_core_template` with `table=sn_hr_core_task` and, for journey parent cases, `parent_case_table=sn_hr_le_case`.
+2. Set template assignment fields deliberately:
+   - employee-facing examples: `assignment_type=employee` and `assign_to=subject_person`, `opened_for`, or `subject_person.manager`
+   - support-team examples: `assignment_type=fulfiller` with `assignment_group` or `assign_to=assigned_to`
+3. Put the generated task defaults in `sn_hr_core_template.template` as an encoded assignment string, including `short_description`, `description`, `state`, `task_support_team`, parent-case visibility fields, `hr_task_type=<choice>`, and the type-specific reference fields.
+4. Create the `sn_hr_le_activity` with `activity_type=employee` or `fulfiller`, `hr_template=<template sys_id>`, and the OOTB HR Task fulfiller activity config. In the PDI the valid config is `sn_hr_le_fulfiller_activity_config` `b09d36cfc3132200b599b4ad81d3aef5` (`HR Task`).
+5. Set `owning_group`, `order_number`, `active=true`, and any `condition` or `audience_criteria` on the activity. Use `wait_for_generated_tasks_to_complete` when this task should gate downstream activity sets.
+6. Verify the saved activity by reading display values. If `fulfiller_activity` displays blank, the activity is misconfigured even if insert succeeded.
+
+Practical encoded template fields by task type:
+- `hr_service`: set `hr_service=<sn_hr_core_service>` and create field mappings when a child case/request must inherit lifecycle case values.
+- `submit_catalog_item`: set `sc_cat_item=<sc_cat_item>`; map requested-for values if the request should target the subject person.
+- `submit_order_guide`: set `order_guide=<sc_cat_item_guide>`; use when the assignee must launch a bundle rather than one item.
+- `collect_Information`: set `employee_form=<sn_hr_core_employee_form>`.
+- `checklist`: set `hr_task_type=checklist`; add checklist items through the supported checklist model when individual item tracking matters.
+- `e_sign`: set `sn_esign_esignature_configuration=<sn_esign_configuration>` or the customer-supported e-signature configuration field.
+- `meeting`: set `meeting_subject`, `meeting_details`, and scheduling fields such as `schedule_method=manual`; calendar scheduling needs the Microsoft Outlook spoke.
+- `mark_when_complete`: only task copy is normally required.
+- `take_survey`: set `survey=<asmt_metric_type>`.
+- `upload_documents`: write clear attachment instructions in `description`; generated task state must allow upload.
+- `url`: set `url=<https URL>`.
+- `view_video`: set `url=<video or embed URL>`.
+- `action_url`: use an OOTB/vendor integration template with `integrating_system=<system>`; arbitrary new `action_url` templates may be blocked by Business Rule validation.
+- `create_JA_plan`: set `hr_task_type=create_JA_plan` and Journey Accelerator plan fields when required; `auto_create_plan=false` creates a manager-facing create/review action.
 
 ## Recommended Demo Build Pattern
 
@@ -95,3 +151,6 @@ Inactive PDI choices observed: Credential (`credential`), old E-signature (`e_si
 - Flow activities need published/compiled subflows and valid field mappings. Direct Flow tests are not enough; verify the HRSD wrapper path with `sn_hr_le.hr_LEActivityFlow().generateFlowActivity(...)`.
 - Creating HR Services and activities through server-side GlideRecord can fail with little error detail in the PDI. Prefer Table API writes for these metadata records and then verify update capture.
 - Avoid cloning invalid OOTB/demo mappings blindly. Some baseline mappings target generic tables or show invalid validation state.
+- For Employee/Fulfiller HR Task activities, resolve the HR Task config from `sn_hr_le_fulfiller_activity_config` by name/display value. In the PDI the working sys_id is `b09d36cfc3132200b599b4ad81d3aef5`; using the wrong config sys_id can insert an activity with a blank card type.
+- Do not rely on patching `sn_hr_le_activity.fulfiller_activity` after insert to repair a bad HR Task activity. In the PDI, the bad value persisted; deleting and recreating the activity with the correct config was the reliable fix.
+- New `action_url` HR task templates can be blocked by the OOTB Business Rule `Stop create update action_url task type`. Reuse supported OOTB/vendor integration templates or build the vendor integration through the intended setup path.
