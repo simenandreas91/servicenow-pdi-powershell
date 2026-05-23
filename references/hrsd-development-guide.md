@@ -166,12 +166,27 @@ Use this pattern when a Lifecycle Event should generate or expose a document tem
    - Employee HR Task: `activity_type=employee`, `fulfiller_activity=HR Task`, `hr_template=<task template>` where the HR task type is `hr_service`.
 6. Create activity field mappings from the source case to the generated child case. At minimum map `subject_person -> subject_person` and `opened_for -> opened_for`; map any additional fields used by `${...}` tokens in `html_script_body`.
 
+Participants:
+- Use the `Participants` related list (`sn_doc_participant`) when the generated document needs online fill, review, or signature tasks. ServiceNow's document task flow uses participant `action` and `order` when initiating document tasks.
+- For an internal HR participant, set `doc_template_user` to a user reference field on the template table, such as `subject_person`, `opened_for`, `assigned_to`, or a manager/user dot-walk when allowed. Leave `participant_name` and `participant_email` empty unless you intentionally want those fields to override the selected user's name/email or support an external participant.
+- Choose `action=fill` when that participant supplies values, `action=review` when they only review, and `action=sign` when an e-signature task should be generated. For HTML templates with `action=sign`, insert a matching signature token such as `${signature:Subject Person}` in the body where the signature should render.
+- Use `order` to sequence participant tasks. Keep the participant `name` stable and human-readable because signature tokens refer to it.
+
+Document Template Blocks:
+- Use `Document Template Blocks` when a clause, paragraph, or section should be reusable across multiple HTML templates or conditionally selected at generation time. Do not create separate full templates only to vary one clause by country, employment type, eligibility, or case attributes.
+- Create a block container on `sn_doc_template_block` with `table=<same table or a parent table compatible with the HTML template>`, `name`, `active=true`, and optional `topic_detail`/description. Blocks are selectable from an HTML template only when the block table is in the template table hierarchy.
+- Add one or more content rows on `sn_doc_template_block_content`. Each row has `block`, `name`, `order`, `active`, `body`, optional `applies_when`, optional `applies_to` user criteria, and `applies_to_user`. If multiple content rows match, the lower `order` wins; if no condition/user criteria is supplied, the content is always applicable.
+- Add the block to the HTML template through the Add Blocks action whenever possible. The platform inserts a non-editable `data-dtblock-id="<block sys_id>"` snippet into `html_script_body` and maintains the `sn_doc_m2m_html_template_to_block` related-list row. The related-list row alone is not enough; the body must contain the block snippet where the conditional content should appear.
+- For generated or scripted setup, verify both the block marker in `html_script_body` and the `sn_doc_m2m_html_template_to_block` row. The Document Templates utility identifies block markers by `data-dtblock-id`.
+
 PDI lessons:
 - `sn_doc_html_template` extends `sn_doc_template`; Table API can create the concrete HTML record and capture it in the active Journey Designer update set.
 - Existing OOTB/demo HTML templates use `${field}` and dot-walked tokens such as `${subject_person.company}` in `html_script_body`.
 - HR Service form labels "Opened for / Approver view" and "Subject person / Task assignee view" are stored as `header_config_opened_for` and `header_config_subject_person`, both referencing `sn_hr_core_config_case`. The normal defaults in the PDI are `86d9872eb3900300f5302ddc16a8dc8b` (`Default for opened for/approver`) and `c4e9872eb3900300f5302ddc16a8dc91` (`Default for subject person/task assigned to`).
 - A direct HR Service activity can auto-create generic `sn_hr_core_case` mappings. If the child service uses a concrete table such as `sn_hr_le_case`, re-query mappings and keep the concrete valid mappings; remove duplicate generic mappings from the update set.
 - Use Table API reads as the verification source for new document templates in this PDI. Scoped Xplore template application confirmed the HR template can assign `document_template`, but Xplore did not reliably read newly created `sn_doc_template` rows by sys_id.
+- 2026-05-23 participant/block test created a `Subject Person` signing participant (`sn_doc_participant.action=sign`, `doc_template_user=subject_person`) and a reusable `sn_doc_template_block` on `sn_hr_le_case` with one unconditional `sn_doc_template_block_content` row. Capture was clean in the Journey Designer update set as `Participant`, `Document Template Block`, `Document Template Block Content`, and `HTML Template to Document Block`.
+- In this PDI, creating the records server-side works, but the UI-generated block snippet required care: verify `DocumentTemplateBlockUtils.extractBlocksFromHtmlSnippet(html_script_body)` returns the block sys_id. If it does not, the runtime block replacement will not find the block even if the related-list M2M row exists.
 
 ## Recommended Demo Build Pattern
 
