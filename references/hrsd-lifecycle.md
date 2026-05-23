@@ -129,6 +129,13 @@ Activity set trigger selection:
 - `map_from_table=sn_hr_le_case` with `map_from_field` such as `subject_person` or `opened_for`.
 - `map_to_table` and `map_to_field` target generated records such as `sn_hr_core_case`, `sc_request`, or `sn_hr_core_task`.
 
+Document template child HR Service:
+- Create the document template as `sn_doc_html_template`, with `table` matching the generated HR case table and `html_script_body` containing `${field}` tokens. For journey cases, `table=sn_hr_le_case` lets the body use tokens such as `${number}`, `${opened_at}`, `${subject_person}`, `${opened_for}`, and dot-walks like `${subject_person.manager}`.
+- Create an HR case template with `table=<case table>` and encoded `template` containing `document_template=<sn_doc_html_template sys_id>`.
+- Create a simple child HR Service with `service_table=<case table>`, `template=<HR case template>`, and `service_table_fields=document_template`.
+- Add a source Lifecycle Event activity to call the child service. Direct pattern: `activity_type=fulfiller`, `fulfiller_activity=HR Service`, `hr_service=<child service>`. Employee-task pattern: `activity_type=employee`, `fulfiller_activity=HR Task`, task template `hr_task_type=hr_service`.
+- Add `sn_hr_le_activity_field_mapping` records from the source lifecycle case to the generated child case. Use the concrete child case table when possible, for example `sn_hr_le_case.subject_person -> sn_hr_le_case.subject_person` and `sn_hr_le_case.opened_for -> sn_hr_le_case.opened_for`.
+
 ## Sample Patterns
 
 Activity selection rule:
@@ -243,6 +250,7 @@ HR service card:
 - `hr_service=<sn_hr_core_service>` for the generated child service/case.
 - add mappings from lifecycle case fields to the generated HR case, such as `subject_person -> subject_person`, `opened_for -> opened_for`.
 - Prefer this direct activity over HR task type `hr_service` when the child case should be created automatically as part of the lifecycle.
+- For document-template child services, ensure the child HR Service has `service_table_fields=document_template` and its HR template sets `document_template=<sn_doc_html_template>`.
 
 Flow activity card:
 - `activity_type=flow`
@@ -328,3 +336,4 @@ Testing sequence:
 - 2026-05-23 HR Task activity demo in the PDI confirmed the working Table API shape: create `sn_hr_core_template` rows in Journey Designer with `table=sn_hr_core_task`, `parent_case_table=sn_hr_le_case`, assignment fields, and encoded `template`; then create Employee/Fulfiller `sn_hr_le_activity` rows with `fulfiller_activity=b09d36cfc3132200b599b4ad81d3aef5` and `hr_template=<template>`. A wrong `sn_hr_le_fulfiller_activity_config` sys_id inserted activities whose card type displayed blank, and PATCH did not correct them; delete/recreate was required.
 - The same demo created valid HR Task activities for `submit_catalog_item`, `collect_Information`, `checklist`, `e_sign`, `meeting`, `mark_when_complete`, `take_survey`, `upload_documents`, `url`, `view_video`, `action_url` via an OOTB CIC Plus template, and `create_JA_plan`. `hr_service` and `submit_order_guide` were skipped in that demo because they need suitable child service/order-guide setup and field mappings to be meaningful.
 - OOTB catalog-variable mappings confirm the pattern for catalog-backed lifecycle activities: `map_to_table=task`, `map_to_field=variables`, and `map_to_variable=<item_option_new>`. Example inspected in the PDI: activity `Reclaim Assets` maps `sn_hr_le_case.subject_person` to a catalog variable `Requested for` and is marked `valid=true`.
+- 2026-05-23 document-template demo in the PDI confirmed the supported shape for Demo Manager Approval Journey: create a published `sn_doc_html_template` on `sn_hr_le_case`; create an HR template on `sn_hr_le_case` with `document_template=<html template>`; create a simple child HR Service on `sn_hr_le_case` with `service_table_fields=document_template`; add a Fulfiller HR Service activity from the journey; and map `subject_person`/`opened_for` from the parent LE case to the child LE case. The update set captured `HTML Template`, `HR Template`, `HR Service`, `Activity`, and concrete `Activity Field Mapping` rows cleanly in Journey Designer.

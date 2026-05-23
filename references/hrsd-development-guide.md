@@ -16,6 +16,7 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 | Activity field mapping | `sn_hr_le_activity_field_mapping` | Maps parent case fields to generated cases, tasks, requests, or Flow inputs. Verify `valid=true` when the platform supports validation. |
 | HR Criteria | `sn_hr_core_criteria` | HRSD wrapper for eligibility/audience rules. Often points to `user_criteria`; used on HR Services and some activity logic. PDI examples include Employees Only, New Hire, Office Based Employees, and US Employees - Tax forms Collection. |
 | Topic category/detail | `sn_hr_core_topic_category`, `sn_hr_core_topic_detail` | Service taxonomy. Must align with the selected COE/service table; see `references/hrsd-coe-selection.md`. |
+| Document Template | `sn_doc_template`, extended by `sn_doc_html_template` | HTML/PDF document template metadata. For HRSD demos, prefer HTML templates (`sn_doc_html_template`) with `table=<HR case table>`, `html_script_body`, language, page settings, and optional header/footer image fields. |
 
 ## How Lifecycle Event Activities Work
 
@@ -145,6 +146,30 @@ Field mapping notes:
 - Use `map_to_table=sc_request` and `map_to_field=requested_for` when mapping to generated request fields.
 - Use `map_to_table=task`, `map_to_field=variables`, and `map_to_variable=<item_option_new sys_id>` when mapping to catalog item/order guide variables.
 - Validate type compatibility yourself before creating mappings. A reference case field such as `subject_person` should map to a reference variable with the same target table, such as `sys_user`; date, choice, boolean, and text values should map to compatible variable types.
+
+## Document Template HR Services
+
+Use this pattern when a Lifecycle Event should generate or expose a document template through a child HR Service.
+
+1. Create an HTML document template on `sn_doc_html_template`, not the base `sn_doc_template` table directly:
+   - `name=<document template name>`
+   - `table=<case table used for tokens>`, for example `sn_hr_le_case`
+   - `state=published`, `active=true`, `language=en`
+   - `html_script_body=<HTML body with ${field} tokens>`
+   - optional layout fields: `page_size`, `top_bottom_margin`, `left_right_margin`, `footnote`, `header_image`, `footer_image`, and related image position/height fields.
+2. Match the template table to the HR Service case table that will hold the document data. If the journey parent and child service use `sn_hr_le_case`, use `sn_hr_le_case` so tokens such as `${subject_person}`, `${opened_for}`, `${subject_person.manager}`, and `${number}` resolve from that case.
+3. Create an HR case template (`sn_hr_core_template`) for the document HR Service. Use `table=<same HR case table>` and set `document_template=<sn_doc_template sys_id>` inside the encoded `template`, for example `short_description=Generate summary^document_template=<html_template>^priority=4^state=10^EQ`.
+4. Create a child HR Service (`sn_hr_core_service`) with `fulfillment_type=simple`, `service_table=<same HR case table>`, `template=<HR template>`, and `service_table_fields=document_template`. The service table field exposes the document template field on the generated HR case.
+5. From the source Lifecycle Event, call the child document HR Service with either:
+   - direct Fulfiller activity: `activity_type=fulfiller`, `fulfiller_activity=HR Service`, `hr_service=<child service>`
+   - Employee HR Task: `activity_type=employee`, `fulfiller_activity=HR Task`, `hr_template=<task template>` where the HR task type is `hr_service`.
+6. Create activity field mappings from the source case to the generated child case. At minimum map `subject_person -> subject_person` and `opened_for -> opened_for`; map any additional fields used by `${...}` tokens in `html_script_body`.
+
+PDI lessons:
+- `sn_doc_html_template` extends `sn_doc_template`; Table API can create the concrete HTML record and capture it in the active Journey Designer update set.
+- Existing OOTB/demo HTML templates use `${field}` and dot-walked tokens such as `${subject_person.company}` in `html_script_body`.
+- A direct HR Service activity can auto-create generic `sn_hr_core_case` mappings. If the child service uses a concrete table such as `sn_hr_le_case`, re-query mappings and keep the concrete valid mappings; remove duplicate generic mappings from the update set.
+- Use Table API reads as the verification source for new document templates in this PDI. Scoped Xplore template application confirmed the HR template can assign `document_template`, but Xplore did not reliably read newly created `sn_doc_template` rows by sys_id.
 
 ## Recommended Demo Build Pattern
 
