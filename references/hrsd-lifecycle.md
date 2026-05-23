@@ -91,10 +91,23 @@ Prefer cloning or templating a known-good sample before creating these from scra
 `sn_hr_le_activity_set`:
 - `le_type=<sn_hr_le_type>`
 - `title`, `display_title`, `display_order`
-- `trigger_type=immediate` for columns that start immediately.
-- `trigger_type=condition` with `condition_table` and `condition` for conditional columns.
-- `trigger_type=other_activity_sets` with `activity_set_dependencies` for dependency-based columns.
+- `trigger_type=immediate` for stages that start as soon as the Lifecycle Event case is created/ready.
+- `trigger_type=date` for milestone stages, with `trigger_table`, `trigger_field`, `ignore_empty_date`, `date_offset_type`, `date_offset_quantity`, and `date_offset_units`.
+- `trigger_type=other_activity_sets` with `activity_set_dependencies` for dependency-based stages. All selected dependencies must complete before the set triggers.
+- `trigger_type=script` for Advanced trigger scripts. The script receives `parentCase` and `hrTriggerUtil` and should return true/false.
+- `trigger_type=condition` with `condition_table` and `condition` for table/field-driven stages.
+- `trigger_type=combination` with `combination_type=and|or` plus date, dependency, and/or condition fields when multiple trigger dimensions must be evaluated together.
 - Conditional variables use encoded query syntax with variable sys_ids, for example `variables.<item_option_new_sys_id>IN100,80^EQ`.
+- `evaluation_interval` defaults to `0 04:00:00` / 4 hours and controls reevaluation for non-immediate triggers.
+
+Activity set trigger selection:
+- Use Immediate for first-stage intake, initial approvals, welcome/pre-hire tasks, or simple demo stages that should always launch at case creation.
+- Use Date for stages tied to business milestones: before start date, day one, week one, first day of leave, estimated last day of leave, employment end date, or follow-up intervals.
+- Use Other Activity Sets for linear sequencing: after approval, after pre-hire, after confirm return, or after separation initiation. Do not list mutually exclusive branch sets as dependencies for one downstream set.
+- Use Condition when a field value decides whether/when the stage starts: state, employee type, location, copied variable value, or HR profile data. If the change must launch quickly, trigger `check_activity_set_trigger` from server-side logic instead of shortening the evaluation interval.
+- Use Advanced only when Date/Condition/Dependency/Combination cannot express the rule. Keep scripts small and use `hrTriggerUtil` helpers for elapsed dates and completed sets.
+- Use Combination when multiple normal trigger dimensions are needed together. Prefer `combination_type=and` for strict gates; use `or` only when either a date/condition/dependency path is truly acceptable. Remember the dependency list itself is still an all-dependencies-complete group.
+- The PDI also has `trigger_type=rescind`; use it only for the dedicated rescind process, not as a general activity-set trigger.
 
 `sn_hr_le_activity`:
 - `activity_set=<sn_hr_le_activity_set>`
@@ -116,7 +129,26 @@ Prefer cloning or templating a known-good sample before creating these from scra
 - `map_from_table=sn_hr_le_case` with `map_from_field` such as `subject_person` or `opened_for`.
 - `map_to_table` and `map_to_field` target generated records such as `sn_hr_core_case`, `sc_request`, or `sn_hr_core_task`.
 
+Document template child HR Service:
+- Create the document template as `sn_doc_html_template`, with `table` matching the generated HR case table and `html_script_body` containing `${field}` tokens. For journey cases, `table=sn_hr_le_case` lets the body use tokens such as `${number}`, `${opened_at}`, `${subject_person}`, `${opened_for}`, and dot-walks like `${subject_person.manager}`.
+- Use `sn_doc_participant` rows when the document needs fill/review/sign tasks. For a subject-person signature, use `name=Subject Person`, `action=sign`, `doc_template_user=subject_person`, `order=1`, and insert `${signature:Subject Person}` into the HTML body.
+- Use document template blocks for reusable or conditional HTML sections. Create `sn_doc_template_block` on the same case table, add ordered `sn_doc_template_block_content` rows with optional `applies_when`/user criteria, insert the block marker into `html_script_body`, and verify the `sn_doc_m2m_html_template_to_block` link exists.
+- Create an HR case template with `table=<case table>` and encoded `template` containing `document_template=<sn_doc_html_template sys_id>`.
+- Create a simple child HR Service with `service_table=<case table>`, `template=<HR case template>`, and `service_table_fields=document_template`.
+- Set mandatory HR Service header views: `header_config_opened_for=Default for opened for/approver` and `header_config_subject_person=Default for subject person/task assigned to`. In the PDI these are `sn_hr_core_config_case` records `86d9872eb3900300f5302ddc16a8dc8b` and `c4e9872eb3900300f5302ddc16a8dc91`.
+- Add a source Lifecycle Event activity to call the child service. Direct pattern: `activity_type=fulfiller`, `fulfiller_activity=HR Service`, `hr_service=<child service>`. Employee-task pattern: `activity_type=employee`, `fulfiller_activity=HR Task`, task template `hr_task_type=hr_service`.
+- Add `sn_hr_le_activity_field_mapping` records from the source lifecycle case to the generated child case. Use the concrete child case table when possible, for example `sn_hr_le_case.subject_person -> sn_hr_le_case.subject_person` and `sn_hr_le_case.opened_for -> sn_hr_le_case.opened_for`.
+
 ## Sample Patterns
+
+Activity selection rule:
+- Use `activity_type=approval` for native approvals. Do not model approval as an HR task.
+- Use `activity_type=employee` plus `fulfiller_activity=HR Task` when the subject person, opened-for user, manager, mentor, or another employee-facing participant must complete a to-do.
+- Use `activity_type=fulfiller` when HR, IT, Facilities, Payroll, Legal, or another support team must complete work, or when the activity should directly create a child HR Service, Catalog Item, Order Guide, Incident, Flow, or template-based record.
+- Use `activity_type=notification` when the journey only sends email and no completion tracking is needed.
+- Use `activity_type=flow` when the journey must run automation/integration logic through a published subflow with mapped inputs.
+- Use `activity_type=content` when the journey should schedule informational content such as banners or guidance.
+- Use `activity_type=activity_container` only when member activities in the same activity set need grouped sequencing/parallelization. Containers cannot contain other containers, and member activities cannot be moved out for standalone reuse.
 
 Approval card:
 - `sn_hr_le_activity.activity_type=approval`
@@ -177,23 +209,51 @@ Useful reference records from the PDI:
 - Demo approval activity: `8fba93efc33c435065eefdec05013185`
 - Demo approver option `Subject person Manager`: `be5cd47a3b322200d901655593efc402`
 - Approval option table: `sn_hr_core_service_approval_option`
+- HR Task fulfiller activity config: `sn_hr_le_fulfiller_activity_config` `b09d36cfc3132200b599b4ad81d3aef5` (`HR Task`)
 
 HR task card:
 - `activity_type=fulfiller` or `employee`
-- `fulfiller_activity=HR Task`
+- `fulfiller_activity=<HR Task config sys_id>`, not a display value. In the PDI use `b09d36cfc3132200b599b4ad81d3aef5`.
 - `hr_template=<sn_hr_core_template>`
+- Choose Employee vs Fulfiller by assignee, not by task type: employee-facing actors use Employee; support teams use Fulfiller.
+- The selected HR template must have `table=sn_hr_core_task`, `parent_case_table=sn_hr_le_case` for journey parent tasks, and an encoded `template` containing `hr_task_type=<choice>` plus required type-specific fields.
+- For simple manual acknowledgement, prefer `hr_task_type=mark_when_complete`; use `checklist` only when individual checklist items matter.
+- For structured input, use `collect_Information` with `employee_form`; use `take_survey` only when a survey artifact is the desired output.
+- For document collection, use `upload_documents`; for signing, use current `e_sign` with e-signature template config.
+- For child work started from a to-do, use `hr_service`, `submit_catalog_item`, or `submit_order_guide` and consider `wait_for_generated_tasks_to_complete`.
+- For integration/vendor-owned closure, use `action_url` only when an external/action URL process will auto-close the task.
+- For manager-led Journey Accelerator plans, use `create_JA_plan`; do not substitute normal Lifecycle Event checklists when Journey Accelerator is the intended experience.
+- When creating by Table API, include the correct `fulfiller_activity` on insert. If the saved activity displays a blank card type, delete/recreate it; patching `fulfiller_activity` did not repair bad PDI records reliably.
+
+HR task template examples:
+- Submit catalog item: `hr_task_type=submit_catalog_item^sc_cat_item=<sc_cat_item>`.
+- Submit catalog item variable mapping: create `sn_hr_le_activity_field_mapping` with `map_from_table=sn_hr_le_case`, `map_from_field=<case field>`, `map_to_table=task`, `map_to_field=variables`, and `map_to_variable=<item_option_new>`. Use this to prefill a catalog variable from lifecycle data, for example `subject_person` into a `sys_user` reference variable.
+- Collect input: `hr_task_type=collect_Information^employee_form=<sn_hr_core_employee_form>`.
+- Checklist: `hr_task_type=checklist`.
+- E-signature: `hr_task_type=e_sign^sn_esign_esignature_configuration=<sn_esign_configuration>`.
+- Schedule meeting: `hr_task_type=meeting^meeting_subject=<text>^meeting_details=<html>^schedule_method=manual`.
+- Mark complete: `hr_task_type=mark_when_complete`.
+- Survey: `hr_task_type=take_survey^survey=<asmt_metric_type>`.
+- Upload documents: `hr_task_type=upload_documents`.
+- URL: `hr_task_type=url^url=<https URL>`.
+- View video: `hr_task_type=view_video^url=<video URL>`.
+- Auto-close integration: `hr_task_type=action_url^integrating_system=<vendor/system>`. In the PDI, creating arbitrary new `action_url` templates is blocked by Business Rule `Stop create update action_url task type`; reuse supported OOTB/vendor templates unless the integration setup explicitly permits creation.
+- Journey Accelerator plan: `hr_task_type=create_JA_plan^auto_create_plan=false` for a manager-facing plan creation/review action.
 
 Catalog item card:
 - `activity_type=fulfiller`
 - `fulfiller_activity=Catalog Item`
 - `catalog_item=<sc_cat_item>`
 - add `sn_hr_le_activity_field_mapping` from lifecycle case fields to `sc_request` fields, such as `subject_person -> requested_for`.
+- Prefer this direct activity over HR task type `submit_catalog_item` when no person needs to review/launch the catalog request from a to-do.
 
 HR service card:
 - `activity_type=fulfiller`
 - `fulfiller_activity=HR Service`
 - `hr_service=<sn_hr_core_service>` for the generated child service/case.
 - add mappings from lifecycle case fields to the generated HR case, such as `subject_person -> subject_person`, `opened_for -> opened_for`.
+- Prefer this direct activity over HR task type `hr_service` when the child case should be created automatically as part of the lifecycle.
+- For document-template child services, ensure the child HR Service has `service_table_fields=document_template` and its HR template sets `document_template=<sn_doc_html_template>`.
 
 Flow activity card:
 - `activity_type=flow`
@@ -202,6 +262,7 @@ Flow activity card:
 - create `sys_hub_flow_input` records for the subflow inputs, for example a `reference` input `subject_person` to `sys_user`.
 - add `sn_hr_le_activity_field_mapping` from the LE case to the subflow input, for example `map_from_table=sn_hr_le_case`, `map_from_field=subject_person`, `map_to_flow_input=<sys_hub_flow_input sys_id>`, and verify `valid=true`.
 - The subflow can call a custom Flow Action (`sys_hub_action_type_definition`) containing a Script step. This keeps the Lifecycle Event visible and admin-owned while keeping integration logic in a scriptable Flow Action wrapper.
+- Prefer Flow for automation and integrations, not for native approvals, simple emails, simple HR tasks, or content delivery.
 
 ## Fast Path: HRSD Flow Activity With Scripted Action
 
@@ -243,6 +304,8 @@ Testing sequence:
 - After creating records, inspect `sys_update_xml` for all touched scopes; Journey Designer records usually use the Journey designer scope/package (`sn_jny` display) even when related catalog/HR records are present.
 - Open the Lifecycle Event UI and verify the visual board: activity set order, trigger labels, card order, card badges, and target type labels.
 - Submit a test HR service from the portal/UI and verify generated HR case, activity sets, tasks, approvals, child services, requests, and field mappings.
+- For HR Task card demos, verify every activity in the set has `fulfiller_activity` display value `HR Task`, points to the intended `hr_template`, and the template's encoded `hr_task_type` matches the desired experience.
+- For `submit_catalog_item` HR tasks, verify both request-field mappings and catalog-variable mappings. Catalog variables use `map_to_field=variables` plus `map_to_variable=<item_option_new>`, not only `map_to_field`.
 - Clean up test cases, requests, tasks, approvals, and generated child records; keep metadata update sets.
 
 ## Lessons Learned
@@ -253,6 +316,8 @@ Testing sequence:
 - Activity field mappings have a `valid` flag. Several baseline/demo Journey mappings point to generic targets such as `sn_hr_core_case` or request fields and show `valid=false`; do not clone those blindly. For new build work, map to the concrete generated table/field or variable/flow input and verify `valid=true` where the platform supports validation.
 - Record producers for Journey HR Services commonly do more than call the generic case creation utility. Examples from the PDI demos: New Hire calls `sn_hr_le.hr_ActivityUtils().createCaseFromProducer`; Parental Leave also creates and links a Leave of Absence detail record through `sn_jny.LeaveOfAbsenceUtil`; Voluntary Separation updates the subject person's HR profile `employment_end_date` from the producer variable.
 - Date-triggered Journey sets can target related fields, not only direct case fields. Demo examples include `subject_person_job.job_start_date`, `leave_of_absence.first_day_of_leave`, and `leave_of_absence.estimated_last_day_of_leave`.
+- Official ServiceNow docs define Lifecycle Event activity set triggers as Immediate, Date, Other activity sets, Advanced, Condition, and Combination. PDI metadata confirms internal values `immediate`, `date`, `other_activity_sets`, `script`, `condition`, and `combination`; `combination_type` choices are `and` and `or`; date offset choices are `before`/`after` with units `days`, `weeks`, and `months`.
+- The HR Activity Launcher evaluates activity sets when a Lifecycle Event case reaches Ready, but non-immediate sets can wait for reevaluation. The default `evaluation_interval` is 4 hours. ServiceNow recommends using the `check_activity_set_trigger` workflow event from server-side logic for just-in-time checks instead of lowering the interval broadly.
 - Creating `sn_hr_core_service` and `sn_hr_le_activity` with server-side GlideRecord can fail with an empty `getLastErrorMessage()`. Prefer Table API `POST/PATCH` for these records, then verify capture in the Journey Designer update set.
 - HR templates (`sn_hr_core_template`) can have scope/visibility differences between global and `sn_jny`; if a read path is inconsistent, verify by sys_id and use the creation path that captures in the active Journey Designer update set.
 - Creating a journey service can auto-create placeholder `Activity Set 1/2/3` records. Delete unintended placeholder activity sets and their `sys_update_xml` rows before delivery.
@@ -271,3 +336,9 @@ Testing sequence:
 - After changing Flow action script variables or cloned Flow metadata, compile before runtime testing. `sn_fd.FlowAPI.getRunner().subflow('<scope>.<internal_name>').compile()` refreshed the subflow plan in the PDI; before compile, the subflow could complete without executing its action instance even though the action itself ran directly.
 - Flow activity testing in this PDI needed layered checks: direct action execution proved the Script step and output, direct subflow execution proved the action instance fired after compile, and `hr_LEActivityFlow.generateFlowActivity(parentCase, activity, true)` proved the Lifecycle Event Flow activity wrapper could map case fields and start the subflow. Full producer submission still created a case without visible activity set/status rows, so do not use producer API alone as proof of Lifecycle Event activity execution.
 - Approval rejection lesson from 2026-05-18 PDI demo: for an HR Service/Journey approval activity where manager rejection should notify the subject person with a reason, start by inspecting `sysapproval_approver` UI Actions, `approval.rejected`, `sn_hr_core.approval_rejected`, and OOTB notification `HR Case Approval Rejected`. The better OOTB-first design is usually: keep OOTB reject/comment behavior, add only a targeted notification or mail script if the OOTB HR email lacks `subject_person` recipient logic or comment text. Use a Business Rule only when enforcing rejection comments outside normal UI paths or queuing a custom event is explicitly required.
+- 2026-05-23 HR Task activity demo in the PDI confirmed the working Table API shape: create `sn_hr_core_template` rows in Journey Designer with `table=sn_hr_core_task`, `parent_case_table=sn_hr_le_case`, assignment fields, and encoded `template`; then create Employee/Fulfiller `sn_hr_le_activity` rows with `fulfiller_activity=b09d36cfc3132200b599b4ad81d3aef5` and `hr_template=<template>`. A wrong `sn_hr_le_fulfiller_activity_config` sys_id inserted activities whose card type displayed blank, and PATCH did not correct them; delete/recreate was required.
+- The same demo created valid HR Task activities for `submit_catalog_item`, `collect_Information`, `checklist`, `e_sign`, `meeting`, `mark_when_complete`, `take_survey`, `upload_documents`, `url`, `view_video`, `action_url` via an OOTB CIC Plus template, and `create_JA_plan`. `hr_service` and `submit_order_guide` were skipped in that demo because they need suitable child service/order-guide setup and field mappings to be meaningful.
+- OOTB catalog-variable mappings confirm the pattern for catalog-backed lifecycle activities: `map_to_table=task`, `map_to_field=variables`, and `map_to_variable=<item_option_new>`. Example inspected in the PDI: activity `Reclaim Assets` maps `sn_hr_le_case.subject_person` to a catalog variable `Requested for` and is marked `valid=true`.
+- 2026-05-23 document-template demo in the PDI confirmed the supported shape for Demo Manager Approval Journey: create a published `sn_doc_html_template` on `sn_hr_le_case`; create an HR template on `sn_hr_le_case` with `document_template=<html template>`; create a simple child HR Service on `sn_hr_le_case` with `service_table_fields=document_template`; add a Fulfiller HR Service activity from the journey; and map `subject_person`/`opened_for` from the parent LE case to the child LE case. The update set captured `HTML Template`, `HR Template`, `HR Service`, `Activity`, and concrete `Activity Field Mapping` rows cleanly in Journey Designer.
+- The same demo reinforced that HR Services need the two header configuration references even when Table API creation succeeds without them: `header_config_opened_for` for the "Opened for / Approver view" and `header_config_subject_person` for the "Subject person / Task assignee view". Use the default HR Core records unless a service-specific case header design is required.
+- The same document-template demo later added a signing participant and one reusable block. The working block shape was `sn_doc_template_block.table=sn_hr_le_case`, one active `sn_doc_template_block_content` with `body` using `${number}` and `${subject_person}`, one `sn_doc_m2m_html_template_to_block`, and a matching `data-dtblock-id` marker in `html_script_body`. Verify with `DocumentTemplateBlockUtils.extractBlocksFromHtmlSnippet`; a related-list row without a body marker will not render the block.

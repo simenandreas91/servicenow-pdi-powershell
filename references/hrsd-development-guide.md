@@ -16,6 +16,7 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 | Activity field mapping | `sn_hr_le_activity_field_mapping` | Maps parent case fields to generated cases, tasks, requests, or Flow inputs. Verify `valid=true` when the platform supports validation. |
 | HR Criteria | `sn_hr_core_criteria` | HRSD wrapper for eligibility/audience rules. Often points to `user_criteria`; used on HR Services and some activity logic. PDI examples include Employees Only, New Hire, Office Based Employees, and US Employees - Tax forms Collection. |
 | Topic category/detail | `sn_hr_core_topic_category`, `sn_hr_core_topic_detail` | Service taxonomy. Must align with the selected COE/service table; see `references/hrsd-coe-selection.md`. |
+| Document Template | `sn_doc_template`, extended by `sn_doc_html_template` | HTML/PDF document template metadata. For HRSD demos, prefer HTML templates (`sn_doc_html_template`) with `table=<HR case table>`, `html_script_body`, language, page settings, and optional header/footer image fields. |
 
 ## How Lifecycle Event Activities Work
 
@@ -28,7 +29,38 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 - Notification activities use `sn_hr_core_email_content` email content plus recipient fields/users/groups on the activity.
 - Activity sets and activities both have conditions. In the PDI, date-triggered activity-set conditions are not reliable gates by themselves; put conditional logic on activities when suppression matters.
 
+## Activity Set Trigger Types
+
+Activity Sets are Lifecycle Event stages. The trigger type controls when the stage's activities become available; `display_order` only controls visual order and does not control timing. Official ServiceNow docs describe these trigger methods as immediate, date, other activity sets, advanced script, condition, and combination. In the PDI, `sn_hr_le_activity_set.trigger_type` also has a `rescind` choice for rescind handling; treat that as a dedicated rescind-process pattern, not a normal stage trigger.
+
+Decision guide:
+
+| Trigger type | Value | Use when | Key fields / notes |
+| --- | --- | --- | --- |
+| Immediate | `immediate` | The first stage should launch as soon as the Lifecycle Event case is created/ready. Good for intake review, initial approval, welcome/pre-hire tasks, and simple demos. | Usually no trigger-specific fields. Keep only one or a few immediate sets unless parallel work is intentional. |
+| Date | `date` | Work is tied to a real milestone date, such as job start date, first day of leave, estimated return date, employment end date, or 30/60/90-day check-in. | `trigger_table`, `trigger_field`, `ignore_empty_date`, `date_offset_type=before|after`, `date_offset_quantity`, `date_offset_units=days|weeks|months`. Date fields can be related paths such as `subject_person_job.job_start_date`. |
+| Other Activity Sets | `other_activity_sets` | A stage must wait until one or more earlier stages finish, such as HR processing after manager approval or return-to-work tasks after confirm-return. | `activity_set_dependencies` is a glide list of prerequisite activity sets. The dependency list is AND-style: all selected sets must complete. |
+| Advanced | `script` | OOTB Date/Condition/Dependency logic cannot express the rule, for example manager exists, date elapsed, and specific sets completed, or a custom business state must be checked. | `trigger_script` returns true/false. The script receives `parentCase` and `hrTriggerUtil`. Prefer this only when no-code triggers cannot model the requirement. |
+| Condition | `condition` | The stage should launch when fields on an HR case/profile table match an encoded condition, such as case state, lifecycle variables copied to fields, location, employee type, or employment end date. | `condition_table`, `condition`, and `evaluation_interval`. For faster checks, use the `check_activity_set_trigger` event pattern instead of lowering the interval. |
+| Combination | `combination` | The stage needs Date, Other Activity Sets, and/or Condition together, such as "after approval AND five days before leave" or "date OR condition" where the UI supports it. | Same fields as Date/Condition/Dependencies plus `combination_type=and|or`. Use carefully; dependencies inside `activity_set_dependencies` still behave as all selected dependencies complete. |
+
+Trigger timing notes:
+- When a Lifecycle Event case moves to Ready, HR Activity Launcher evaluates activity sets; activities only launch when the set's trigger condition is met.
+- Non-immediate trigger checks can wait for the `evaluation_interval`, which defaults to four hours (`0 04:00:00` / display `4 Hours` in the PDI).
+- Do not reduce the global/default evaluation interval casually. ServiceNow warns that frequent updates can cause activity sets to cancel before completion. Use the `check_activity_set_trigger` workflow event from a Business Rule/event/scheduled job when a condition should be reevaluated immediately.
+- The `check_activity_set_trigger` event works for condition/script/date-style reevaluation, but not for sets triggered immediately or only by other activity sets.
+- Changing trigger type, audience, or adding activities affects only activity sets/cases that have not already triggered. Existing generated activities are not rebuilt automatically.
+
 ## Activity Types
+
+Use this decision ladder before creating a Lifecycle Event activity:
+
+1. If a decision must approve/reject or gate downstream work, create an **Approval** activity.
+2. If the activity is only communication with no completion tracking, create a **Notification** activity for email or a **Content** activity for scheduled informational content.
+3. If the activity must run automation, integration, provisioning, or reusable logic, create a **Flow** activity backed by a published/compiled subflow.
+4. If a human must do something, choose **Employee** when the actor is the subject person, opened-for user, manager, mentor, or another employee-facing participant. Choose **Fulfiller** when the actor is HR, IT, Facilities, Payroll, Legal, or another support team.
+5. For Employee/Fulfiller human work, use **HR Task** plus an HR task template when the result is a to-do. Use **HR Service**, **Catalog Item**, or **Order Guide** when completion should create a formal child case/request.
+6. Use **Activity container** only when multiple activities inside the same activity set must be grouped and ordered together. Prefer normal activity sets for major journey stages.
 
 | Activity type | Value | Use when | PDI examples / notes |
 | --- | --- | --- | --- |
@@ -40,28 +72,121 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 | Content | `content` | The journey needs display-only content, banner, guidance, or informational material. | PDI example: Separations Banner. Use for read-only information rather than a task. |
 | Activity container | `activity_container` | Activities need grouping/nesting under a parent card/container. | PDI examples include Initiate Separation Activities and Onboarding Swag Request. Use sparingly; prefer normal Activity Sets for stages. |
 
+Implementation notes:
+- Employee and Fulfiller activities inherit most runtime behavior from the selected HR task template when `fulfiller_activity=HR Task`.
+- Fulfiller activity configuration can also expose HR Service, Catalog Item, Order Guide, Flow, Incident, Template, Workflow, and custom activity types. Prefer the OOTB configuration type that creates the target artifact directly.
+- Activity-level audience criteria personalize which subject persons receive the activity. Activity set audience/trigger logic runs first; activity audience is evaluated after the set triggers.
+- For generated child records and Flow inputs, create `sn_hr_le_activity_field_mapping` records. Map to the concrete target table/field or flow input and verify `valid=true` when available.
+- Australia docs also include Pulse Survey as a lifecycle activity type. Use it when the requirement is specifically a pulse survey; otherwise use HR task type `take_survey` or `collect_Information` depending on the data model required.
+
 ## HR Task Types
 
-The active `sn_hr_core_task.hr_task_type` choices in the PDI are:
+The active `sn_hr_core_task.hr_task_type` choices in the PDI are below. Choose these only after deciding that the Lifecycle Event should create an Employee/Fulfiller HR Task rather than a direct Approval, Flow, HR Service, Catalog Item, Order Guide, Notification, or Content activity.
 
-| HR task type | Value | Practical use |
-| --- | --- | --- |
-| HR Service | `hr_service` | Creates or guides the user into another HR Service from a to-do. Set `hr_service` in the template. Good for child HR Services such as benefit enrollment, payroll setup, or profile completion. |
-| Submit Catalog Item | `submit_catalog_item` | Launches a catalog item/request from the journey. Set `sc_cat_item`; map requested-for data when needed. Good for IT equipment, access, or facilities requests. |
-| Submit Order Guide | `submit_order_guide` | Launches an order guide. Set `order_guide`. Good when the assignee must choose from a bundle of related items, such as new-hire equipment. |
-| Collect Employee Input | `collect_Information` | Presents an HR employee form. Set `employee_form`. Good for structured employee input that is not a full HR case. |
-| Checklist | `checklist` | Creates a checklist-style task. Good for manual multi-step work by HR, manager, IT, or facilities. |
-| E-signature | `e_sign` | Creates an e-signature task. Set the e-signature configuration field in the template. The old `e_signature` choice exists but is inactive; use `e_sign`. |
-| Schedule a meeting | `meeting` | Creates a meeting-oriented task. Use meeting fields such as subject, details, attendees, scheduling method, start/end dates. No active OOTB template was found in the inspected PDI, but the type and fields are present. |
-| Mark When Complete | `mark_when_complete` | Simple acknowledgement/manual completion task. Good for "confirm/update/do this outside the platform" tasks. |
-| Take Survey | `take_survey` | Assigns a survey. Set `survey`. Good for onboarding, leave, satisfaction, and manager feedback. |
-| Upload Documents | `upload_documents` | Asks the user to attach files. Good for leave certification, return-to-work release, receipts, transcripts, or profile documents. |
-| URL | `url` | Provides a link to external site, portal page, knowledge article, video host, or third-party process. Set `url` and descriptive text. |
-| View Video | `view_video` | Presents a video to watch. Set `url` to the embed/video URL. |
-| Auto-close integration task | `action_url` | Integration-style task that can close through an external/action URL pattern. PDI example uses `integrating_system=cicplus` for tax forms. |
-| Create Journey Accelerator Action Plan | `create_JA_plan` | Starts a Journey Accelerator plan/action-plan flow. Set JA plan-related fields such as plan type/name/description or auto-create behavior as required. |
+| HR task type | Value | Use when | Required / important fields |
+| --- | --- | --- | --- |
+| HR Service | `hr_service` | A to-do should guide the assignee into another HR Service or create a child HR case. Good for benefit enrollment, payroll setup, profile completion, or child COE work. Prefer a direct Fulfiller `HR Service` activity if no intermediate to-do is needed. | `hr_service`; field mappings from LE case to generated case, such as `subject_person` and `opened_for`; set `wait_for_generated_tasks_to_complete` if the parent activity must wait for the child case. |
+| Submit Catalog Item | `submit_catalog_item` | A to-do should submit one catalog item/request, usually IT, access, equipment, facilities, or workplace service. Prefer direct Fulfiller `Catalog Item` activity if no employee/agent action is needed first. | `sc_cat_item`; field mappings such as `subject_person -> requested_for`; wait flag if request completion gates the journey. |
+| Submit Order Guide | `submit_order_guide` | The assignee needs a bundle of catalog items, such as new-hire equipment/access packages. Prefer direct Fulfiller `Automated Order Guide` when the order guide can be submitted automatically. | `order_guide`; request/requested-for mappings; wait flag if request completion gates the journey. |
+| Collect Employee Input | `collect_Information` | Structured answers are needed from an employee, manager, opened-for user, or another case participant. Good for upstream branching and downstream activity creation from responses. | `employee_form`; assignee/assignment fields; verify survey/employee form visibility and who can respond. |
+| Checklist | `checklist` | Manual multi-step work must be tracked in one task for HR, manager, IT, Facilities, or Payroll. | `checklist_items`; assignment group/user; short description with actionable text. |
+| E-signature | `e_sign` | The user must electronically sign a managed document, knowledge article, or HR document template. | E-signature template or HR document template e-signature configuration; use current `e_sign`, not deprecated `credential`, `e_signature`, or `sign_document`. |
+| Schedule a meeting | `meeting` | A meeting invite must be scheduled from HR case/task, such as new-hire check-in, return-to-work meeting, or manager conversation. | Meeting subject/details/attendees/start/end/scheduling fields; Microsoft Outlook spoke is required for calendar scheduling capability. |
+| Mark When Complete | `mark_when_complete` | Simple acknowledgement/manual completion is enough. Best default for "confirm this", "do this outside ServiceNow", or lightweight manager/employee tasks. | Short description and description; task moves to Closed Complete when the user clicks Complete. Prefer this over Checklist when there are no real checklist items. |
+| Take Survey | `take_survey` | A survey/assessment record is required for feedback, satisfaction, onboarding/leave pulse, or manager feedback. | `survey`; confirm whether the subject person or other case-access users can answer in lifecycle context. |
+| Upload Documents | `upload_documents` | The assignee must attach files such as leave certification, return-to-work release, receipts, transcripts, tax forms, or profile documents. | Clear short description/instructions; task must be Ready or Work in Progress for upload. |
+| URL | `url` | The task is to visit a link and acknowledge access, such as external policy, portal page, knowledge article, vendor site, or third-party process. | `url`; short description that explains the expected action. |
+| View Video | `view_video` | The task is specifically to watch a video. | `url` to video/embed location; short description. |
+| Auto-close integration task | `action_url` | An external integration/vendor flow should close the task through an action URL or integration callback pattern. Good for tax/e-sign/vendor tasks where ServiceNow waits on an external system. | `integrating_system` and action URL/integration fields; verify external closure path and avoid using this for normal manual work. |
+| Create Journey Accelerator Action Plan | `create_JA_plan` | A manager-led Journey Accelerator plan/action plan should be created or reviewed, often for onboarding, internal mobility, mentoring, promotion, or career transition. | JA plan type/name/description/publish/auto-create fields as required. If not auto-created, the manager receives a to-do to create/review the plan. |
 
 Inactive PDI choices observed: Credential (`credential`), old E-signature (`e_signature`), and Sign Document (`sign_document`). Do not use them for new demos unless a plugin/customer requirement explicitly reactivates the pattern.
+
+HR task type selection shortcuts:
+- Use `mark_when_complete` for the simplest manual acknowledgement.
+- Use `checklist` only when multiple checklist items must be tracked inside one task.
+- Use `collect_Information` when the response data should be structured and can drive downstream logic.
+- Use `take_survey` when the artifact should be a survey response, not an employee form.
+- Use `upload_documents` when the primary output is attachments.
+- Use `url` or `view_video` for learning/reading/watching tasks that only need acknowledgement.
+- Use `hr_service`, `submit_catalog_item`, or `submit_order_guide` when the task launches a child service/request and consider whether the Lifecycle Event activity should wait for that child artifact to complete.
+- Use `action_url` only for integration-owned tasks that can auto-close from the external process.
+- Use `create_JA_plan` only when Journey Accelerator is the desired manager/mentor action-plan experience, not for normal Lifecycle Event task lists.
+
+## Employee/Fulfiller HR Task Configuration
+
+Use this pattern when the selected activity type is Employee or Fulfiller and the card should create an HR Task.
+
+1. Create or reuse an `sn_hr_core_template` with `table=sn_hr_core_task` and, for journey parent cases, `parent_case_table=sn_hr_le_case`.
+2. Set template assignment fields deliberately:
+   - employee-facing examples: `assignment_type=employee` and `assign_to=subject_person`, `opened_for`, or `subject_person.manager`
+   - support-team examples: `assignment_type=fulfiller` with `assignment_group` or `assign_to=assigned_to`
+3. Put the generated task defaults in `sn_hr_core_template.template` as an encoded assignment string, including `short_description`, `description`, `state`, `task_support_team`, parent-case visibility fields, `hr_task_type=<choice>`, and the type-specific reference fields.
+4. Create the `sn_hr_le_activity` with `activity_type=employee` or `fulfiller`, `hr_template=<template sys_id>`, and the OOTB HR Task fulfiller activity config. In the PDI the valid config is `sn_hr_le_fulfiller_activity_config` `b09d36cfc3132200b599b4ad81d3aef5` (`HR Task`).
+5. Set `owning_group`, `order_number`, `active=true`, and any `condition` or `audience_criteria` on the activity. Use `wait_for_generated_tasks_to_complete` when this task should gate downstream activity sets.
+6. Verify the saved activity by reading display values. If `fulfiller_activity` displays blank, the activity is misconfigured even if insert succeeded.
+
+Practical encoded template fields by task type:
+- `hr_service`: set `hr_service=<sn_hr_core_service>` and create field mappings when a child case/request must inherit lifecycle case values.
+- `submit_catalog_item`: set `sc_cat_item=<sc_cat_item>`. To prefill catalog variables, create `sn_hr_le_activity_field_mapping` with `map_from_table=sn_hr_le_case`, `map_from_field=<case field>`, `map_to_table=task`, `map_to_field=variables`, and `map_to_variable=<item_option_new>`. Match data types, for example `subject_person` can map to a catalog variable that references `sys_user`.
+- `submit_order_guide`: set `order_guide=<sc_cat_item_guide>`; use when the assignee must launch a bundle rather than one item. Use the same variable mapping shape as catalog items when order-guide variables need lifecycle values.
+- `collect_Information`: set `employee_form=<sn_hr_core_employee_form>`.
+- `checklist`: set `hr_task_type=checklist`; add checklist items through the supported checklist model when individual item tracking matters.
+- `e_sign`: set `sn_esign_esignature_configuration=<sn_esign_configuration>` or the customer-supported e-signature configuration field.
+- `meeting`: set `meeting_subject`, `meeting_details`, and scheduling fields such as `schedule_method=manual`; calendar scheduling needs the Microsoft Outlook spoke.
+- `mark_when_complete`: only task copy is normally required.
+- `take_survey`: set `survey=<asmt_metric_type>`.
+- `upload_documents`: write clear attachment instructions in `description`; generated task state must allow upload.
+- `url`: set `url=<https URL>`.
+- `view_video`: set `url=<video or embed URL>`.
+- `action_url`: use an OOTB/vendor integration template with `integrating_system=<system>`; arbitrary new `action_url` templates may be blocked by Business Rule validation.
+- `create_JA_plan`: set `hr_task_type=create_JA_plan` and Journey Accelerator plan fields when required; `auto_create_plan=false` creates a manager-facing create/review action.
+
+Field mapping notes:
+- Use `map_to_table=sc_request` and `map_to_field=requested_for` when mapping to generated request fields.
+- Use `map_to_table=task`, `map_to_field=variables`, and `map_to_variable=<item_option_new sys_id>` when mapping to catalog item/order guide variables.
+- Validate type compatibility yourself before creating mappings. A reference case field such as `subject_person` should map to a reference variable with the same target table, such as `sys_user`; date, choice, boolean, and text values should map to compatible variable types.
+
+## Document Template HR Services
+
+Use this pattern when a Lifecycle Event should generate or expose a document template through a child HR Service.
+
+1. Create an HTML document template on `sn_doc_html_template`, not the base `sn_doc_template` table directly:
+   - `name=<document template name>`
+   - `table=<case table used for tokens>`, for example `sn_hr_le_case`
+   - `state=published`, `active=true`, `language=en`
+   - `html_script_body=<HTML body with ${field} tokens>`
+   - optional layout fields: `page_size`, `top_bottom_margin`, `left_right_margin`, `footnote`, `header_image`, `footer_image`, and related image position/height fields.
+2. Match the template table to the HR Service case table that will hold the document data. If the journey parent and child service use `sn_hr_le_case`, use `sn_hr_le_case` so tokens such as `${subject_person}`, `${opened_for}`, `${subject_person.manager}`, and `${number}` resolve from that case.
+3. Create an HR case template (`sn_hr_core_template`) for the document HR Service. Use `table=<same HR case table>` and set `document_template=<sn_doc_template sys_id>` inside the encoded `template`, for example `short_description=Generate summary^document_template=<html_template>^priority=4^state=10^EQ`.
+4. Create a child HR Service (`sn_hr_core_service`) with `fulfillment_type=simple`, `service_table=<same HR case table>`, `template=<HR template>`, and `service_table_fields=document_template`. The service table field exposes the document template field on the generated HR case.
+   - Always set the mandatory case header view references: `header_config_opened_for=Default for opened for/approver` and `header_config_subject_person=Default for subject person/task assigned to`.
+5. From the source Lifecycle Event, call the child document HR Service with either:
+   - direct Fulfiller activity: `activity_type=fulfiller`, `fulfiller_activity=HR Service`, `hr_service=<child service>`
+   - Employee HR Task: `activity_type=employee`, `fulfiller_activity=HR Task`, `hr_template=<task template>` where the HR task type is `hr_service`.
+6. Create activity field mappings from the source case to the generated child case. At minimum map `subject_person -> subject_person` and `opened_for -> opened_for`; map any additional fields used by `${...}` tokens in `html_script_body`.
+
+Participants:
+- Use the `Participants` related list (`sn_doc_participant`) when the generated document needs online fill, review, or signature tasks. ServiceNow's document task flow uses participant `action` and `order` when initiating document tasks.
+- For an internal HR participant, set `doc_template_user` to a user reference field on the template table, such as `subject_person`, `opened_for`, `assigned_to`, or a manager/user dot-walk when allowed. Leave `participant_name` and `participant_email` empty unless you intentionally want those fields to override the selected user's name/email or support an external participant.
+- Choose `action=fill` when that participant supplies values, `action=review` when they only review, and `action=sign` when an e-signature task should be generated. For HTML templates with `action=sign`, insert a matching signature token such as `${signature:Subject Person}` in the body where the signature should render.
+- Use `order` to sequence participant tasks. Keep the participant `name` stable and human-readable because signature tokens refer to it.
+
+Document Template Blocks:
+- Use `Document Template Blocks` when a clause, paragraph, or section should be reusable across multiple HTML templates or conditionally selected at generation time. Do not create separate full templates only to vary one clause by country, employment type, eligibility, or case attributes.
+- Create a block container on `sn_doc_template_block` with `table=<same table or a parent table compatible with the HTML template>`, `name`, `active=true`, and optional `topic_detail`/description. Blocks are selectable from an HTML template only when the block table is in the template table hierarchy.
+- Add one or more content rows on `sn_doc_template_block_content`. Each row has `block`, `name`, `order`, `active`, `body`, optional `applies_when`, optional `applies_to` user criteria, and `applies_to_user`. If multiple content rows match, the lower `order` wins; if no condition/user criteria is supplied, the content is always applicable.
+- Add the block to the HTML template through the Add Blocks action whenever possible. The platform inserts a non-editable `data-dtblock-id="<block sys_id>"` snippet into `html_script_body` and maintains the `sn_doc_m2m_html_template_to_block` related-list row. The related-list row alone is not enough; the body must contain the block snippet where the conditional content should appear.
+- For generated or scripted setup, verify both the block marker in `html_script_body` and the `sn_doc_m2m_html_template_to_block` row. The Document Templates utility identifies block markers by `data-dtblock-id`.
+
+PDI lessons:
+- `sn_doc_html_template` extends `sn_doc_template`; Table API can create the concrete HTML record and capture it in the active Journey Designer update set.
+- Existing OOTB/demo HTML templates use `${field}` and dot-walked tokens such as `${subject_person.company}` in `html_script_body`.
+- HR Service form labels "Opened for / Approver view" and "Subject person / Task assignee view" are stored as `header_config_opened_for` and `header_config_subject_person`, both referencing `sn_hr_core_config_case`. The normal defaults in the PDI are `86d9872eb3900300f5302ddc16a8dc8b` (`Default for opened for/approver`) and `c4e9872eb3900300f5302ddc16a8dc91` (`Default for subject person/task assigned to`).
+- A direct HR Service activity can auto-create generic `sn_hr_core_case` mappings. If the child service uses a concrete table such as `sn_hr_le_case`, re-query mappings and keep the concrete valid mappings; remove duplicate generic mappings from the update set.
+- Use Table API reads as the verification source for new document templates in this PDI. Scoped Xplore template application confirmed the HR template can assign `document_template`, but Xplore did not reliably read newly created `sn_doc_template` rows by sys_id.
+- 2026-05-23 participant/block test created a `Subject Person` signing participant (`sn_doc_participant.action=sign`, `doc_template_user=subject_person`) and a reusable `sn_doc_template_block` on `sn_hr_le_case` with one unconditional `sn_doc_template_block_content` row. Capture was clean in the Journey Designer update set as `Participant`, `Document Template Block`, `Document Template Block Content`, and `HTML Template to Document Block`.
+- In this PDI, creating the records server-side works, but the UI-generated block snippet required care: verify `DocumentTemplateBlockUtils.extractBlocksFromHtmlSnippet(html_script_body)` returns the block sys_id. If it does not, the runtime block replacement will not find the block even if the related-list M2M row exists.
 
 ## Recommended Demo Build Pattern
 
@@ -87,6 +212,7 @@ Inactive PDI choices observed: Credential (`credential`), old E-signature (`e_si
 - Contextual Search and AI Search Assist can coexist on a producer. If AI Search Assist is configured but Contextual Search still appears, verify the portal's Enable AI Search flag, the `aisa_rp_config.active` flag, the AI Search profile's active/published state, and the active search variable on the producer.
 - If AI Search portal results find a catalog item/record producer but the action opens `id=form&table=sc_cat_item` instead of `id=sc_cat_item`, check `sp_ai_search_results_action_config` for the portal. Custom/branded portals may be missing from the action config `portals` list for the `ESC Portal Catalogs` source. Add portal-specific navigation and request actions pointing to the `sc_cat_item` portal page instead of changing the catalog item.
 - HR Service mandatory fields are partly UI/configuration-driven. The fields required for a valid service can change when fulfillment type, COE/service table, template, producer, case options, HR criteria, views, or case creation service config change. Inspect an equivalent OOTB service or read the configured form state before creating a new service through Table API.
+- For most HR Services, set `header_config_opened_for` to `Default for opened for/approver` and `header_config_subject_person` to `Default for subject person/task assigned to`. These are the mandatory form fields labeled "Opened for / Approver view" and "Subject person / Task assignee view"; do not confuse them with the boolean `subject_person_access`.
 - `sn_hr_le_activity.order_number` orders cards; `sn_hr_le_activity_set.display_order` orders stages. Do not confuse these with generic display order fields.
 - Activity Sets can auto-create placeholder stages when a Journey service is created. Remove unintended placeholders and their update XML before delivery.
 - Date triggers can target related fields such as `subject_person_job.job_start_date` or `leave_of_absence.first_day_of_leave`; make sure intake variables are copied to real case fields if a date trigger depends on them.
@@ -95,3 +221,6 @@ Inactive PDI choices observed: Credential (`credential`), old E-signature (`e_si
 - Flow activities need published/compiled subflows and valid field mappings. Direct Flow tests are not enough; verify the HRSD wrapper path with `sn_hr_le.hr_LEActivityFlow().generateFlowActivity(...)`.
 - Creating HR Services and activities through server-side GlideRecord can fail with little error detail in the PDI. Prefer Table API writes for these metadata records and then verify update capture.
 - Avoid cloning invalid OOTB/demo mappings blindly. Some baseline mappings target generic tables or show invalid validation state.
+- For Employee/Fulfiller HR Task activities, resolve the HR Task config from `sn_hr_le_fulfiller_activity_config` by name/display value. In the PDI the working sys_id is `b09d36cfc3132200b599b4ad81d3aef5`; using the wrong config sys_id can insert an activity with a blank card type.
+- Do not rely on patching `sn_hr_le_activity.fulfiller_activity` after insert to repair a bad HR Task activity. In the PDI, the bad value persisted; deleting and recreating the activity with the correct config was the reliable fix.
+- New `action_url` HR task templates can be blocked by the OOTB Business Rule `Stop create update action_url task type`. Reuse supported OOTB/vendor integration templates or build the vendor integration through the intended setup path.
