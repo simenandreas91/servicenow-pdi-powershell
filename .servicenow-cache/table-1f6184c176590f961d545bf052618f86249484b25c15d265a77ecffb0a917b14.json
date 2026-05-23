@@ -1,0 +1,264 @@
+{
+  "result": [
+    {
+      "sys_id": {
+        "display_value": "23f97811c3c18f5065eefdec05013178",
+        "value": "23f97811c3c18f5065eefdec05013178"
+      },
+      "target_name": {
+        "display_value": "Demo: Generate journey summary document",
+        "value": "Demo: Generate journey summary document"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 00:40:52",
+        "value": "2026-05-23 07:40:52"
+      },
+      "name": {
+        "display_value": "sn_hr_le_activity_aff9b411c3c18f5065eefdec050131ae",
+        "value": "sn_hr_le_activity_aff9b411c3c18f5065eefdec050131ae"
+      },
+      "type": {
+        "display_value": "Activity",
+        "value": "Activity"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "5c1af811c3c18f5065eefdec050131ee",
+        "value": "5c1af811c3c18f5065eefdec050131ee"
+      },
+      "target_name": {
+        "display_value": "opened_for",
+        "value": "opened_for"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 00:41:11",
+        "value": "2026-05-23 07:41:11"
+      },
+      "name": {
+        "display_value": "sn_hr_le_activity_field_mapping_d81af811c3c18f5065eefdec050131ea",
+        "value": "sn_hr_le_activity_field_mapping_d81af811c3c18f5065eefdec050131ea"
+      },
+      "type": {
+        "display_value": "Activity Field Mapping",
+        "value": "Activity Field Mapping"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "c41af811c3c18f5065eefdec050131e4",
+        "value": "c41af811c3c18f5065eefdec050131e4"
+      },
+      "target_name": {
+        "display_value": "subject_person",
+        "value": "subject_person"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 00:41:10",
+        "value": "2026-05-23 07:41:10"
+      },
+      "name": {
+        "display_value": "sn_hr_le_activity_field_mapping_8c1a7811c3c18f5065eefdec0501317e",
+        "value": "sn_hr_le_activity_field_mapping_8c1a7811c3c18f5065eefdec0501317e"
+      },
+      "type": {
+        "display_value": "Activity Field Mapping",
+        "value": "Activity Field Mapping"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "6fbf811dc3458f5065eefdec05013117",
+        "value": "6fbf811dc3458f5065eefdec05013117"
+      },
+      "target_name": {
+        "display_value": "Codex Manager Approval Journey Context",
+        "value": "Codex Manager Approval Journey Context"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 02:15:54",
+        "value": "2026-05-23 09:15:54"
+      },
+      "name": {
+        "display_value": "sn_doc_template_block_27bf811dc3458f5065eefdec05013112",
+        "value": "sn_doc_template_block_27bf811dc3458f5065eefdec05013112"
+      },
+      "type": {
+        "display_value": "Document Template Block",
+        "value": "Document Template Block"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "3bbf811dc3458f5065eefdec05013128",
+        "value": "3bbf811dc3458f5065eefdec05013128"
+      },
+      "target_name": {
+        "display_value": "Default journey context",
+        "value": "Default journey context"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 02:15:54",
+        "value": "2026-05-23 09:15:54"
+      },
+      "name": {
+        "display_value": "sn_doc_template_block_content_27bf811dc3458f5065eefdec05013120",
+        "value": "sn_doc_template_block_content_27bf811dc3458f5065eefdec05013120"
+      },
+      "type": {
+        "display_value": "Document Template Block Content",
+        "value": "Document Template Block Content"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "9ead0119c3458f5065eefdec050131e6",
+        "value": "9ead0119c3458f5065eefdec050131e6"
+      },
+      "target_name": {
+        "display_value": "Codex Demo Manager Approval Journey Document Service",
+        "value": "Codex Demo Manager Approval Journey Document Service"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 02:06:48",
+        "value": "2026-05-23 09:06:48"
+      },
+      "name": {
+        "display_value": "sn_hr_core_service_56e97411c3c18f5065eefdec05013161",
+        "value": "sn_hr_core_service_56e97411c3c18f5065eefdec05013161"
+      },
+      "type": {
+        "display_value": "HR Service",
+        "value": "HR Service"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "c0e93411c3c18f5065eefdec0501315c",
+        "value": "c0e93411c3c18f5065eefdec0501315c"
+      },
+      "target_name": {
+        "display_value": "Codex Demo Manager Approval Journey Document Service",
+        "value": "Codex Demo Manager Approval Journey Document Service"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 00:40:21",
+        "value": "2026-05-23 07:40:21"
+      },
+      "name": {
+        "display_value": "sn_hr_core_template_44e93411c3c18f5065eefdec05013159",
+        "value": "sn_hr_core_template_44e93411c3c18f5065eefdec05013159"
+      },
+      "type": {
+        "display_value": "HR Template",
+        "value": "HR Template"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "fdd93411c3c18f5065eefdec05013152",
+        "value": "fdd93411c3c18f5065eefdec05013152"
+      },
+      "target_name": {
+        "display_value": "Codex Demo Manager Approval Journey Summary",
+        "value": "Codex Demo Manager Approval Journey Summary"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 00:40:12",
+        "value": "2026-05-23 07:40:12"
+      },
+      "name": {
+        "display_value": "sn_doc_html_template_b1d93411c3c18f5065eefdec05013147",
+        "value": "sn_doc_html_template_b1d93411c3c18f5065eefdec05013147"
+      },
+      "type": {
+        "display_value": "HTML Template",
+        "value": "HTML Template"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "9450155dc3458f5065eefdec05013163",
+        "value": "9450155dc3458f5065eefdec05013163"
+      },
+      "target_name": {
+        "display_value": "",
+        "value": ""
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 02:18:24",
+        "value": "2026-05-23 09:18:24"
+      },
+      "name": {
+        "display_value": "sn_doc_m2m_html_template_to_block_1c50155dc3458f5065eefdec05013160",
+        "value": "sn_doc_m2m_html_template_to_block_1c50155dc3458f5065eefdec05013160"
+      },
+      "type": {
+        "display_value": "HTML Template to Document Block",
+        "value": "HTML Template to Document Block"
+      }
+    },
+    {
+      "sys_id": {
+        "display_value": "77bf811dc3458f5065eefdec0501312f",
+        "value": "77bf811dc3458f5065eefdec0501312f"
+      },
+      "target_name": {
+        "display_value": "Subject Person",
+        "value": "Subject Person"
+      },
+      "application": {
+        "display_value": "Journey designer",
+        "value": "70b67750c7010110eadc357098c26026"
+      },
+      "sys_created_on": {
+        "display_value": "2026-05-23 02:15:54",
+        "value": "2026-05-23 09:15:54"
+      },
+      "name": {
+        "display_value": "sn_doc_participant_7fbf811dc3458f5065eefdec05013129",
+        "value": "sn_doc_participant_7fbf811dc3458f5065eefdec05013129"
+      },
+      "type": {
+        "display_value": "Participant",
+        "value": "Participant"
+      }
+    }
+  ]
+}
