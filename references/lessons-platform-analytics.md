@@ -28,7 +28,8 @@ Platform Analytics still uses the Performance Analytics backend for indicators, 
 - `pa_cubes`: indicator sources. Important fields include `name`, `facts_table`, `conditions`, `frequency`, and `calendar`.
 - `sysauto_pa`: scheduled data collection jobs.
 - `pa_job_indicators`: collection job to indicator relationships.
-- `pa_scores`: collected score rows.
+- `pa_scores_l1`: primary collected score rows used by current PA widgets. The `indicator` field stores the numeric `pa_indicators.id`, not the indicator `sys_id`.
+- `pa_scores`: legacy/base score table; do not rely on manually inserting here for Platform Analytics widgets.
 
 Indicator `type` values observed in the PDI:
 
@@ -112,13 +113,17 @@ For indicator-backed Platform Analytics widgets, `par_dashboard_widget.component
   "period": "M",
   "enableRealTimeUpdate": false,
   "enableDrilldown": true,
-  "filterConfigurations": "@state.parFilters"
+  "filterConfigurations": [],
+  "followFilters": false,
+  "showFilterIcon": false
 }
 ```
 
 For single score indicator widgets, use macroponent `d24d53f60350de7a652caf3188a46ed2`. Existing single-score indicator widgets in the PDI commonly use blank `aggregateIndicator`, `frequency=10`, `scoreType=null`, and `period=M`.
 
 Do not enable real-time mode on indicator widgets that specify `metrics[0].aggregateIndicator`. Platform Analytics rejects that combination with "Invalid configuration. Indicators with aggregate are not supported for realtime." Keep `dataSources[0].allowRealTime=false`, `enableRealTimeUpdate=false`, and the indicator's `show_realtime_score=false` unless the widget is configured without an aggregate indicator.
+
+Do not leave score-only indicator widgets wired to `@state.parFilters` unless a known-good indicator widget does so successfully. Workspace dashboard filters that target task tables can cause indicator score widgets to show "There is no data for the selected criteria." Use `filterConfigurations=[]`, `followFilters=false`, and `showFilterIcon=false` for shared PA score widgets that should show collected score history independent of the agent's table filters.
 
 Do not replace personalized work widgets with PA indicators unless that is the intent. Dynamic filters such as "Me" and "One of My Groups" work well for real-time table-backed widgets, but scheduled PA score collection runs in a job/user context and can turn a personalized indicator into a global/admin-centered score. For agent dashboards, a good pattern is:
 
@@ -144,6 +149,8 @@ After creating indicators and widgets, verify all three layers:
    - `component_props.dataSources[0].uuid.indicator` matches the indicator sys_id
 3. Runtime sanity:
    - run a matching `GlideAggregate` against the facts table using the source semantics plus indicator conditions
+   - run the relevant `sysauto_pa` data collection job or create a narrow on-demand job for the new indicators
+   - verify rows in `pa_scores_l1` using `pa_indicators.id`, and verify `pa_snapshots` if `collect_records=true`
    - narrow-check `sys_update_xml` rows for `pa_indicators_<sys_id>` and `par_dashboard_widget_<sys_id>`
 
 Example verification query for the FFI high-priority incident indicator:
@@ -157,6 +164,33 @@ if (ga.next()) gs.info(ga.getAggregate('COUNT'));
 ```
 
 If the dashboard needs historical trends, create one on-demand historical `sysauto_pa` job for a bounded date range and relate the new indicators through `pa_job_indicators`. Do not run historical collection repeatedly for the same indicator/date range because it can delete and rebuild scores in the covered periods.
+
+The UI's **Execute Now** action for `sysauto_pa` runs:
+
+```javascript
+current.update();
+SncTriggerSynchronizer.executeNow(current);
+```
+
+For a demo dashboard, an idempotent on-demand collection job can be created as:
+
+```javascript
+var job = new GlideRecord('sysauto_pa');
+job.initialize();
+job.setValue('name', 'FFI Agent Dashboard Demo PA Collection');
+job.setValue('active', true);
+job.setValue('run_type', 'on_demand');
+job.setValue('run_as', '6816f79cc0a8016401c5a33be04be441');
+job.setValue('collect', 'scores_text');
+job.setValue('score_operator', 'relative');
+job.setValue('score_relative_start', '7');
+job.setValue('score_relative_start_interval', 'days');
+job.setValue('score_relative_end', '0');
+job.setValue('score_relative_end_interval', 'days');
+var jobId = job.insert();
+```
+
+Then create one `pa_job_indicators` row per indicator with `job=<jobId>`, `indicator=<pa_indicators sys_id>`, `active=true`, `collect=1`, `collect_indicator=true`, and execute the job. Confirm collection by checking `pa_scores_l1.indicator=<pa_indicators.id>`.
 
 ## Dashboard Skeleton
 
