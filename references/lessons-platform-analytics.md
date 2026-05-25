@@ -89,7 +89,7 @@ For indicator-backed Platform Analytics widgets, `par_dashboard_widget.component
 ```json
 {
   "dataSources": [{
-    "allowRealTime": true,
+    "allowRealTime": false,
     "allowTotalValue": true,
     "indicatorType": "1",
     "isScriptedIndicator": false,
@@ -103,21 +103,22 @@ For indicator-backed Platform Analytics widgets, `par_dashboard_widget.component
   "metrics": [{
     "dataSource": "<same datasource id>",
     "id": "<base64 metric id>",
-    "aggregateIndicator": "1d7a2073eb21020065deac6aa206fe5c",
+    "aggregateIndicator": "",
     "frequency": 10,
-    "frequencyInterval": "DAY",
     "axisId": "primary",
     "numberFormat": {"customFormat": true, "decimalPrecision": 0}
   }],
-  "scoreType": "latest",
-  "period": "D",
-  "enableRealTimeUpdate": true,
+  "scoreType": null,
+  "period": "M",
+  "enableRealTimeUpdate": false,
   "enableDrilldown": true,
   "filterConfigurations": "@state.parFilters"
 }
 ```
 
-For single score indicator widgets, use macroponent `d24d53f60350de7a652caf3188a46ed2`. Existing indicator widgets in the PDI commonly use aggregate indicator `1d7a2073eb21020065deac6aa206fe5c` (`By month SUM +`) even when the score card shows the latest score.
+For single score indicator widgets, use macroponent `d24d53f60350de7a652caf3188a46ed2`. Existing single-score indicator widgets in the PDI commonly use blank `aggregateIndicator`, `frequency=10`, `scoreType=null`, and `period=M`.
+
+Do not enable real-time mode on indicator widgets that specify `metrics[0].aggregateIndicator`. Platform Analytics rejects that combination with "Invalid configuration. Indicators with aggregate are not supported for realtime." Keep `dataSources[0].allowRealTime=false`, `enableRealTimeUpdate=false`, and the indicator's `show_realtime_score=false` unless the widget is configured without an aggregate indicator.
 
 Do not replace personalized work widgets with PA indicators unless that is the intent. Dynamic filters such as "Me" and "One of My Groups" work well for real-time table-backed widgets, but scheduled PA score collection runs in a job/user context and can turn a personalized indicator into a global/admin-centered score. For agent dashboards, a good pattern is:
 
@@ -133,7 +134,7 @@ After creating indicators and widgets, verify all three layers:
    - `type=Automated`
    - expected `cube`
    - expected `conditions`
-   - `show_realtime_score=true`
+   - `show_realtime_score=false` when the dashboard widget uses an aggregate indicator
    - `collect_records=true`
    - `sys_scope`/`sys_package` are the intended app
 2. Dashboard wiring:
