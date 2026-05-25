@@ -20,6 +20,143 @@ Use this when creating or modifying Platform Analytics dashboards (`par_dashboar
 7. For a generated workspace update set, a broad `Confirm-ServiceNowUpdateCapture.ps1` may report pre-existing mixed-scope rows. Narrow-check dashboard rows in `sys_update_xml` by `nameSTARTSWITHpar_dashboard` and by widget `target_nameLIKE<stable prefix>`.
 8. Restore preferences.
 
+## Indicator Backend Model
+
+Platform Analytics still uses the Performance Analytics backend for indicators, sources, breakdowns, scores, and collection jobs. In the PDI, the key tables are:
+
+- `pa_indicators`: automated, formula, manual, and external indicators. Important fields include `name`, `type`, `frequency`, `direction`, `unit`, `aggregate`, `cube`, `conditions`, `collect_records`, `show_realtime_score`, `formula`, and `scripted`.
+- `pa_cubes`: indicator sources. Important fields include `name`, `facts_table`, `conditions`, `frequency`, and `calendar`.
+- `sysauto_pa`: scheduled data collection jobs.
+- `pa_job_indicators`: collection job to indicator relationships.
+- `pa_scores`: collected score rows.
+
+Indicator `type` values observed in the PDI:
+
+- `1`: Automated
+- `2`: Formula
+- `3`: Manual
+
+Useful reference values:
+
+- Daily frequency: `10`
+- Count aggregate: `1`
+- Count unit `#`: `17b365e2d7320100ba986f14ce6103ad`
+- Minimize direction: `2`
+- Maximize direction: `3`
+
+Official docs route new/migrated instances under **Platform Analytics Administration** for backend PA configuration. The old backend tables and jobs remain the implementation surface even when the dashboard UI is the newer Platform Analytics experience.
+
+## Indicator Creation Pattern
+
+Prefer reusing existing `pa_cubes` sources when they already encode the correct date-aware population. Sources are shared across many indicators and collection jobs query each source once, so duplicate sources add cost and make definitions drift.
+
+Good reusable ITSM sources in Simen's PDI:
+
+- `Incidents.Open`: table `incident`, daily source for records open during the collection day.
+- `RequestedItems.Open`: table `sc_req_item`, daily source for records open during the collection day.
+- `Incidents.New`, `Incidents.Closed`, `Incidents.Resolved`
+- `RequestedItems.New`, `RequestedItems.Closed`
+
+Create a narrow automated indicator on an existing source by setting:
+
+```javascript
+var indicator = new GlideRecord('pa_indicators');
+indicator.initialize();
+indicator.setValue('name', 'FFI - High priority open incidents');
+indicator.setValue('label', 'High priority open incidents');
+indicator.setValue('type', '1'); // Automated
+indicator.setValue('frequency', '10'); // Daily
+indicator.setValue('direction', '2'); // Minimize
+indicator.setValue('unit', '17b365e2d7320100ba986f14ce6103ad'); // #
+indicator.setValue('aggregate', '1'); // Count
+indicator.setValue('cube', '<pa_cubes sys_id>');
+indicator.setValue('conditions', 'priorityIN1,2^EQ');
+indicator.setValue('collect_records', true);
+indicator.setValue('show_realtime_score', true);
+indicator.setValue('scripted', false);
+indicator.setValue('precision', '0');
+var indicatorId = indicator.insert();
+```
+
+`conditions` on the indicator are applied in addition to the source filter. Keep broad, reusable date logic on the source and metric-specific filters on the indicator.
+
+Use formula indicators when the value is derived from other indicators, for example `([[Indicator A]] / [[Indicator B]]) * 100`. Avoid scripts, GlideRecords, or GlideAggregates in indicator formulas; official guidance calls out the performance cost. Use manual indicators only when humans will enter scores in the scoresheet; manual indicators have no indicator source and are not populated by collection jobs.
+
+## Indicator Widgets
+
+For indicator-backed Platform Analytics widgets, `par_dashboard_widget.component_props` uses `sourceType: "indicator"` rather than `sourceType: "table"`:
+
+```json
+{
+  "dataSources": [{
+    "allowRealTime": true,
+    "allowTotalValue": true,
+    "indicatorType": "1",
+    "isScriptedIndicator": false,
+    "label": "PA high priority incident backlog",
+    "sourceType": "indicator",
+    "uuid": {"indicator": "<pa_indicators sys_id>", "breakdowns": []},
+    "preferredVisualizations": ["d24d53f60350de7a652caf3188a46ed2"],
+    "id": "<base64 id>",
+    "dataCategories": ["trend", "group", "simple"]
+  }],
+  "metrics": [{
+    "dataSource": "<same datasource id>",
+    "id": "<base64 metric id>",
+    "aggregateIndicator": "1d7a2073eb21020065deac6aa206fe5c",
+    "frequency": 10,
+    "frequencyInterval": "DAY",
+    "axisId": "primary",
+    "numberFormat": {"customFormat": true, "decimalPrecision": 0}
+  }],
+  "scoreType": "latest",
+  "period": "D",
+  "enableRealTimeUpdate": true,
+  "enableDrilldown": true,
+  "filterConfigurations": "@state.parFilters"
+}
+```
+
+For single score indicator widgets, use macroponent `d24d53f60350de7a652caf3188a46ed2`. Existing indicator widgets in the PDI commonly use aggregate indicator `1d7a2073eb21020065deac6aa206fe5c` (`By month SUM +`) even when the score card shows the latest score.
+
+Do not replace personalized work widgets with PA indicators unless that is the intent. Dynamic filters such as "Me" and "One of My Groups" work well for real-time table-backed widgets, but scheduled PA score collection runs in a job/user context and can turn a personalized indicator into a global/admin-centered score. For agent dashboards, a good pattern is:
+
+- table-backed widgets for "my work" and group queues
+- PA indicator widgets for shared backlog/trend insights
+
+## Indicator Verification
+
+After creating indicators and widgets, verify all three layers:
+
+1. Indicator metadata:
+   - `pa_indicators.name`
+   - `type=Automated`
+   - expected `cube`
+   - expected `conditions`
+   - `show_realtime_score=true`
+   - `collect_records=true`
+   - `sys_scope`/`sys_package` are the intended app
+2. Dashboard wiring:
+   - `par_dashboard_widget.canvas` is the tab canvas, not the base canvas
+   - `component` is the intended macroponent
+   - `component_props.dataSources[0].sourceType == "indicator"`
+   - `component_props.dataSources[0].uuid.indicator` matches the indicator sys_id
+3. Runtime sanity:
+   - run a matching `GlideAggregate` against the facts table using the source semantics plus indicator conditions
+   - narrow-check `sys_update_xml` rows for `pa_indicators_<sys_id>` and `par_dashboard_widget_<sys_id>`
+
+Example verification query for the FFI high-priority incident indicator:
+
+```javascript
+var ga = new GlideAggregate('incident');
+ga.addEncodedQuery('opened_atONToday@javascript:gs.beginningOfToday()@javascript:gs.endOfToday()^ORopened_at<javascript:gs.beginningOfToday()^resolved_atISEMPTY^ORresolved_at>javascript:gs.endOfToday()^state!=8^priorityIN1,2');
+ga.addAggregate('COUNT');
+ga.query();
+if (ga.next()) gs.info(ga.getAggregate('COUNT'));
+```
+
+If the dashboard needs historical trends, create one on-demand historical `sysauto_pa` job for a bounded date range and relate the new indicators through `pa_job_indicators`. Do not run historical collection repeatedly for the same indicator/date range because it can delete and rebuild scores in the covered periods.
+
 ## Dashboard Skeleton
 
 Required starting values:
