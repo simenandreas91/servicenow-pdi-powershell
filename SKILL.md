@@ -34,6 +34,7 @@ Default to the bundled PowerShell helpers for fast, narrow, repeatable work. Use
    - unfamiliar table/write: run `Get-ServiceNowTableShape.ps1`
    - returned after time away: run `Export-ServiceNowDelta.ps1`
    - complex unfamiliar app/process: build a temporary ServiceNow graph map with `references/servicenow-graph-mapping.md`
+   - broad OOTB lookup or repeated platform navigation: use generated indexes from `references/service-now-indexing.md`
 4. Decide OOTB vs custom with **Decision Ladder**. State the winning path and why when architecture matters.
 5. Before edits, run `Set-ServiceNowUpdateSetContext.ps1` with a snapshot path.
 6. Implement narrowly using existing naming, scope, package, and script patterns.
@@ -74,6 +75,9 @@ Do not store secrets in this skill. Keep them in `.env` or an OS credential stor
 - `Save-ServiceNowCustomerUpdate.ps1`: force capture only for legitimate application files that did not capture naturally.
 - `Get-ServiceNowScopeInventory.ps1`: cached inventory for common artifacts in a scope.
 - `Find-ServiceNowArtifact.ps1`: targeted artifact search by name/event/subject/body.
+- `Build-ServiceNowInstanceIndex.ps1`: generated local metadata index for broad table/artifact lookup and navigation; metadata-only by default.
+- `Find-ServiceNowIndexedArtifact.ps1`: fast local search across generated tables, fields, and artifacts.
+- `Get-ServiceNowIndexedImpact.ps1`: basic local impact lookup using generated index edges.
 - `Get-ServiceNowTableShape.ps1`: dictionary, choices, and optional ACL summary.
 - `Get-ServiceNowUpdateSetSummary.ps1`: update-set contents, mixed-scope risk, type counts, likely noise.
 - `Test-ServiceNowNotification.ps1`: event/notification configuration and optional event trigger.
@@ -117,6 +121,27 @@ Verify scoped capture:
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
 ```
+
+Build and query a local metadata index:
+
+```powershell
+& "$HOME/.codex/skills/servicenow-pdi/scripts/Build-ServiceNowInstanceIndex.ps1" `
+  -Artifacts `
+  -OutputPath .\.servicenow-index `
+  -Profile pdi `
+  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
+
+& "$HOME/.codex/skills/servicenow-pdi/scripts/Find-ServiceNowIndexedArtifact.ps1" `
+  -Text "approval" `
+  -IndexPath .\.servicenow-index `
+  -Limit 20
+
+& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowIndexedImpact.ps1" `
+  -Key "sysapproval_approver" `
+  -IndexPath .\.servicenow-index
+```
+
+Use the index to narrow candidates only. Verify exact records live with Table API or Xplore before edits.
 
 Read-only Xplore probe:
 
@@ -259,6 +284,7 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 - FFI Personellsikkerhet app (`x_personellsikkerh`): load `references/lessons-personellsikkerhet.md`.
 - Custom scoped application, new app/table/role/navigation, App Engine Studio, ServiceNow Studio, source control, Application Repository, or app deployment decisions: load `references/custom-scoped-apps.md`.
 - Unfamiliar application, tangled process, cross-channel behavior, or impact analysis before edits: load `references/servicenow-graph-mapping.md`.
+- Broad OOTB lookup, repeated table/artifact navigation, or generated platform knowledge caches: load `references/service-now-indexing.md`.
 - Service Operations Workspace, action bar buttons, modals, or Declarative Actions: load `references/lessons-sow.md`; for modal/action implementation also load `references/lessons-workspace-modals.md`.
 - UI16 popup/modal work, UI Pages, `GlideDialogWindow`, classic Client Scripts, UI Actions, or GlideAjax modal saves: load `references/lessons-ui16.md`.
 - Now Assist, Now Assist for HRSD, Skill Kit, AI Search Genius Results, AI agents, AI Agent Studio, agentic workflows, MCP tools, AI Control Tower, model providers, or AI privacy/safety: load `references/now-assist.md`.

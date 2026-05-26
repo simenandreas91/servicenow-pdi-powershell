@@ -29,6 +29,7 @@ Use these workflows to move quickly without guessing. Keep each run narrow: insp
 | HRSD / Journey | COE, service, template, producer, Journey metadata | HRSD metadata before raw script | Generated case/task/activity/approval/notification |
 | Custom scoped app | App candidate, existing product fit, scope, data model, roles, deployment path | Studio/AES/IDE with scoped app, table, role, ACL, UX, logic | Sample record, generated ACLs, app-file capture, channel test |
 | Unfamiliar app/process | Graph map of tables, scripts, flows, ACLs, UI, events, runtime evidence | Highest-level confirmed artifact that controls behavior | Same mapped path end-to-end plus one-hop blast-radius checks |
+| Broad OOTB lookup | Generated ServiceNow index, targeted artifact search, table shape | Lookup from index first, live verify before edits | Fresh record read/Xplore proof on exact artifact |
 | Integration / import | REST/data source/transform/logs | Connection alias/spoke/transform config | Sample payload or transform run plus logs/errors |
 | Notification | Event, notification, template, recipients | Event/notification config | `sysevent`, `sys_email`, recipient/body marker |
 | Update set | Health check and update-set summary | One scoped update set per app | mixed-scope=false or explained platform rows |
