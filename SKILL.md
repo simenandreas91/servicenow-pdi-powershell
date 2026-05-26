@@ -62,6 +62,8 @@ If generic `SN_INSTANCE`/`SN_USER`/`SN_PASS` variables are set, pass the intende
 
 Do not store secrets in this skill. Keep them in `.env` or an OS credential store.
 
+In this Codex environment, the live skill helpers are under `/root/.agents/skills/servicenow-pdi/scripts`. If a copied command points at `$HOME/.codex/skills/servicenow-pdi/scripts` and PowerShell says the script file is not recognized, switch to the `/root/.agents/...` path and continue.
+
 ## Helper Selection
 
 - `Invoke-ServiceNowTable.ps1`: default for narrow reads, creates, patches, schema records, update sets, and setup data.
@@ -90,7 +92,7 @@ Use `-Refresh` when cache may be stale and `-NoCache` for verification immediate
 Narrow read:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
   -Table sys_script `
   -Query "name=My rule^active=true" `
   -Fields "sys_id,name,collection,when,active,sys_scope,sys_package,updated_on" `
@@ -104,7 +106,7 @@ Narrow read:
 Set update context:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Set-ServiceNowUpdateSetContext.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Set-ServiceNowUpdateSetContext.ps1" `
   -Scope "<scope or global>" `
   -Name "<story/change> - <short description>" `
   -SnapshotPath .\.sn-pref-snapshot.json `
@@ -115,7 +117,7 @@ Set update context:
 Verify scoped capture:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Confirm-ServiceNowUpdateCapture.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Confirm-ServiceNowUpdateCapture.ps1" `
   -UpdateSetSysId "<sys_update_set>" `
   -ExpectedApplication "<sys_scope.sys_id-or-global>" `
   -Profile pdi `
@@ -125,18 +127,18 @@ Verify scoped capture:
 Build and query a local metadata index:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Build-ServiceNowInstanceIndex.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Build-ServiceNowInstanceIndex.ps1" `
   -Artifacts `
   -OutputPath .\.servicenow-index `
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
 
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Find-ServiceNowIndexedArtifact.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Find-ServiceNowIndexedArtifact.ps1" `
   -Text "approval" `
   -IndexPath .\.servicenow-index `
   -Limit 20
 
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowIndexedImpact.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Get-ServiceNowIndexedImpact.ps1" `
   -Key "sysapproval_approver" `
   -IndexPath .\.servicenow-index
 ```
@@ -157,13 +159,13 @@ $script = @'
   gs.print('CODEX_RESULT_START' + JSON.stringify(result) + 'CODEX_RESULT_END');
 })();
 '@
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowXploreScript.ps1" -Script $script -Profile pdi
+& "/root/.agents/skills/servicenow-pdi/scripts/Invoke-ServiceNowXploreScript.ps1" -Script $script -Profile pdi
 ```
 
 Restore preferences:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Restore-ServiceNowPreferenceSnapshot.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Restore-ServiceNowPreferenceSnapshot.ps1" `
   -SnapshotPath .\.sn-pref-snapshot.json `
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
@@ -172,7 +174,7 @@ Restore preferences:
 PDI preflight:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowPdiHealth.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Get-ServiceNowPdiHealth.ps1" `
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
 ```
@@ -186,7 +188,7 @@ Use this when Simen asks for the Andrew approach, Andrew Pishchulin's custom Ser
 ```powershell
 git clone https://github.com/elinsoftware/servicenow-react-app.git '<project path>'
 Set-Location '<project path>'
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Initialize-ServiceNowAndrewReactApp.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Initialize-ServiceNowAndrewReactApp.ps1" `
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env' `
   -Install
@@ -215,7 +217,7 @@ Use this when Simen asks to finish an update set, export XML, and email it.
 2. Inspect the update set before completing:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowUpdateSetSummary.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Get-ServiceNowUpdateSetSummary.ps1" `
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env' `
   -UpdateSetSysId '<sys_update_set>'
@@ -224,7 +226,7 @@ Use this when Simen asks to finish an update set, export XML, and email it.
 3. If the summary is clean, complete and export with the helper:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Export-ServiceNowUpdateSetXml.ps1" `
+& "/root/.agents/skills/servicenow-pdi/scripts/Export-ServiceNowUpdateSetXml.ps1" `
   -Profile pdi `
   -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env' `
   -UpdateSetSysId '<sys_update_set>' `
