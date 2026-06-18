@@ -294,6 +294,7 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 - Service Operations Workspace, action bar buttons, modals, or Declarative Actions: load `references/lessons-sow.md`; for modal/action implementation also load `references/lessons-workspace-modals.md`.
 - UI16 popup/modal work, UI Pages, `GlideDialogWindow`, classic Client Scripts, UI Actions, or GlideAjax modal saves: load `references/lessons-ui16.md`.
 - Now Assist, Now Assist for HRSD, Skill Kit, AI Search Genius Results, AI agents, AI Agent Studio, agentic workflows, MCP tools, AI Control Tower, model providers, or AI privacy/safety: load `references/now-assist.md`.
+- External ServiceNow MCP servers, third-party agent tools, broad MCP tool surfaces, MCP installation/evaluation, or deciding whether an MCP is safe enough for ServiceNow reads/writes/scripts/update sets: load `references/external-mcp-evaluation.md`.
 - Australia release AI development features, Build Agent, ServiceNow Studio AI-assisted app generation, MCP Server Console, or MCP Client: load `references/australia-ai-platform.md` plus `references/now-assist.md` when runtime AI configuration is involved.
 - Integrations, REST messages, SAP SuccessFactors, import/export, auth profiles, or connection aliases: load `references/integrations.md`; use `references/lessons-integrations.md` for durable local import/integration lessons.
 - Debugging ACLs, hidden records, role visibility, before-query rules, or user criteria: load `references/debugging.md`.
@@ -393,7 +394,7 @@ Portal/workspace: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp_theme`
 
 HRSD: `sn_hr_core_service`, `sn_hr_core_template`, `sn_hr_core_task`, `sn_hr_core_criteria`, `sn_hr_le_case`, `sn_jny_journey_config`, `sn_hr_le_activity_set`, `sn_hr_le_activity`, `sn_hr_le_activity_field_mapping`, `sc_cat_item_producer`, `item_option_new`, `question_choice`.
 
-Integration/import: `sys_rest_message`, `sys_rest_message_fn`, `sys_outbound_http_log`, `sys_alias`, `sys_connection`, `http_connection`, `sys_auth_profile_basic`, `oauth_entity_profile`, `sys_data_source`, `sys_attachment`, `sys_import_set`, `sys_import_set_run`, `sys_import_set_row_error`, `sys_transform_map`, `sys_transform_entry`.
+Integration/import: `sys_rest_message`, `sys_rest_message_fn`, `sys_outbound_http_log`, `sys_alias`, `sys_connection`, `http_connection`, `sys_auth_profile_basic`, `oauth_entity_profile`, `sys_ws_definition`, `sys_ws_version`, `sys_ws_operation`, `sys_ws_query_parameter`, `sys_ws_header`, `sys_data_source`, `sys_attachment`, `sys_import_set`, `sys_import_set_run`, `sys_import_set_row_error`, `sys_transform_map`, `sys_transform_entry`, `sys_transform_script`.
 
 Known IDs: admin user `6816f79cc0a8016401c5a33be04be441`; global scope `global`; Employee Center scope `sn_ex_sp` / app `4249e63a28d54d61bb6fbf61fd86cccb`; Xplore app `Xplore: Developer Toolkit` version `5.02` sys_id `0f6ab99a0f36060094f3c09ce1050ee8`; Super Search widget id `super_search_widget`, sys_id `3b9d29f7c34083106b68770d0501314c`.
 
