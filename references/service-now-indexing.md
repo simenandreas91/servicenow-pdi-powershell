@@ -41,6 +41,16 @@ The useful idea from `cocoindex-io/cocoindex-code` is optional semantic discover
 
 `ccc` is optional. Do not make it a required dependency for the skill or block ServiceNow work when it is unavailable.
 
+The useful idea from `chopratejas/headroom` is reversible context compression:
+
+1. route large outputs by content type before summarizing them, such as JSON arrays, search results, logs, diffs, Markdown, and script/code.
+2. preserve stable identifiers and structure first: table names, sys_ids, update-set ids, artifact names, field names, choices, timestamps, errors, and exact file paths.
+3. store compact summaries separately from retrievable originals, so a narrow follow-up can fetch the full record, script body, log, or export when needed.
+4. measure usefulness by task quality and verification evidence, not token savings alone.
+5. keep compression local-first for ServiceNow-derived data; do not send exported metadata, scripts, logs, or customer-sensitive records to external compression, embedding, or telemetry services without explicit task-level approval.
+
+Do not add Headroom as a default dependency for this skill. Borrow the architecture for generated indexes, helper output shaping, and lessons extraction. Install or wrap an agent with Headroom only after a concrete repeated context-size problem is identified and Simen approves the extra local service.
+
 ## ServiceNow Index Shape
 
 Prefer a generated JSON or SQLite index outside the base skill context. Suggested files:
