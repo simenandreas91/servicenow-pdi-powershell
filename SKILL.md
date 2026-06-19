@@ -304,6 +304,10 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 - Practical ServiceNow pitfalls and secondary community heuristics: load `references/snprotips.md` only as supporting context.
 - Official docs research: load `references/official-docs.md`; prefer official docs for API contracts, table semantics, plugin behavior, and release-sensitive facts.
 
+## HRSD Template Guidance
+
+- For HR task templates, use rich description instead of plain description when task text needs dynamic values. Rich description supports template variables that dot-walk to the parent HR case, such as `${parent.assigned_to}` and `${parent.opened_by}`, and it can read record producer question answers through `${parent.variables.<variable_name>}`, such as `${parent.variables.name_of_variable}` or `${parent.variables.name_of_variable_number_two}`.
+
 ## Safety Checkpoints
 
 Load `references/safety-checklists.md` before high-risk changes involving update sets, fix scripts, flows, ACLs, integrations, imports, HRSD, portals/workspaces, or production-like data.
