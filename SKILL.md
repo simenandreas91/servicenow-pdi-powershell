@@ -307,7 +307,7 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 
 ## HRSD Template Guidance
 
-- For HR task templates, use rich description instead of plain description when task text needs dynamic values. Rich description supports template variables that dot-walk to the parent HR case, such as `${parent.assigned_to}` and `${parent.opened_by}`, and it can read record producer question answers through `${parent.variables.<variable_name>}`, such as `${parent.variables.name_of_variable}` or `${parent.variables.name_of_variable_number_two}`.
+- For HR task templates, always put task instructions in `rich_description`, not plain `description`, even when the current text is static. Rich description supports HTML formatting and template variables that dot-walk to the parent HR case, such as `${parent.assigned_to}` and `${parent.opened_by}`, and it can read record producer question answers through `${parent.variables.<variable_name>}`, such as `${parent.variables.name_of_variable}` or `${parent.variables.name_of_variable_number_two}`.
 - For HR task template due dates, use the `HR task template due dates` guidance in `references/hrsd-development-guide.md`: choose assignment-date mode or parent-case-table mode deliberately, set the due-date fields on `sn_hr_core_template`, and verify generated `sn_hr_core_task.due_date` with a runtime task.
 
 ## Safety Checkpoints
