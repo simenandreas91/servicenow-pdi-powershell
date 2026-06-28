@@ -14,6 +14,38 @@
 - For portal catalog cleanup, query active candidates with `active=true^hide_sp=false^visible_standalone=true^sc_catalogsISNOTEMPTY` and exclude named keepers by sys_id. Some `sc_cat_item_content` records can be found through GlideRecord on `sc_cat_item` but fail Table API PATCH by base-table sys_id; with the intended update set current, use a constrained exact-sys_id GlideRecord update and verify `sys_update_xml` capture.
 - There is no proven OOTB property in the PDI to hide only empty variables from the RITM Variable Editor. For UI16/classic, the upgrade-safe pattern that worked is an additive Catalog Client Script on the catalog item with `type=onLoad`, `applies_catalog=false`, `applies_req_item=true`, and `applies_sc_task` only if catalog task behavior is desired. For a generic script, loop over `g_form.nameMap` and use each entry's `prettyName`; `g_form.getFieldNames()` is not available in this Variable Editor context, and `g_form.getEditableFields()` returns `ni.VE...` real names that can be read but do not hide correctly with `g_form.setDisplay()`. Check `g_form.getValue(prettyName)` and call `g_form.setDisplay(prettyName, false)` only when the value is blank/whitespace or an empty MRVS payload such as `[]`. Wrap per-field reads in `try/catch` so non-standard catalog fields do not break the script. A short delayed retry with `setTimeout` helps if classic rendering finishes after `onLoad`. This keeps OOTB formatter/UI macro code unchanged and avoids touching internal option tables.
 - SOW Workspace does not load the classic VEditor script body or item-level Catalog Client Scripts in the page, even when `applies_req_item=true`. A table-level `sys_script_client` on `sc_req_item` does run in SOW and can hide variables by original variable name, but SOW does not expose `g_form.nameMap` to that script. The SOW-safe generic pattern is: client-callable Script Include receives the RITM sys_id, verifies `GlideRecordSecure('sc_req_item').canRead()`, queries `sc_item_option_mtom -> sc_item_option -> item_option_new`, returns the names whose option value is blank/whitespace or `[]`, and an `sc_req_item` onLoad client script calls it with GlideAjax then runs `g_form.setDisplay(variableName, false)` for each returned name. Keep any item-specific guard in the client script if the behavior should not apply to every RITM.
+- Employee Center/Service Portal catalog forms can show the OOTB `Add attachments` drop zone independently of attachment-type catalog variables. Do not add a mandatory Attachment variable just to let users attach supporting files; it creates a second upload control and appears as a required question. Use an attachment variable only when the process needs that file as a named variable answer, otherwise rely on the standard attachment area and set item-level mandatory attachment behavior only if attachments must be required.
+
+## Catalog Variable Attributes
+
+Record producer question variables are catalog variables (`item_option_new`), and their Variable attributes field is stored in `item_option_new.attributes`. ServiceNow treats the value as comma-separated attributes (`key=value,key2=value2`) with semicolon-separated lists inside one attribute (`field1;field2`). Attribute support is type-specific; verify behavior in the target UI because some catalog-variable attributes are desktop-only or render differently in Service Portal/Employee Center.
+
+Official Service Catalog variable attributes to remember:
+
+| Attribute | Applies to | Use |
+| --- | --- | --- |
+| `allowed_extensions=txt;pdf` | Attachment | Restricts attachment file extensions. |
+| `max_file_size=2` | Attachment | Caps attachment size in MB. |
+| `barcode=true` | Single Line Text | Enables mobile barcode scanning into the variable. |
+| `glide_list=true` | List Collector | Uses the glide-list style interface instead of the slushbucket. |
+| `no_filter=true` | List Collector | Hides list collector filter fields. |
+| `is_searchable_choice=true` | Lookup Select Box, Select Box | Makes choices searchable; ServiceNow notes this is not applicable in Service Portal. |
+| `max_length=200` | Single-line Text, Wide Single-line Text | Limits text length. |
+| `max_unit=days` / `hours` / `minutes` / `seconds` | Duration | Controls the largest displayed duration unit. |
+| `ref_auto_completer=AJAXTableCompleter` | Reference | Uses the table-style reference autocomplete. |
+| `ref_ac_columns=user_name;email` | Reference, Requested For | Adds extra autocomplete result columns after the display value. |
+| `ref_ac_order_by=name` | Reference | Sorts autocomplete results by the referenced field. |
+| `ref_qual_elements=field1;field2` | Lookup Multiple Choice, Lookup Select Box, List Collector | Refreshes the reference qualifier when dependent fields change; ServiceNow documents this as service catalog desktop-specific. |
+
+For `sys_user` reference variables on record producers, use the reference autocomplete attributes together. Example for a requester-facing dropdown that shows name plus employee number:
+
+```text
+ref_auto_completer=AJAXTableCompleter,ref_ac_columns=employee_number,ref_ac_columns_search=true
+```
+
+`ref_ac_columns_search=true` is documented for reference autocomplete and works with the same pattern: without it, matching normally uses only the display value; with it, the user can search the extra fields listed in `ref_ac_columns`. Do not rely on `ref_ac_display_value=false` for record producer/catalog item variables; ServiceNow's dictionary attribute docs explicitly note that this feature does not work with Catalog Item variables. `ref_contributions=<macro_name>` controls reference-field icons/contributions on platform reference fields; only use it for catalog variables after confirming the target UI renders those contributions.
+
+Do not use `ref_ac_columns` as the primary solution for List Collector variables. ServiceNow's catalog-variable docs list `ref_ac_columns` for Reference/Requested For, not List Collector. For list collectors, use documented list collector attributes such as `glide_list`, `no_filter`, and `ref_qual_elements`, then test the actual portal/workspace behavior.
 
 ## Catalog Item Flow Designer Fulfillment
 

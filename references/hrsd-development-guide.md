@@ -6,7 +6,7 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 
 | Concept | Table | Notes |
 | --- | --- | --- |
-| HR Service | `sn_hr_core_service` | Employee-facing service. Key fields: `name`, `fulfillment_type`, `service_table`, `template`, `producer`, `topic_detail`, `hr_criteria`, `le_type`, `journey_config`, `flow`. |
+| HR Service | `sn_hr_core_service` | Employee-facing service. Key fields: `name`, `value`, `fulfillment_type`, `service_table`, `template`, `producer`, `topic_detail`, `hr_criteria`, `le_type`, `journey_config`, `flow`. |
 | Lifecycle Event type | `sn_hr_le_type` | Journey/Lifecycle definition. Key fields: `title`, `event_type`, `display_activity_set`, `sort_activities_by`, `active`. Active PDI examples include Onboarding, Offboarding, Parental Leave, and custom Simen demos. |
 | Journey configuration | `sn_jny_journey_config` | Visual Journey Designer config linked from `sn_hr_core_service.journey_config` and `sn_hr_le_type`. |
 | Activity Set | `sn_hr_le_activity_set` | Stage/column under a Lifecycle Event. Key fields: `le_type`, `title`, `display_title`, `display_order`, `trigger_type`, trigger date/table/field, dependencies, condition table/condition, display booleans. |
@@ -17,6 +17,18 @@ Use this as the first compact model guide for HRSD HR Service, Lifecycle Event, 
 | HR Criteria | `sn_hr_core_criteria` | HRSD wrapper for eligibility/audience rules. Often points to `user_criteria`; used on HR Services and some activity logic. PDI examples include Employees Only, New Hire, Office Based Employees, and US Employees - Tax forms Collection. |
 | Topic category/detail | `sn_hr_core_topic_category`, `sn_hr_core_topic_detail` | Service taxonomy. Must align with the selected COE/service table; see `references/hrsd-coe-selection.md`. |
 | Document Template | `sn_doc_template`, extended by `sn_doc_html_template` | HTML/PDF document template metadata. For HRSD demos, prefer HTML templates (`sn_doc_html_template`) with `table=<HR case table>`, `html_script_body`, language, page settings, and optional header/footer image fields. |
+
+## HR Service Additional Information
+
+The **HR Service Additional Information** section on `sn_hr_core_service` controls service-specific information on the HR case form after a case exists. It is not the same as the Employee Center/record producer intake form, and it does not create fields by itself.
+
+- `service_table_fields` is a `field_list` against the HR service's `service_table`. Use it when a field already exists on the HR case/COE table and should appear only for this HR service, such as `benefit_provider`, `document_template`, or a dot-walked field like `subject_person_hr_profile.employment_end_date`.
+- `subject_person_related_lists` is a glide list of `sys_relationship` records. Use it when agents need a subject-person-specific related list on this HR service's cases, such as benefits, direct deposit, retirement, or similar profile data related lists.
+- These fields drive OOTB Classic/UI16 HR case display logic: display Business Rule `Scratchpad: Show HR Service Fields` reads the service's `service_table_fields` and `subject_person_related_lists`; UI policies `Show HR service fields on load - HR Case` and `Show HR service fields on load - LE Case` show fields based on case table scope; client script `Show HR service fields` responds when `hr_service` changes.
+- Add the selected fields and related lists to the relevant COE case form layout first. HR Service Additional Information only tells the UI which of those configured fields/lists to show for the selected service; it does not add them to the form layout.
+- If a selected field appears on every HR case instead of only this service, add it to the OOTB `Hide HR service fields and related lists` UI policy actions so it is hidden by default and then shown back by the service-specific logic.
+- Scope matters. The OOTB scratchpad logic groups fields by dictionary scope and table hierarchy; fields in Global, the service table's scope, or inherited HR Core fields are handled. Cross-scope fields that are not inherited by the service table may not be controlled automatically.
+- Do not use this tab for initial intake questions. For Employee Center intake, use record producer variables. For HR agent case creation before the case exists, use `case_creation_service_config`. If a producer answer must become a case field, map/copy it into a real case field, then optionally expose that field through `service_table_fields`.
 
 ## How Lifecycle Event Activities Work
 
@@ -210,7 +222,9 @@ PDI lessons:
 9. Prefer Employee/Fulfiller activity plus HR Template for human tasks; use Flow only for automation/integration; use child HR Service or catalog item activity when the result should be a real case/request.
 10. Add activity field mappings for any generated child case, request, task, or subflow input. Map to the concrete target table, not generic `sn_hr_core_case`, when the child service uses a COE extension.
 11. Before saving or API-creating an HR Service, validate the final form state after choosing fulfillment type, COE/service table, topic detail, template, producer, case options, HR criteria, and related config. Mandatory fields are dynamic and can appear after those choices, such as Opened for / Approver view, Subject person / Task assignee view, and Case creation service config. Fill the dynamic mandatory fields deliberately rather than relying only on base `sys_dictionary` mandatory flags.
-12. Verify both design-time records and runtime artifacts: submit the producer or use the HRSD wrapper, inspect generated parent case, activity set contexts, activities/tasks/approvals/requests/flows, and confirm update-set capture.
+12. Set `sn_hr_core_service.value` together with `name` when creating HR Services through API/script. The UI normally auto-generates the value from the name, but programmatic creation can leave it blank; use lower snake case, for example `Meld inn rekrutteringsbehov` -> `meld_inn_rekrutteringsbehov`.
+13. If the HR case needs service-specific case fields or subject-person related lists after creation, configure **HR Service Additional Information** deliberately. Also update the relevant COE case form layout and OOTB hide/show UI policy actions so the fields are present but hidden for unrelated HR services.
+14. Verify both design-time records and runtime artifacts: submit the producer or use the HRSD wrapper, inspect generated parent case, activity set contexts, activities/tasks/approvals/requests/flows, and confirm update-set capture.
 
 ## Common Pitfalls
 
@@ -221,6 +235,8 @@ PDI lessons:
 - Contextual Search and AI Search Assist can coexist on a producer. If AI Search Assist is configured but Contextual Search still appears, verify the portal's Enable AI Search flag, the `aisa_rp_config.active` flag, the AI Search profile's active/published state, and the active search variable on the producer.
 - If AI Search portal results find a catalog item/record producer but the action opens `id=form&table=sc_cat_item` instead of `id=sc_cat_item`, check `sp_ai_search_results_action_config` for the portal. Custom/branded portals may be missing from the action config `portals` list for the `ESC Portal Catalogs` source. Add portal-specific navigation and request actions pointing to the `sc_cat_item` portal page instead of changing the catalog item.
 - HR Service mandatory fields are partly UI/configuration-driven. The fields required for a valid service can change when fulfillment type, COE/service table, template, producer, case options, HR criteria, views, or case creation service config change. Inspect an equivalent OOTB service or read the configured form state before creating a new service through Table API.
+- Empty `sn_hr_core_service.value` fields can slip through API-created HR Services even when the UI would have generated one from `name`. Set and verify the value explicitly, and confirm exported XML contains `<value>...`.
+- HR Service Additional Information does not add fields or related lists to form layouts. Missing form-layout entries make `service_table_fields` and `subject_person_related_lists` look broken; missing hide-policy actions can make those fields visible for every service in the COE.
 - For most HR Services, set `header_config_opened_for` to `Default for opened for/approver` and `header_config_subject_person` to `Default for subject person/task assigned to`. These are the mandatory form fields labeled "Opened for / Approver view" and "Subject person / Task assignee view"; do not confuse them with the boolean `subject_person_access`.
 - `sn_hr_le_activity.order_number` orders cards; `sn_hr_le_activity_set.display_order` orders stages. Do not confuse these with generic display order fields.
 - Activity Sets can auto-create placeholder stages when a Journey service is created. Remove unintended placeholders and their update XML before delivery.

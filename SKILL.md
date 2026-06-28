@@ -17,7 +17,7 @@ Default to the bundled PowerShell helpers for fast, narrow, repeatable work. Use
 - Prefer OOTB configuration over Flow/low-code, Flow/low-code over script, script over custom UI/API, and custom platform extension only when justified.
 - Resolve records by stable keys and mutate by `sys_id`; never patch by display value alone.
 - Keep writes narrow, reversible, and scoped. Avoid deletes, broad data repair, plugin installs, credential changes, and production writes unless explicitly requested.
-- Create one update set per application scope. Do not deliver a mixed-scope update set.
+- Reuse the existing story/change update set for small follow-up changes in the same application scope. Create a new update set only when the work is a distinct story/change, the existing set is inappropriate/complete, or a different application scope is required. Do not deliver a mixed-scope update set.
 - Snapshot developer preferences before edits, switch scope/update set, confirm customer-update capture, then restore preferences.
 - Verify behavior with realistic role/channel/data conditions, not just record existence.
 - At the end of every ServiceNow task, capture one durable lesson if the work revealed a reusable pattern, trap, table detail, helper behavior, or app-specific fact. Update this skill or the most relevant `references/lessons-*.md` file before the final response.
@@ -307,6 +307,8 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 
 ## HRSD Template Guidance
 
+- For HR Services, always set `sn_hr_core_service.value` alongside `name` when creating through API/script. The UI normally auto-generates this lower-snake-case value from the name, such as `Meld inn rekrutteringsbehov` -> `meld_inn_rekrutteringsbehov`, but programmatic creation can leave it blank.
+- For HR Services, use **HR Service Additional Information** only when the generated HR case form needs service-specific case fields (`service_table_fields`) or subject-person related lists (`subject_person_related_lists`) after case creation. It does not replace record producer variables for Employee Center intake; see `references/hrsd-development-guide.md`.
 - For HR task templates, always put task instructions in `rich_description`, not plain `description`, even when the current text is static. Rich description supports HTML formatting and template variables that dot-walk to the parent HR case, such as `${parent.assigned_to}` and `${parent.opened_by}`, and it can read record producer question answers through `${parent.variables.<variable_name>}`, such as `${parent.variables.name_of_variable}` or `${parent.variables.name_of_variable_number_two}`.
 - For HR task template due dates, use the `HR task template due dates` guidance in `references/hrsd-development-guide.md`: choose assignment-date mode or parent-case-table mode deliberately, set the due-date fields on `sn_hr_core_template`, and verify generated `sn_hr_core_task.due_date` with a runtime task.
 
@@ -360,7 +362,7 @@ Immediate stop-and-confirm cases:
 ## Update-Set Hygiene
 
 1. Run `Get-ServiceNowPdiHealth.ps1` when starting substantial work; note current update set, current app, stale in-progress update-set count, and API fallback status.
-2. Before writes, snapshot preferences and set the intended scope/update set with `Set-ServiceNowUpdateSetContext.ps1`.
+2. Before writes, snapshot preferences and set the intended scope/update set with `Set-ServiceNowUpdateSetContext.ps1`. For follow-up work on the same story/change, prefer selecting the existing in-progress update set for that scope instead of creating another small update set.
 3. During work, confirm captured rows belong to the intended application. Mixed scope is a warning unless it is an understood platform-generated pattern.
 4. Create batch/parent update sets in Global scope, even when the child update sets span scoped applications. If Table API creation follows the current application preference, switch to Global before creating the batch or correct the batch application with a constrained Global script before attaching children.
 5. Leave unrelated in-progress update sets alone. Clean only throwaway data, accidental customer updates from the current task, or update-set noise that is clearly caused by this run.
