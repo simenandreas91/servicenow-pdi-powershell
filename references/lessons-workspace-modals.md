@@ -213,11 +213,17 @@ script_condition = current.canWrite() && current.state.canWrite() && current.u_o
   - Global update set for `sys_declarative_action_assignment`, `sys_ux_form_action`, and global action layout items.
   - SOW-scoped update set for SOW-owned `sys_ui_section` form layout updates.
 - Prefer the Table API helper for creating `sys_declarative_action_assignment`, `sys_ux_form_action`, and `sys_ux_form_action_layout_item` records after switching to the intended app/update set. Server-side GlideRecord inserts in some workspace tables can return null sys_ids or create unintended duplicate customer updates; if that happens, inspect live records and delete both the bad records and their `sys_update_xml` rows.
+- For HR Workspace child tables such as `sn_hr_le_case`, creating an exact-table `sys_ux_form_action_layout` can auto-copy existing HR Workspace layout items and M2M layout rows into the current update set. Treat those rows as intentional only when the exact-table layout is required; otherwise prefer adding the new action to an existing inherited layout/group.
 - Form layout changes may not auto-capture. If the live layout changed but the update set is empty, force capture:
   ```powershell
   Save-ServiceNowCustomerUpdate.ps1 -Table sys_ui_section -SysId <section_sys_id> -UpdateSetSysId <update_set_sys_id>
   ```
 - Confirm every update set with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`.
+
+## Scoped Ajax Bridge
+
+- When a Global client-callable Ajax processor needs to update fields owned by a scoped HR/Journey Designer table, keep the Global Ajax class as a thin wrapper and delegate to a public scoped helper Script Include.
+- Direct HR case lookup from the `AbstractAjaxProcessor` path can behave differently from a scoped server test. A scoped helper preserves table/scope behavior and lets UI16 and Workspace launchers share one save path.
 
 ## RITM On Hold SOW Example
 

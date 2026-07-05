@@ -4,6 +4,7 @@ Durable notes for Simen's `x_personellsikkerh` Personellsikkerhet app on PDI `de
 
 ## Instance And Helper Use
 
+- FFI's real ServiceNow environment is on-premise and not reachable from this Codex environment. Use Simen's PDI `dev396302` as the mirror/reproduction instance for FFI/Personellsikkerhet behavior, and ask for FFI record numbers, screenshots, exported XML, logs, or exact configuration details when a discrepancy exists only in FFI.
 - Generic shell variables `SN_INSTANCE`, `SN_USER`, and `SN_PASS` may point at an older PDI. For this app, prefer helper calls with `-Profile pdi -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'` and clear generic env vars in the command when needed.
 - Use update set context in scope `x_personellsikkerh` / sys_id `5a901a5caf0efe10442b822dc62749ba`.
 - Credentials belong in the `.env` or OS credential store, never in `SKILL.md` or repo docs.

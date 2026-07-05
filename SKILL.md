@@ -57,6 +57,8 @@ Known profiles:
 - `pdi`: Simen's PDI, `https://dev396302.service-now.com`
 - `other`: Vår Energi DEV, `https://varenergidev.service-now.com`
 
+FFI's real ServiceNow environment is on-premise and not directly accessible from this Codex environment. For FFI/Personellsikkerhet work, treat the PDI as the mirror/reproduction environment unless Simen explicitly provides exported evidence, screenshots, record XML, or a reachable endpoint. Do not try to route FFI work to the Vår Energi `other` profile.
+
 Vår Energi PROD can be reached by passing `-Instance 'https://varenergiprod.service-now.com'` with `other` credentials, but treat PROD as read-only unless Simen explicitly authorizes a write. Vår Energi stories usually live in PROD and are implemented first in DEV.
 
 If generic `SN_INSTANCE`/`SN_USER`/`SN_PASS` variables are set, pass the intended profile and env path explicitly:
@@ -298,7 +300,7 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 - External ServiceNow MCP servers, third-party agent tools, broad MCP tool surfaces, MCP installation/evaluation, or deciding whether an MCP is safe enough for ServiceNow reads/writes/scripts/update sets: load `references/external-mcp-evaluation.md`.
 - Australia release AI development features, Build Agent, ServiceNow Studio AI-assisted app generation, MCP Server Console, or MCP Client: load `references/australia-ai-platform.md` plus `references/now-assist.md` when runtime AI configuration is involved.
 - Integrations, REST messages, SAP SuccessFactors, import/export, auth profiles, or connection aliases: load `references/integrations.md`; use `references/lessons-integrations.md` for durable local import/integration lessons.
-- Debugging ACLs, hidden records, role visibility, before-query rules, or user criteria: load `references/debugging.md`.
+- Debugging ACLs, hidden records, role visibility, before-query rules, user criteria, Restricted Caller Access, cross-scope access denied, or "must declare a Restricted Caller Access privilege": load `references/debugging.md`.
 - Portal/Employee Center widgets/themes/pages: load `references/tables.md`, then `references/lessons-portal.md` if behavior is tricky.
 - Complex scripts, Business Rules, Script Includes, story state handling, update-set edge cases, or Xplore/background patterns: load `references/development.md`.
 - Toolkit helper behavior and examples: load `references/toolkit.md` or `references/examples.md`.
@@ -311,6 +313,12 @@ Load `references/golden-paths.md` for step-by-step workflows and checklists. Com
 - For HR Services, use **HR Service Additional Information** only when the generated HR case form needs service-specific case fields (`service_table_fields`) or subject-person related lists (`subject_person_related_lists`) after case creation. It does not replace record producer variables for Employee Center intake; see `references/hrsd-development-guide.md`.
 - For HR task templates, always put task instructions in `rich_description`, not plain `description`, even when the current text is static. Rich description supports HTML formatting and template variables that dot-walk to the parent HR case, such as `${parent.assigned_to}` and `${parent.opened_by}`, and it can read record producer question answers through `${parent.variables.<variable_name>}`, such as `${parent.variables.name_of_variable}` or `${parent.variables.name_of_variable_number_two}`.
 - For HR task template due dates, use the `HR task template due dates` guidance in `references/hrsd-development-guide.md`: choose assignment-date mode or parent-case-table mode deliberately, set the due-date fields on `sn_hr_core_template`, and verify generated `sn_hr_core_task.due_date` with a runtime task.
+- For Lifecycle Event activities (`sn_hr_le_activity`), always set both `owning_group` and `badge` when creating records through API/script. The UI treats Owning group as mandatory, and `badge` gives the Journey board the visual owner marker Simen expects, such as HR, IT, or Manager.
+- For HRSD/Journey record producers and approval notifications, load `references/hrsd-lifecycle.md` before implementation. It contains current PDI traps for producer `map_to_field`/`field` mappings, Auto-populate dot-walk metadata, Reference variables for reference-returning dot-walks such as `sys_user.department`, List Collector `list_table`, Global approval mail scripts, `u_hr_approval_todo_content`, scoped update-set splits, and Lifecycle Event trigger verification.
+- For the `Midlertidig ansettelse` HR Service/Journey, generated HR task template `assignment_group` values should route only to `HR` or `Personellsikkerhet`; use the P badge plus the `Personellsikkerhet` group for security-clearance work and avoid HR Tier 3 or legacy demo HR groups unless Simen explicitly requests a different owner model.
+- For `Midlertidig ansettelse` submit-catalog HR tasks that use record producers only to update an existing HR case, do not update the same `sn_hr_le_case` target inline inside the producer script. In Table API/submit-producer tests that can create duplicate-key behavior and a transient Draft HR case. Queue a short scoped event from the producer with the target case sys_id and submitted values, handle the update in a Script Action after the producer transaction, and close the transient generated case as inactive/cancelled if the platform refuses physical delete.
+- When testing `Midlertidig ansettelse` activity-set progression, remember that the active combination sets use the default 4-hour evaluation interval. If dependencies and branch conditions look correct but `hr_ActivitySetTrigger(...).shouldActivitySetTrigger(...)` is false immediately after a dependency is completed, record the interval as the likely blocker instead of changing activity-set metadata just for testing.
+- When continuing `Midlertidig ansettelse`, load `references/hrsd-lifecycle.md` and use its `PDI Fast Path: Midlertidig Ansettelse` section before rediscovering lifecycle, producer, group, condition, badge, or submit-catalog update patterns.
 
 ## Safety Checkpoints
 
@@ -363,11 +371,14 @@ Immediate stop-and-confirm cases:
 
 1. Run `Get-ServiceNowPdiHealth.ps1` when starting substantial work; note current update set, current app, stale in-progress update-set count, and API fallback status.
 2. Before writes, snapshot preferences and set the intended scope/update set with `Set-ServiceNowUpdateSetContext.ps1`. For follow-up work on the same story/change, prefer selecting the existing in-progress update set for that scope instead of creating another small update set.
+   - When duplicate same-named update sets exist, pass `-UpdateSetSysId` explicitly; passing only `-Name` creates a new update set.
 3. During work, confirm captured rows belong to the intended application. Mixed scope is a warning unless it is an understood platform-generated pattern.
 4. Create batch/parent update sets in Global scope, even when the child update sets span scoped applications. If Table API creation follows the current application preference, switch to Global before creating the batch or correct the batch application with a constrained Global script before attaching children.
-5. Leave unrelated in-progress update sets alone. Clean only throwaway data, accidental customer updates from the current task, or update-set noise that is clearly caused by this run.
-6. Ask before completing/exporting when the summary shows mixed scope, unexpected application, broad form/layout noise, or records outside the named task.
-7. Restore preferences before handoff and report whether the restored state matches the snapshot.
+5. When consolidating messy release work, merge update sets only within the same application/scope. Prefer creating a new clean child update set and copying the latest `sys_update_xml` row per `name` into it, then mark source sets `state=ignore` and `merged_to=<clean child>`. Keep cross-scope artifacts as separate children under a Global batch parent; do not create a mixed-scope child.
+6. Exclude obvious unrelated noise instead of copying it into the release set. Empty placeholder update sets can be marked ignored and left out of the batch after verification.
+7. Leave unrelated in-progress update sets alone. Clean only throwaway data, accidental customer updates from the current task, or update-set noise that is clearly caused by this run.
+8. Ask before completing/exporting when the summary shows mixed scope, unexpected application, broad form/layout noise, or records outside the named task.
+9. Restore preferences before handoff and report whether the restored state matches the snapshot. If the original update set was intentionally ignored/merged, switch preferences to the clean successor instead of restoring the stale snapshot.
 
 ## Output Contract
 
@@ -394,11 +405,13 @@ Do not dump long scripts/XML unless they are the deliverable. Do not claim produ
 
 ## Common Tables
 
-Core: `sys_user`, `sys_scope`, `sys_user_preference`, `sys_dictionary`, `sys_db_object`, `sys_properties`, `sys_plugins`, `sys_update_set`, `sys_update_xml`, `rm_story`, `sys_script`, `sys_script_include`, `sys_ui_policy`, `sys_ui_policy_action`, `sys_script_client`, `sysauto_script`, `sysevent_register`, `sysevent_email_action`, `sys_security_acl`.
+Core: `sys_user`, `sys_scope`, `sys_user_preference`, `sys_dictionary`, `sys_db_object`, `sys_properties`, `sys_plugins`, `sys_update_set`, `sys_update_xml`, `rm_story`, `sys_script`, `sys_script_include`, `sys_ui_policy`, `sys_ui_policy_action`, `sys_script_client`, `sysauto_script`, `sysevent_register`, `sysevent_email_action`, `sys_security_acl`, `sys_restricted_caller_access`.
 
 Flow: `sys_hub_flow`, `sys_hub_flow_base`, `sys_hub_flow_snapshot`, `sys_hub_trigger_instance_v2`, `sys_hub_action_instance_v2`, `sys_hub_flow_logic_instance_v2`, `sys_hub_action_input`, `sys_hub_action_output`, `sys_flow_trigger_plan`, `sys_flow_context`, `sys_flow_runtime_value`, `sys_hub_action_type_definition`.
 
 Portal/workspace: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp_theme`, `sp_header_footer`, `sys_ux_page_registry`, `sys_ux_app_config`, `sys_ux_app_route`, `sys_ux_screen_type`, `sys_ux_screen`, `sys_ux_page_property`, `sys_ux_macroponent`, `sys_ux_applicability`, `sys_ux_applicability_m2m_list`, `sys_ux_list_menu_config`, `sys_ux_list_category`, `sys_ux_list`, `sys_ux_ribbon_config`, `m2m_app_config_theme`, `sys_declarative_action_assignment`, `sys_declarative_action_payload_definition`, `sys_declarative_action_model_definition`, `sys_ux_action_config`, `sys_ux_form_action`, `sys_ux_form_action_layout`, `sys_ux_form_action_layout_group`, `sys_ux_form_action_layout_item`, `sys_ux_addon_event_mapping`.
+
+Content Publishing and Manager Hub: `sn_cd_content_base`, `sn_cd_content_portal`, `sn_cd_content_visibility`, `sn_cd_content_type`, `sn_cd_content_type_widget_m2m`, `sn_cd_audience`, `cmn_schedule`, `cmn_schedule_span`, `sn_mh_important_dates_config`, `sn_ca_campaign`, `sn_ca_campaign_bundle`, `sn_ca_campaign_item`.
 
 HRSD: `sn_hr_core_service`, `sn_hr_core_template`, `sn_hr_core_task`, `sn_hr_core_criteria`, `sn_hr_le_case`, `sn_jny_journey_config`, `sn_hr_le_activity_set`, `sn_hr_le_activity`, `sn_hr_le_activity_field_mapping`, `sc_cat_item_producer`, `item_option_new`, `question_choice`.
 

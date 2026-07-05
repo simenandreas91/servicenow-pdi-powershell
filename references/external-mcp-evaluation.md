@@ -93,6 +93,7 @@ Good early uses for external MCPs:
 - retrieving official docs or locally indexed docs.
 - listing candidate records before exact Table API/Xplore verification.
 - inspecting MCP design patterns for future helper improvements.
+- using a local codebase-intelligence MCP such as Repowise for repository navigation, helper-script review, generated docs, and command-output distillation; treat results as advisory because it does not understand live ServiceNow update-set capture or record relationships unless those records are exported into indexable files.
 
 Risky uses requiring explicit approval:
 

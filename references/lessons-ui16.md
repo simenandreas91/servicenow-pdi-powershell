@@ -84,6 +84,7 @@ Use this follow-along checklist when creating a classic UI16 modal in ServiceNow
 
 ## Client Script Pitfalls
 
+- `syntax_editor_macro` records expand only in syntax/code editor controls such as Background Scripts and script fields. Task `comments` and `work_notes` are `journal_input` fields, so syntax editor macros do not run there. For a journal-field snippet such as `[code]<a href="YOUR_URL_HERE">Display Text</a>[/code]`, use a record template, quick-message/response-template feature where available, or a narrow UI16/Workspace action that inserts text into the journal field.
 - Avoid `window.<customFlag>` in UI16 Client Scripts. In some UI16 contexts, `window` can be null or resolve unexpectedly, causing errors such as `Cannot read properties of null`.
 - Use `g_scratchpad.<flag>` for a short-lived duplicate-dialog guard, with `typeof g_scratchpad != 'undefined'` checks.
 - On cancel, revert any changed form field if the modal was opened by an onChange script:
