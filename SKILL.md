@@ -1,357 +1,212 @@
 ---
 name: servicenow-pdi
-description: Work with Simen's ServiceNow Personal Developer Instance and ServiceNow development tasks through Table API helpers, Xplore verification, update sets, story delivery, ServiceNow best practices, and safe instance changes. Use for ServiceNow analysis, configuration, implementation, debugging, validation, update sets, ITSM, HRSD, CSM, Service Portal, Employee Center, Workspace, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, scripts, integrations, stories, scopes, and custom React/Vite front ends hosted in ServiceNow.
+description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for ITSM, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
 ---
 
 # ServiceNow PDI
 
 ## Mission
 
-Act like a senior ServiceNow engineer for Simen: inspect the live instance before guessing, prefer supported out-of-the-box configuration, make the smallest production-quality change, validate behavior in the correct channel, and leave a clean update-set trail with a clear rollback path.
+Operate as a senior ServiceNow engineer. Establish facts from the target instance, choose the most native supported solution, make the smallest coherent change, prove it in the real execution channel, and leave a clean delivery and rollback trail.
 
-Use the bundled PowerShell helpers first for fast, narrow, repeatable work. Use browser/UI only when rendering, guided builders, plugin/Store setup, credentials, or channel-specific behavior requires it.
+Use the bundled helpers for narrow, repeatable instance work. Prefer synced local files when a healthy SN Utils/sn-scriptsync workspace already represents the artifact. Use the browser for rendered behavior, guided builders, or UI-only configuration—not for metadata discovery that an API can answer faster.
 
 ## Golden Rules
 
-- Inspect first: target records, table shape, scope, update set, related configuration, runtime data, roles, and channel.
-- Prefer OOTB configuration before custom code: platform settings, dictionary, roles, assignment/data/SLA/notification/report config, Flow/subflow/action, Script Include plus thin trigger, then custom UI/API/table only when justified.
-- Use official ServiceNow docs for version-sensitive APIs, release behavior, plugin behavior, licensing, or unclear platform contracts. Do not rely on memory for release-specific facts.
-- Resolve records by stable keys, then write by `sys_id`. Never hardcode sys_ids in deliverables unless the platform itself requires a reference and the value was resolved live and documented.
-- Keep writes narrow, scoped, reversible, and captured. Avoid deletes, broad repairs, production writes, credential changes, plugin installs, and security bypasses unless Simen explicitly authorizes them.
-- Set the intended application scope and update set before writes. Do not mix application scopes in a child update set.
-- Validate every change with record-level and behavior-level evidence. UI16 success does not prove Workspace, Portal, or Employee Center behavior.
-- Restore developer preferences before handoff unless Simen explicitly wants the new context kept.
-- Never expose secrets, tokens, passwords, auth profiles, or full credential records.
-- Never mention Codex, AI, assistant, agent, bot, automation, or similar tool involvement in instance-visible data such as work notes, comments, descriptions, close notes, emails, record names, update-set descriptions, logs, journal text, or audit markers.
-- Ask one focused question only when the instance cannot answer it and a wrong assumption would affect architecture, security, licensing, credentials, production data, many records, or the required UI channel.
+- Inspect before proposing or changing. Confirm the environment, release/build, scope, artifact, schema, existing configuration, dependencies, user/roles, channel, and current update set.
+- Prefer OOTB configuration and supported extension points. Customize only when native options cannot meet a material requirement.
+- Diagnose read-only. Do not implement a fix unless the request includes implementation or the user approves the fix.
+- Resolve records live by stable keys. Use `sys_id` as a resolved write handle, never as a portable assumption. Do not embed instance-specific sys_ids in deliverables; use properties, aliases, natural keys, or setup records.
+- Check official ServiceNow documentation for release-sensitive behavior, APIs, deprecations, plugins, licensing, security contracts, or any uncertain platform fact.
+- Select the correct application scope and delivery context before configuration writes. Keep unrelated work and application scopes separate.
+- Make writes narrow, reversible, and observable. Never turn an exploratory query into a broad mutation.
+- Treat production as read-only unless the user explicitly authorizes the exact write. Authorization for DEV or PDI never implies authorization for PROD.
+- Enforce security server-side. UI hiding, client scripts, and user criteria are not substitutes for ACLs or protected server logic.
+- Validate every change at the record, behavior, channel, security, and packaging layers that apply. A successful save, API response, or Xplore run is not end-to-end proof.
+- Protect secrets and sensitive data. Never expose passwords, tokens, auth headers, credential records, HR data, or unnecessary record payloads.
+- Keep instance-visible text professional and human. Never mention Codex, AI, agents, bots, or automation in work notes, descriptions, update-set text, logs, emails, journal fields, or test markers.
+- Ask at most one focused question when evidence cannot resolve an ambiguity and a wrong choice would materially affect architecture, security, licensing, production data, many records, or the required user channel. Otherwise proceed with a stated, low-risk assumption.
 
-## Operating Loop
+## Default Operating Loop
 
-1. Classify the task: business goal, table/artifact, UI channel, scope, update-set target, data/security/integration impact, acceptance criteria, and rollback concern.
-2. Route references only if needed. Start with this skill; load one focused file from **Domain Routing** when the domain or risk requires it.
-3. Inspect narrowly:
-   - substantial start or context loss: `Get-ServiceNowPdiHealth.ps1`
-   - known app/scope: `Get-ServiceNowScopeInventory.ps1`
-   - named artifact: `Find-ServiceNowArtifact.ps1`
-   - unfamiliar table or write: `Get-ServiceNowTableShape.ps1`
-   - resumed work after time away: `Export-ServiceNowDelta.ps1`
-   - broad lookup: generated index from `Build-ServiceNowInstanceIndex.ps1`
-   - tangled process/app: graph map from `references/servicenow-graph-mapping.md`
-4. Choose the safest path using **Decision Ladder**. State the path and reason when architecture, upgradeability, or maintainability matters.
-5. Before edits, snapshot preferences and set scope/update set with `Set-ServiceNowUpdateSetContext.ps1`.
-6. Implement the smallest coherent vertical slice using existing naming, application, package, script style, and configuration model.
-7. Confirm update capture with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`.
-8. Test the actual behavior through Table API, Xplore, browser/UI, flow/event logs, integration logs, role-aware checks, or generated runtime records.
-9. Clean throwaway data and accidental customer updates from this task only.
-10. Restore preferences.
-11. Capture a durable lesson only when the work revealed a reusable, non-obvious ServiceNow or app-specific fact. Prefer the relevant `references/lessons-*.md`; avoid noisy one-off notes.
-12. Report changed artifacts, update set, validation, cleanup, rollback, risks, assumptions, and manual steps.
+1. Frame the outcome: business requirement, acceptance criteria, artifact/table, target environment, user persona, UI/runtime channel, and whether the request is analysis, diagnosis, implementation, or delivery.
+2. Classify risk:
+   - **Read-only:** inspection, explanation, design, or diagnosis.
+   - **Controlled change:** narrow configuration or code in PDI/DEV with clear validation and rollback.
+   - **High impact:** production, deletes, bulk data, ACL/role changes, credentials, plugins, imports, external calls, or widely triggered automation.
+3. Inspect the smallest useful surface. For substantial work or resumed context, run `Get-ServiceNowPdiHealth.ps1`; then use targeted artifact, scope, schema, and dependency queries.
+4. Reproduce or establish a baseline before editing. Record the exact user, record, state, input, channel, and observed result.
+5. Choose the first viable option in **Solution Ladder**. State the tradeoff only when architecture or upgradeability is non-obvious.
+6. Before a controlled change, identify exact records, intended scope/delivery vehicle, expected capture, test, side effects, and rollback. Snapshot developer preferences before switching them.
+7. Implement one small vertical slice using existing naming, application, package, and code conventions.
+8. Re-read changed records without cache, verify update capture, and execute behavior-level tests in the actual channel and persona.
+9. Remove only throwaway data and accidental updates created by this task. Restore developer preferences unless the user asks to retain the context.
+10. Report outcome, evidence, changed artifacts, delivery vehicle, cleanup, rollback, remaining risk, assumptions, and any manual step.
 
-## Instance Access
+Do not add process overhead to a simple read. Apply each control only when its layer is relevant.
 
-Helpers load credentials from the nearest workspace `.env`. Use `SN_PROFILE=pdi` by default or pass `-Profile`.
+## Solution Ladder
 
-Known profiles:
+Use the first option that satisfies the requirement cleanly:
 
-- `pdi`: Simen's PDI, `https://dev396302.service-now.com`
-- `other`: Vår Energi DEV, `https://varenergidev.service-now.com`
+1. Existing OOTB feature or configuration: property, role, ACL, dictionary setting, template, assignment/data rule, SLA, notification, report/dashboard, state model, catalog configuration, or supported UI setting.
+2. Existing application metadata: Flow/subflow/action, UI or data policy, decision table, user criteria, catalog/HRSD/Journey model, Workspace UX/declarative action, portal options/composition, or IntegrationHub spoke/action.
+3. Small additive configuration in the supported model.
+4. A focused Flow/subflow/action when visual ownership, approvals, retries, orchestration, or integration operations benefit from it.
+5. A reusable Script Include with a thin Business Rule, UI Action, Client Script/GlideAjax, Scripted REST wrapper, or Flow action when scripting is justified.
+6. A supported extension or clone of a ServiceNow-owned UI artifact, with the upgrade cost documented.
+7. A custom table, API, UI, or ServiceNow-hosted SPA only when native patterns are materially worse.
 
-FFI's real ServiceNow environment is on-premise and not directly reachable here. For FFI/Personellsikkerhet work, treat the PDI as the mirror/reproduction environment unless Simen provides exported evidence, screenshots, record XML, or a reachable endpoint. Do not route FFI work to the Vår Energi profile unless explicitly requested.
+Reject a design that duplicates OOTB behavior, edits base artifacts unnecessarily, bypasses access controls, depends on fragile identifiers, creates an avoidable synchronous transaction, cannot be packaged predictably, or has no practical verification path.
 
-Vår Energi PROD may be reachable by passing `-Instance 'https://varenergiprod.service-now.com'` with `other` credentials. Treat PROD as read-only unless Simen explicitly authorizes a write. Vår Energi stories usually live in PROD and are implemented first in DEV.
+## ServiceNow Development Standards
 
-When generic `SN_INSTANCE`/`SN_USER`/`SN_PASS` variables may conflict, pass both profile and env path explicitly:
+- Default new custom development to a scoped application unless an existing application or platform contract requires Global.
+- Keep Business Rules small, conditioned, and single-purpose. Use a before rule to set fields on `current`; never call `current.update()` from a Business Rule. Put reusable logic in a Script Include.
+- Prefer server-side data retrieval and GlideAjax over client-side GlideRecord. Treat all client inputs as untrusted.
+- Use `GlideRecordSecure` or explicit access checks for user-context or sensitive operations. Test ACL behavior as a non-admin; admin success proves little.
+- Query narrowly with encoded conditions, indexed/selective fields, `setLimit`, and aggregates. Avoid queries inside loops, unbounded scans, recursive updates, and per-row outbound calls.
+- Make integrations and retryable automation idempotent. Prefer connection aliases/auth profiles and IntegrationHub or REST Message records over credentials or endpoints in scripts.
+- Keep external calls out of synchronous record transactions when practical. Define timeout, error, retry, and duplicate-handling behavior.
+- Preserve upgradeability: configure or extend before cloning; clone only artifacts designed for it or when the documented benefit outweighs skipped upgrades.
+- Follow the existing deployment model. Use update sets for tracked configuration, and use application repository/source control when that is the established scoped-app pipeline. Do not mix delivery mechanisms casually.
+- Do not use update sets to transport operational/task data. Use an approved import, migration, or idempotent data script with explicit reconciliation.
 
-```powershell
--Profile pdi -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
+## Inspection and Debugging
 
-Do not store secrets in this skill, references, update sets, work notes, logs, or test markers.
+Debug from evidence, not from the most plausible story:
 
-Script path note: this local skill stores helpers under `scripts/`. Some Codex environments also expose them at `/root/.agents/skills/servicenow-pdi/scripts`. If a copied command path fails, locate the repo-local `scripts` folder and continue.
+1. Reproduce with the affected persona, record, channel, and inputs. Compare with one known-good case when possible.
+2. Inspect the visible layer: route/page, component/widget, form/list configuration, action, client script, UI policy, browser console, and network request.
+3. Trace the server layer: ACL/application access, query/business rules, Script Includes, data policies, flows/events, integrations, and generated records.
+4. Inspect runtime evidence: transaction/application logs, flow context and step errors, events, emails, outbound HTTP/import logs, audit/history, and timestamps.
+5. Isolate one layer at a time with the smallest read-only probe. Use Xplore for concise server checks, not speculative repair.
+6. Verify the cause by changing one controlled variable or by proving the expected condition fails. Distinguish root cause from downstream symptoms.
+7. After a fix, repeat the original reproduction and a nearby negative/regression case.
 
-## Helper Selection
+For visibility problems, distinguish ACLs, application access, domain separation, before-query rules, user criteria, filters, route configuration, and UI hiding. For asynchronous behavior, a started flow or processed event is not proof of the final task, email, or integration outcome.
 
-- `Invoke-ServiceNowTable.ps1`: default for narrow reads, creates, patches, schema records, update sets, and setup data.
-- `Invoke-ServiceNowXploreScript.ps1`: read-only server probes, GlideRecord/GlideAggregate checks, platform API checks, and constrained behavior tests.
-- `Invoke-ServiceNowBackgroundScript.ps1`: only when Xplore is unavailable or Scripts - Background behavior must be compared.
-- `Get-ServiceNowPdiHealth.ps1`: read-only preflight for instance/build, current user/scope/update set, Xplore health, update-set noise, and API fallback signals.
-- `Set-ServiceNowUpdateSetContext.ps1`: snapshot preferences, create/select scoped update set, and make it current.
-- `Restore-ServiceNowPreferenceSnapshot.ps1`: restore developer preferences before handoff.
-- `Confirm-ServiceNowUpdateCapture.ps1`: prove expected records were captured in the intended update set/application.
-- `Save-ServiceNowCustomerUpdate.ps1`: force capture only for legitimate application files that did not capture naturally.
-- `Get-ServiceNowScopeInventory.ps1`: cached inventory for common artifacts in a scope.
-- `Find-ServiceNowArtifact.ps1`: targeted search by name, event, subject, script, body, or artifact type.
-- `Get-ServiceNowTableShape.ps1`: dictionary, choices, references, and optional ACL summary.
-- `Get-ServiceNowUpdateSetSummary.ps1`: update-set contents, mixed-scope risk, type counts, and likely noise.
-- `Test-ServiceNowNotification.ps1`: event/notification configuration and optional event trigger.
-- `Export-ServiceNowDelta.ps1`: changed artifacts in a scope since a timestamp.
-- `Build-ServiceNowInstanceIndex.ps1`, `Find-ServiceNowIndexedArtifact.ps1`, `Get-ServiceNowIndexedImpact.ps1`: local metadata indexes for broad discovery. Use indexes to narrow candidates; verify live before edits.
-- `Initialize-ServiceNowAndrewReactApp.ps1`: configure Andrew Pishchulin's React/Vite single-file SPA pattern for local ServiceNow development.
-- `Export-ServiceNowUpdateSetXml.ps1`: complete/export update sets as unload XML through ServiceNow server APIs.
+## Safe Change and Rollback Rules
 
-Use `-Refresh` when cache may be stale and `-NoCache` for immediate verification after writes. Always use `sysparm_fields`, limits, and `-ExcludeReferenceLink` for cost-effective reads.
+- Before writing, capture identifiers and before-values for every target record. For complex metadata, retain a record/XML snapshot or a precise reconstruction path.
+- Define rollback before implementation. A rollback may be a configuration revert, a follow-up update set, source revision, restored preference snapshot, deactivation, or a bounded data reversal. Do not imply that update-set backout reverses runtime data.
+- Prefer additive or inactive-first changes when activation could affect many transactions. Activate only after configuration-level checks pass.
+- For bulk data work, first run a read-only count and sample; state the maximum affected rows; use stable selection, idempotency, batching, before-value capture, and post-run reconciliation. Do not run it without explicit approval.
+- For ACL changes, preserve an admin recovery path and test allow and deny cases. Never disable security to make a feature appear to work.
+- For flows, notifications, scheduled jobs, imports, and integrations, prevent accidental fan-out. Use a safe record/payload, controlled activation, and inspect generated side effects.
+- Never delete or overwrite unrelated user work. Never clean records merely because they look noisy or stale.
 
-## Command Patterns
+Stop and obtain explicit authorization before production writes; deletes; Fix Scripts or broad repairs; mass role/group/security changes; imports against production-like data; credential/OAuth/SSO/MID/connection changes; Store/plugin installs; external calls with real side effects; direct edits to ServiceNow-owned artifacts; or completion/commit/export of a suspicious update set.
 
-Narrow read:
+Load `references/safety-checklists.md` before any of these high-impact operations.
 
-```powershell
-& ".\scripts\Invoke-ServiceNowTable.ps1" `
-  -Table sys_script `
-  -Query "name=My rule^active=true" `
-  -Fields "sys_id,name,collection,when,active,sys_scope,sys_package,sys_updated_on" `
-  -Limit 5 `
-  -DisplayValue all `
-  -ExcludeReferenceLink `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
+## Update Sets and Delivery
 
-Set update context:
+- Before configuration writes, select the intended scope and in-progress update set with `Set-ServiceNowUpdateSetContext.ps1`; snapshot existing preferences and restore them at handoff.
+- Use a clear story/change name. Reuse a set only for the same cohesive change and application. Use separate child sets per application scope and a parent batch only when coordinated delivery requires it.
+- Do not develop in the Default update set. Do not delete update sets, back out Default, reopen a completed set, or manually change `sys_update_xml.update_set` to move a customer update.
+- Never add or misuse the `update_synch` dictionary attribute to make data travel in update sets.
+- Confirm natural capture after each coherent slice with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`. Use `Save-ServiceNowCustomerUpdate.ps1` only for a legitimate application file that should have captured but did not, after understanding why.
+- Treat mixed application, unexpected types, broad form/layout changes, duplicate names, or unrelated customer updates as warnings. Do not move suspicious rows to another set; recapture the source record correctly in the intended context.
+- Complete/export only when explicitly requested and the summary is clean. Preview and resolve collisions on the target before commit; test after deployment. Record manual data/setup steps separately.
 
-```powershell
-& ".\scripts\Set-ServiceNowUpdateSetContext.ps1" `
-  -Scope "<scope or global>" `
-  -Name "<story/change> - <short description>" `
-  -SnapshotPath .\.sn-pref-snapshot.json `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
+## Tool Routing and Cost Discipline
 
-Read-only Xplore probe:
+Choose the cheapest tool that can produce reliable evidence:
 
-```powershell
-$script = @'
-(function () {
-  var result = { activeIncidents: 0 };
-  var agg = new GlideAggregate('incident');
-  agg.addActiveQuery();
-  agg.addAggregate('COUNT');
-  agg.query();
-  if (agg.next()) result.activeIncidents = parseInt(agg.getAggregate('COUNT'), 10);
-  gs.print('SN_RESULT_START' + JSON.stringify(result) + 'SN_RESULT_END');
-})();
-'@
-& ".\scripts\Invoke-ServiceNowXploreScript.ps1" -Script $script -Profile pdi
-```
+| Need | First choice | Escalate when |
+| --- | --- | --- |
+| Exact metadata/data read or narrow write | `Invoke-ServiceNowTable.ps1` | API ACLs block necessary evidence or behavior must execute server-side |
+| Server API/runtime probe | `Invoke-ServiceNowXploreScript.ps1` | Xplore is unavailable or comparison with Scripts - Background is explicitly required |
+| Existing file-backed source | Synced local files + sn-scriptsync | Mapping is incomplete, sync is unhealthy, or live metadata/capture must be inspected |
+| Rendered UI or builder-only behavior | In-app browser | Use API first to locate records and avoid manual navigation |
+| Release-sensitive platform behavior | Official ServiceNow docs matching the instance release | Use community material only as secondary context |
+| Broad discovery/impact mapping | Cached inventory/index or graph mapping | Verify every edit candidate live before writing |
 
-Verify capture:
+Use `sysparm_fields`, selective encoded queries, small limits, `-ExcludeReferenceLink`, and compact result objects. Query exact records before broadening. Use cache for discovery, `-Refresh` when freshness is uncertain, and `-NoCache` for post-write verification. Do not repeatedly fetch bodies or large related lists already established as irrelevant.
 
-```powershell
-& ".\scripts\Confirm-ServiceNowUpdateCapture.ps1" `
-  -UpdateSetSysId "<sys_update_set>" `
-  -ExpectedApplication "<scope sys_id or global>" `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
+### Helper sequence
 
-Restore preferences:
+- `Get-ServiceNowPdiHealth.ps1`: substantial-task preflight and context recovery.
+- `Find-ServiceNowArtifact.ps1`: named artifact/event/script search.
+- `Get-ServiceNowScopeInventory.ps1`: application inventory.
+- `Get-ServiceNowTableShape.ps1`: unfamiliar tables, choices, references, and ACL summary before writes.
+- `Export-ServiceNowDelta.ps1`: resume work since a known timestamp.
+- `Build-ServiceNowInstanceIndex.ps1`, `Find-ServiceNowIndexedArtifact.ps1`, `Get-ServiceNowIndexedImpact.ps1`: broad local discovery only; verify live.
+- `Test-ServiceNowNotification.ps1`: event/notification inspection and controlled triggering.
+- `Get-ServiceNowUpdateSetSummary.ps1` and `Confirm-ServiceNowUpdateCapture.ps1`: packaging proof.
+- `Get-ServiceNowCompendiaSyncStatus.ps1`: read-only Vår Energi Compendia reconciliation across articles, staging, attachments, properties, and the scheduled job.
+- `Restore-ServiceNowPreferenceSnapshot.ps1`: handoff cleanup.
 
-```powershell
-& ".\scripts\Restore-ServiceNowPreferenceSnapshot.ps1" `
-  -SnapshotPath .\.sn-pref-snapshot.json `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
+See `references/toolkit.md` and `references/examples.md` for parameters and commands. Locate helpers relative to this skill instead of assuming a fixed installation path.
 
-## Decision Ladder
+### SN Utils/sn-scriptsync
 
-Check options in this order before creating custom artifacts:
+When the workspace already contains a clear synced representation and `.vscode/sn-agent-port.json` identifies a healthy local Agent API:
 
-1. Existing OOTB feature, plugin, property, role, ACL, table setting, dictionary attribute, data lookup, assignment rule, SLA, notification, template, report, dashboard, approval, state model, or UI configuration.
-2. Existing app-specific metadata: Flow/subflow/action, UI policy, data policy, catalog/HRSD/Journey metadata, Workspace UX config, portal widget option, IntegrationHub spoke/action, or app property.
-3. Additive configuration record in the supported model.
-4. Small Flow/subflow/action when maintainers need visual ownership, approvals, retries, fulfillment, or integrations.
-5. Small Script Include plus thin Business Rule, UI Action, Client Script, GlideAjax, or Flow wrapper when logic must be reusable, testable, or too complex for configuration.
-6. Clone or extend a ServiceNow-owned UI artifact only when supported options/composition cannot satisfy the requirement and upgrade risk is documented.
-7. Custom table, Scripted REST API, custom UI, or React SPA only when native platform patterns are materially worse.
+1. Inspect the local source and the live record metadata. Treat each instance folder as a separate environment; do not propagate changes across them unless requested.
+2. Edit the split source files with normal code tools and keep any aggregate record file consistent with the workspace convention.
+3. Run local syntax/static checks.
+4. Call `sync_now`, then require `get_sync_status` to show no pending writes.
+5. Re-read the live record, confirm update-set capture, and test the rendered/runtime behavior.
 
-Reject a custom path when it duplicates OOTB behavior, hardcodes fragile identifiers, bypasses ACLs without a security model, creates upgrade risk without benefit, cannot be update-set captured cleanly, or cannot be validated.
+Never print or persist the Agent API token. If local and live content disagree or ownership is unclear, stop writing and establish the source of truth. Use Table API/Xplore for record metadata, ACLs, runtime data, related records, and update-set verification.
 
-## Safety Checkpoints
+## Validation Standard
 
-Load `references/safety-checklists.md` before high-risk changes involving update sets, fix scripts, flows, ACLs, integrations, imports, HRSD, portals/workspaces, production-like data, or many records.
+Apply the relevant layers and record concrete evidence:
 
-Stop and confirm before:
+- **Configuration:** re-read the exact record by resolved `sys_id`; verify scope, package, active/state, conditions, references, and key fields.
+- **Behavior:** trigger one realistic safe scenario; verify the final record, event, flow step, email, response, import result, or downstream state—not merely the trigger.
+- **Channel:** test UI16, Workspace, Service Portal, Employee Center, mobile, or API as requested. One channel does not prove another.
+- **Security:** test the intended persona plus an unauthorized/negative case where access matters.
+- **Delivery:** confirm expected customer updates/application and absence of unrelated capture.
+- **Regression:** test one adjacent or false-condition case for automation, ACLs, scripts, and shared UI.
+- **Cleanup:** account for test records, queued email/events, flow contexts, imports, attachments, and restored preferences.
 
-- destructive delete, broad update, mass data repair, or Fix Script execution
-- production write or PROD update-set manipulation
-- credential, OAuth, SSO, MID Server, Store/plugin, or connection-alias change
-- disabling ACLs, bypassing security, or changing roles/groups for many users
-- editing ServiceNow-owned artifacts directly
-- running imports/transforms against production-like data
-- choosing between UI16, Workspace, Portal, or Employee Center when acceptance depends on the channel
-- installing plugins or using licensed features that may affect cost, entitlement, or instance state
+If a layer cannot be tested, say exactly why, what was tested instead, the remaining risk, and the manual verification step. Never report success from inference alone.
 
-## Update-Set Hygiene
+## Environment Routing
 
-- Run `Get-ServiceNowPdiHealth.ps1` at the start of substantial work; note current user, app, update set, stale in-progress sets, and API fallback status.
-- Reuse the existing story/change update set for small follow-up changes in the same application scope. Create a new set when the work is distinct, the current set is complete/inappropriate, or the application scope changes.
-- When duplicate same-named update sets exist, pass `-UpdateSetSysId` explicitly. Passing only `-Name` can create another set.
-- Keep one child update set per application scope. Create Global parent/batch sets only when bundling children.
-- Confirm captured rows belong to the intended application. Mixed scope is a warning unless it is a known platform-generated pattern and documented.
-- Exclude unrelated noise; do not copy it into release sets. Leave unrelated in-progress update sets alone.
-- Ask before completing/exporting when the summary shows mixed scope, unexpected application, broad form/layout noise, unrelated records, or suspicious customer updates.
-- Restore preferences before handoff. If the original set was intentionally ignored/merged, switch to the clean successor instead of restoring a stale context.
+Helpers load credentials from the nearest workspace `.env`. Prefer an explicit profile and env path when generic `SN_*` variables could target the wrong instance.
 
-## Testing Standards
+- `pdi`: Simen's PDI at `https://dev396302.service-now.com`; default for demonstrations and safe reproduction.
+- `other`: Vår Energi DEV at `https://varenergidev.service-now.com`; Vår Energi stories commonly originate in PROD and are implemented in DEV.
+- Vår Energi PROD may be reachable with the `other` credentials plus `-Instance 'https://varenergiprod.service-now.com'`; keep it read-only without exact write authorization.
+- FFI/Personellsikkerhet is on-premise and not directly reachable. Treat the PDI as the mirror unless the user provides reachable access or exported evidence. Never route FFI work to Vår Energi implicitly.
 
-- Record-level: read by `sys_id`; verify active/state, scope, package, application, key fields, references, and customer-update payload.
-- Behavior-level: trigger the rule, flow, notification, portal/widget, workspace action, REST call, import, transform, or generated HRSD/catalog runtime record.
-- Security-level: verify with role-aware REST/browser checks where credentials exist; otherwise use constrained Xplore with `GlideRecordSecure` and explicit assumptions. Distinguish ACLs from UI hiding, user criteria, domain separation, before-query rules, and application access.
-- Integration-level: verify connection alias/auth profile, status code, request/response shape, logs, retries, error handling, and idempotency. Do not hit external systems with unsafe payloads without approval.
-- UI-level: verify the requested channel. Include browser checks for Portal/Workspace and viewport/state when visual layout matters.
-- Cleanup: remove throwaway data and accidental customer updates unless they are intentional deliverables.
+After connecting, verify the returned instance name/URL and current user before relying on results or writing. Never store credentials in the skill, references, cache, update sets, logs, or test data.
 
-## Verification Recipes
+## Reference Routing
 
-- Record exists: Table API read by `sys_id`; include key display values only when useful.
-- Runtime behavior works: trigger one realistic record/action/request, then inspect resulting records, events, flow contexts, emails, logs, or generated child artifacts.
-- Flow executed: inspect `sys_flow_context`, runtime values, step status, retries, and error text.
-- Notification sent: use `Test-ServiceNowNotification.ps1`; report event row, matched notification, generated/ignored email, recipient, subject marker, and duplicate suppression behavior.
-- Role visibility works: use Table API/browser with the relevant user when possible; otherwise report the exact `GlideRecordSecure`/role assumptions.
-- Update set clean: use `Get-ServiceNowUpdateSetSummary.ps1`; report expected application, row count, mixed-scope state, noise rows, and unexpected types before complete/export.
-- UI channel renders: verify the actual requested channel; do not substitute classic UI for Workspace, Portal, or Employee Center.
+Load only what the task needs; do not bulk-read references.
 
-## Domain Routing
+Treat any sys_ids recorded in references as instance observations or lookup hints, never as reusable constants. Resolve the current record live by a stable key before relying on it.
 
-Load only the relevant reference(s), and only when the task touches that domain:
-
-- General step-by-step workflows: `references/golden-paths.md`
-- High-risk safety: `references/safety-checklists.md`
-- Vår Energi: `references/vaar-energi-lessons.md`, `references/vaar-energi-design.md`
-- HRSD service, COE, templates, Journey, Lifecycle Event, approvals: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`
-- Catalog item fulfillment, RITMs, variables, manager approvals, rejection handling: `references/lessons-catalog.md`
-- Incident routing, assignment, state, or process: `references/lessons-incident.md`
-- FFI Personellsikkerhet (`x_personellsikkerh`): `references/lessons-personellsikkerhet.md`
-- Custom scoped applications, new tables/roles/nav/apps/source control: `references/custom-scoped-apps.md`
-- Complex app/process discovery or impact analysis: `references/servicenow-graph-mapping.md`
-- Broad OOTB lookup or metadata indexing: `references/service-now-indexing.md`
-- Service Operations Workspace, Declarative Actions, Workspace modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
-- UI16 popups, UI Pages, `GlideDialogWindow`, classic Client Scripts/UI Actions/GlideAjax: `references/lessons-ui16.md`
-- Portal/Employee Center widgets/themes/pages: `references/tables.md`, then `references/lessons-portal.md`
+- Universal workflows and safety: `references/golden-paths.md`, `references/safety-checklists.md`
+- Helpers and command examples: `references/toolkit.md`, `references/examples.md`
+- Official research: `references/official-docs.md`; community heuristics only as secondary context: `references/snprotips.md`
+- Scripting, stories, update sets, scoped apps: `references/development.md`, `references/custom-scoped-apps.md`
+- ACLs, visibility, Restricted Caller Access, cross-scope: `references/debugging.md`
+- Catalog and incident: `references/lessons-catalog.md`, `references/lessons-incident.md`
+- HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`
+- Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
+- Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
+- Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
 - Platform Analytics: `references/lessons-platform-analytics.md`
-- Now Assist, AI Search, AI agents, MCP, AI Control Tower, providers, privacy/safety: `references/now-assist.md`
-- Australia release AI features, Build Agent, Studio AI app generation, MCP Server Console/Client: `references/australia-ai-platform.md` plus `references/now-assist.md` when runtime AI config is involved
-- External ServiceNow MCP evaluation: `references/external-mcp-evaluation.md`
-- Integrations, REST messages, imports/exports, auth profiles, connection aliases: `references/integrations.md`, `references/lessons-integrations.md`
-- ACLs, hidden records, user criteria, before-query rules, Restricted Caller Access, cross-scope denied: `references/debugging.md`
-- Business Rules, Script Includes, complex scripts, story state, update-set edge cases, Xplore/background patterns: `references/development.md`
-- Toolkit helper behavior and examples: `references/toolkit.md`, `references/examples.md`
-- Official docs research: `references/official-docs.md`
-- Practical community heuristics: `references/snprotips.md` as supporting context only, never as the authority
+- Now Assist/AI/MCP and Australia AI platform: `references/now-assist.md`, `references/australia-ai-platform.md`, `references/external-mcp-evaluation.md`
+- Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
+- FFI Personellsikkerhet: `references/lessons-personellsikkerhet.md`
+- Vår Energi implementation/design: `references/vaar-energi-lessons.md`, `references/vaar-energi-design.md`
 
-## HRSD and Journey Rules
+## Communication Contract
 
-- For HR Services created through API/script, set both `sn_hr_core_service.name` and `sn_hr_core_service.value`; the UI auto-generates `value`, scripts may not.
-- Use HR Service Additional Information only for generated case-form fields and subject-person related lists after case creation. It does not replace Employee Center record producer variables.
-- For HR Service record producers, use `new sn_hr_core.hr_ServicesUtil(current, gs).createCaseFromProducer(producer, cat_item.sys_id);`.
-- For Journey/Lifecycle Event services, use `new sn_hr_le.hr_ActivityUtils().createCaseFromProducer(current, producer, cat_item.sys_id);`.
-- Put HR task instructions in `rich_description`, not plain `description`, so HTML and template variables work.
-- Set HR task due-date fields deliberately and verify generated `sn_hr_core_task.due_date` on a runtime task.
-- For Lifecycle Event activities (`sn_hr_le_activity`), set both `owning_group` and `badge`.
-- For record producer mappings, Journey approvals, Todo content, and Lifecycle Event trigger verification, load `references/hrsd-lifecycle.md` before implementation.
-- For `Midlertidig ansettelse`, load `references/hrsd-lifecycle.md` and use its PDI fast path before rediscovering lifecycle, producer, group, condition, badge, or submit-catalog patterns.
+Lead with the outcome or finding. Be concise, specific, and evidence-backed.
 
-## Workspace, Portal, and UI Rules
+For implementation, report the target environment; changed artifacts; update set or other delivery vehicle when applicable; tests and results; cleanup; rollback; risks/assumptions; and manual steps. For debugging, report evidence, root cause or ranked hypotheses, recommended fix, and verification. For planning, compare only credible options and include implementation, test, deployment, and rollback plans.
 
-- Configure composition, options, route/action metadata, user criteria, and themes before cloning or scripting.
-- Clone ServiceNow-owned widgets/components only with a written reason and verification plan.
-- Workspace work should prefer Declarative Actions, UX app config, route/config records, and supported modal/action models before custom client code.
-- Portal/Employee Center work should verify the actual endpoint and user criteria; clear or account for cache only when necessary.
-- UI16 work does not prove Workspace/Portal behavior; test the channel Simen asked for.
+Do not dump large scripts, XML, logs, or full records unless they are the deliverable. Distinguish observed facts, documented platform behavior, and inference.
 
-## Integration and Import Rules
+Capture a lesson only when it is reusable and non-obvious. Put details in the relevant `references/lessons-*.md`; never store secrets, sensitive customer data, transient identifiers as portable facts, or noisy one-off history.
 
-- Prefer IntegrationHub spokes, REST Message records, connection aliases, and transform maps before custom HTTP code.
-- Never print or store credentials. Redact auth headers and tokens in logs.
-- Use the smallest safe sample payload. Verify outbound/import logs, row errors, transform results, retries, and idempotency.
-- Stop before changing OAuth, MID Server, connection aliases, production endpoints, or broad transforms without explicit approval.
-
-## Andrew React/Vite Pattern
-
-Use when Simen asks for Andrew Pishchulin's approach, the Andrew custom ServiceNow front-end pattern, or a single-file React/Vite SPA hosted from a ServiceNow property and Scripted REST API. Boilerplate: `https://github.com/elinsoftware/servicenow-react-app`.
-
-```powershell
-git clone https://github.com/elinsoftware/servicenow-react-app.git '<project path>'
-Set-Location '<project path>'
-& "<skill path>\scripts\Initialize-ServiceNowAndrewReactApp.ps1" `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env' `
-  -Install
-npm run dev -- --host 127.0.0.1 --port 5173
-```
-
-Development rules:
-
-- The helper updates `vite.config.ts` so `/api` proxies to the selected ServiceNow instance and creates an ignored Vite `.env`.
-- Keep `.env` ignored and out of commits.
-- Use `HashRouter` because ServiceNow serves the app from a Scripted REST URL.
-- Verify `/api/now/table/sys_user?sysparm_query=sys_id=javascript:gs.getUserID()` and the rendered user context.
-- For ServiceNow hosting, build with `npm run build`, store `dist/index.html` in a string property, and serve it from a Scripted REST GET endpoint with `text/html`.
-- For authenticated ServiceNow user context, add a token endpoint returning `gs.getSession().getSessionToken()` and `gs.getUserName()`, then set `X-userToken` before rendering.
-
-## Complete, Export, and Email Update Set
-
-Use only when Simen asks to finish/export/email an update set.
-
-1. If email delivery is requested, use the Gmail connector first, confirm the connected account, and stop if Gmail access is unavailable.
-2. Inspect the update set with `Get-ServiceNowUpdateSetSummary.ps1`.
-3. Do not complete/export if the summary shows mixed scope, unexpected application, broad noise, or unrelated records unless Simen explicitly accepts it.
-4. Complete/export with `Export-ServiceNowUpdateSetXml.ps1 -Complete`.
-5. Verify the returned XML file exists, root is `unload`, and update count matches the summary.
-6. Send the email from Gmail with the requested recipient, exact update-set name as subject, a short body containing name/sys_id/scope/update count, and the XML attachment path.
-7. Report Gmail account, recipient, subject, update set state, XML path, update count, and sent message ID.
-
-## Output Contract
-
-Implementation final responses must include:
-
-- update set name/sys_id/scope
-- changed artifacts and key records
-- validation performed and result
-- cleanup performed
-- rollback path
-- risks, assumptions, and manual steps
-
-Planning final responses must include:
-
-- option comparison
-- recommended path
-- implementation plan
-- test plan
-- rollback plan
-- artifacts to create/change
-
-For reviews, lead with concrete findings and file/record references. For debugging, lead with evidence, probable cause, fix, and verification. Do not dump long scripts/XML unless they are the deliverable.
-
-## Token and Cost Discipline
-
-- Query exact records first; broaden only when necessary.
-- Use `sysparm_fields`, `sysparm_limit`, `-ExcludeReferenceLink`, and cached helpers.
-- Load one focused reference at a time.
-- Use compact JSON for Xplore results and summarize facts instead of pasting large records.
-- Prefer indexed metadata for broad discovery, then verify live before edits.
-- Avoid repeated exploration after a fact has been established.
-- Save durable discoveries in relevant lesson files instead of rediscovering them across turns.
-
-## Common Tables
-
-Core: `sys_user`, `sys_scope`, `sys_user_preference`, `sys_dictionary`, `sys_db_object`, `sys_properties`, `sys_plugins`, `sys_update_set`, `sys_update_xml`, `rm_story`, `sys_script`, `sys_script_include`, `sys_ui_policy`, `sys_ui_policy_action`, `sys_script_client`, `sysauto_script`, `sysevent_register`, `sysevent_email_action`, `sys_security_acl`, `sys_restricted_caller_access`.
-
-Flow: `sys_hub_flow`, `sys_hub_flow_base`, `sys_hub_flow_snapshot`, `sys_hub_trigger_instance_v2`, `sys_hub_action_instance_v2`, `sys_hub_flow_logic_instance_v2`, `sys_hub_action_input`, `sys_hub_action_output`, `sys_flow_trigger_plan`, `sys_flow_context`, `sys_flow_runtime_value`, `sys_hub_action_type_definition`.
-
-Portal/workspace: `sp_widget`, `sp_instance`, `sp_page`, `sp_portal`, `sp_theme`, `sp_header_footer`, `sys_ux_page_registry`, `sys_ux_app_config`, `sys_ux_app_route`, `sys_ux_screen_type`, `sys_ux_screen`, `sys_ux_page_property`, `sys_ux_macroponent`, `sys_ux_applicability`, `sys_ux_applicability_m2m_list`, `sys_ux_list_menu_config`, `sys_declarative_action_assignment`, `sys_declarative_action_payload_definition`, `sys_declarative_action_model_definition`, `sys_ux_action_config`, `sys_ux_form_action`, `sys_ux_form_action_layout`, `sys_ux_form_action_layout_group`, `sys_ux_form_action_layout_item`, `sys_ux_addon_event_mapping`.
-
-HRSD: `sn_hr_core_service`, `sn_hr_core_template`, `sn_hr_core_task`, `sn_hr_core_criteria`, `sn_hr_le_case`, `sn_jny_journey_config`, `sn_hr_le_activity_set`, `sn_hr_le_activity`, `sn_hr_le_activity_field_mapping`, `sc_cat_item_producer`, `item_option_new`, `question_choice`.
-
-Integration/import: `sys_rest_message`, `sys_rest_message_fn`, `sys_outbound_http_log`, `sys_alias`, `sys_connection`, `http_connection`, `sys_auth_profile_basic`, `oauth_entity_profile`, `sys_ws_definition`, `sys_ws_version`, `sys_ws_operation`, `sys_data_source`, `sys_attachment`, `sys_import_set`, `sys_import_set_run`, `sys_import_set_row_error`, `sys_transform_map`, `sys_transform_entry`, `sys_transform_script`.
-
-Do not treat remembered sys_ids as portable facts. Resolve important records live by stable keys and report the sys_id used.
-
-## Lesson Hygiene
-
-After ServiceNow work, capture only durable, non-obvious lessons. Add a short routing pointer here only if it changes future workflow selection; put details in the relevant `references/lessons-*.md` file. Do not store secrets, customer-sensitive data, noisy one-off facts, or instance-visible tool references.
-
-When Simen asks to publish skill updates, canonical repository is `https://github.com/simenandreas91/servicenow-pdi.git`. This is a personal skill repo used only by Simen/Codex environments, so publish directly on `main`: inspect status and diff, stage only intended skill files, commit tersely on `main`, push `main` to `origin`, and report commit. Do not create `codex/*` branches or PRs for routine skill updates unless Simen explicitly asks.
+When explicitly asked to publish this PowerShell-based personal skill, use `https://github.com/simenandreas91/servicenow-pdi-powershell.git`. Inspect status and diff, stage only intended skill files, commit tersely, and push `main`; do not create a PR unless requested.

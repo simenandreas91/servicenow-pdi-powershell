@@ -186,7 +186,7 @@ job.initialize();
 job.setValue('name', 'FFI Agent Dashboard Demo PA Collection');
 job.setValue('active', true);
 job.setValue('run_type', 'on_demand');
-job.setValue('run_as', '6816f79cc0a8016401c5a33be04be441');
+job.setValue('run_as', gs.getUserID()); // Or resolve the intended service account live by user_name.
 job.setValue('collect', 'scores_text');
 job.setValue('score_operator', 'relative');
 job.setValue('score_relative_start', '7');
@@ -206,8 +206,8 @@ Required starting values:
 - `par_dashboard.active`: `true`
 - `par_dashboard.ready_to_migrate`: `Not Applicable`
 - `par_dashboard_visibility.experience`: Platform Analytics page registry `08c73d60537101100834ddeeff7b1287`
-- owner permission: `can_read=true`, `can_share=true`, `can_write=true`, `owner=true`, `user=6816f79cc0a8016401c5a33be04be441`
-- metadata user fields: `created_by_user` and `updated_by_user` should use Simen Admin `6816f79cc0a8016401c5a33be04be441`
+- owner permission: `can_read=true`, `can_share=true`, `can_write=true`, `owner=true`; resolve `user` live by `user_name`
+- metadata user fields: resolve `created_by_user` and `updated_by_user` live for the intended owner; do not embed a PDI user sys_id
 - metadata `widgets_margin`: `$now-global-space--sm`
 - metadata `po_project_id_list`: `[]`
 

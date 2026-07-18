@@ -23,12 +23,14 @@ Inspect mandatory fields before inserting:
 
 Create a story only when explicitly requested:
 
+Resolve the intended assignee by a stable key such as `user_name` and use the returned `sys_id` only for this write.
+
 ```powershell
 $body = @{
   short_description = 'Example story'
   description = 'As a user, I want an example story so that I can verify API writes.'
-  assigned_to = '6816f79cc0a8016401c5a33be04be441'
-  eap_team = '<team_sys_id>'
+  assigned_to = '<resolved_assignee_sys_id>'
+  eap_team = '<resolved_team_sys_id>'
 } | ConvertTo-Json
 
 & "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `

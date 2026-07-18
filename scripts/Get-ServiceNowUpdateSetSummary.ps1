@@ -1,7 +1,7 @@
 param(
   [string]$UpdateSetSysId,
   [string]$Name,
-  [string]$UserSysId = '6816f79cc0a8016401c5a33be04be441',
+  [string]$UserSysId,
   [string]$CachePath,
   [int]$CacheTtlMinutes = 5,
   [switch]$Refresh,
@@ -13,6 +13,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_ServiceNowToolkitCommon.ps1')
+
+if (-not $UpdateSetSysId -and -not $Name) {
+  $UserSysId = Resolve-ServiceNowToolkitUserSysId `
+    -UserSysId $UserSysId `
+    -Profile $Profile `
+    -EnvPath $EnvPath `
+    -Instance $Instance
+}
 
 if (-not $UpdateSetSysId) {
   if ($Name) {

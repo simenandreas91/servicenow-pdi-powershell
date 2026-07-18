@@ -5,7 +5,7 @@ param(
   [string]$Name,
   [string]$Description = '',
   [string]$UpdateSetSysId,
-  [string]$UserSysId = '6816f79cc0a8016401c5a33be04be441',
+  [string]$UserSysId,
   [string]$SnapshotPath,
   [string]$Profile,
   [string]$EnvPath,
@@ -14,6 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $tableScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowTable.ps1'
+. (Join-Path $PSScriptRoot '_ServiceNowToolkitCommon.ps1')
 
 function Invoke-Table {
   param(
@@ -78,6 +79,11 @@ function Set-Preference {
   return $created.result.sys_id.value
 }
 
+$UserSysId = Resolve-ServiceNowToolkitUserSysId `
+  -UserSysId $UserSysId `
+  -Profile $Profile `
+  -EnvPath $EnvPath `
+  -Instance $Instance
 $scopeSysId = Get-ScopeSysId -ScopeValue $Scope
 $prefNames = @('apps.current_app', 'sys_update_set', "updateSetForScope$scopeSysId")
 $snapshot = [ordered]@{

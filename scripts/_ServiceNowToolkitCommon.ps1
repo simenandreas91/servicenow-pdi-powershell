@@ -39,7 +39,6 @@ function Invoke-ServiceNowToolkitTable {
     [switch]$NoCache
   )
 
-  $cacheRoot = Get-ServiceNowToolkitCacheRoot -CachePath $CachePath
   $cacheInput = @{
     table = $Table
     query = $Query
@@ -49,7 +48,11 @@ function Invoke-ServiceNowToolkitTable {
     profile = $Profile
     instance = $Instance
   } | ConvertTo-Json -Compress
-  $cacheFile = Join-Path $cacheRoot ("table-{0}.json" -f (Get-ServiceNowToolkitCacheKey -Text $cacheInput))
+  $cacheFile = $null
+  if (-not $NoCache) {
+    $cacheRoot = Get-ServiceNowToolkitCacheRoot -CachePath $CachePath
+    $cacheFile = Join-Path $cacheRoot ("table-{0}.json" -f (Get-ServiceNowToolkitCacheKey -Text $cacheInput))
+  }
 
   if (-not $NoCache -and -not $Refresh -and (Test-Path -LiteralPath $cacheFile)) {
     $age = (Get-Date) - (Get-Item -LiteralPath $cacheFile).LastWriteTime
@@ -76,6 +79,42 @@ function Invoke-ServiceNowToolkitTable {
     $raw | Set-Content -LiteralPath $cacheFile -Encoding UTF8
   }
   return $raw | ConvertFrom-Json
+}
+
+function Resolve-ServiceNowToolkitUserSysId {
+  param(
+    [string]$UserSysId,
+    [string]$Profile,
+    [string]$EnvPath,
+    [string]$Instance
+  )
+
+  if (-not [string]::IsNullOrWhiteSpace($UserSysId)) {
+    if ($UserSysId -notmatch '^[0-9a-fA-F]{32}$') {
+      throw "UserSysId must be a 32-character sys_id: '$UserSysId'."
+    }
+    return $UserSysId.ToLowerInvariant()
+  }
+
+  . (Join-Path $PSScriptRoot 'Resolve-ServiceNowConnection.ps1')
+  $connection = Resolve-ServiceNowConnection -Profile $Profile -EnvPath $EnvPath -Instance $Instance
+  $response = Invoke-ServiceNowToolkitTable `
+    -Table 'sys_user' `
+    -Query "user_name=$($connection.UserName)" `
+    -Fields 'sys_id,user_name,active' `
+    -Limit 5 `
+    -DisplayValue false `
+    -ExcludeReferenceLink `
+    -Profile $Profile `
+    -EnvPath $EnvPath `
+    -Instance $Instance `
+    -NoCache
+
+  $matches = @($response.result | Where-Object { $_.user_name -eq $connection.UserName })
+  if ($matches.Count -ne 1) {
+    throw "Could not resolve one exact sys_user record for the authenticated user '$($connection.UserName)'. Pass -UserSysId explicitly."
+  }
+  return [string]$matches[0].sys_id
 }
 
 function Resolve-ServiceNowToolkitScope {

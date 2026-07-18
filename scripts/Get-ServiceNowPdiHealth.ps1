@@ -1,5 +1,5 @@
 param(
-  [string]$UserSysId = '6816f79cc0a8016401c5a33be04be441',
+  [string]$UserSysId,
   [int]$StaleUpdateSetDays = 14,
   [string]$Profile,
   [string]$EnvPath,
@@ -7,6 +7,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ($UserSysId -and $UserSysId -notmatch '^[0-9a-fA-F]{32}$') {
+  throw "UserSysId must be a 32-character sys_id: '$UserSysId'."
+}
 $tableScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowTable.ps1'
 $xploreScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowXploreScript.ps1'
 
@@ -63,6 +66,8 @@ $escapedDays = [int]$StaleUpdateSetDays
 
 $script = @"
 (function () {
+  var userSysId = '$escapedUserSysId' || gs.getUserID();
+
   function count(table, query) {
     var ga = new GlideAggregate(table);
     if (query) ga.addEncodedQuery(query);
@@ -104,7 +109,7 @@ $script = @"
   }
 
   function pref(name) {
-    return one('sys_user_preference', "user=$escapedUserSysId^name=" + name, ['sys_id', 'name', 'value']);
+    return one('sys_user_preference', "user=" + userSysId + "^name=" + name, ['sys_id', 'name', 'value']);
   }
 
   var appPref = pref('apps.current_app');
@@ -164,11 +169,13 @@ try {
   $xploreStatus.error = $message
 }
 
-$tableChecks = @(
-  Invoke-HealthTableCheck -Table 'sys_user_preference' -Query "user=$UserSysId^name=sys_update_set" -Fields 'sys_id,name,value'
-  Invoke-HealthTableCheck -Table 'sys_update_set' -Query 'state=in progress' -Fields 'sys_id,name,state,application,sys_updated_on'
-  Invoke-HealthTableCheck -Table 'sys_plugins' -Query 'active=true' -Fields 'sys_id,name,active'
-)
+$effectiveUserSysId = if ($UserSysId) { $UserSysId } elseif ($xploreHealth) { $xploreHealth.user_id } else { $null }
+$tableChecks = @()
+if ($effectiveUserSysId) {
+  $tableChecks += Invoke-HealthTableCheck -Table 'sys_user_preference' -Query "user=$effectiveUserSysId^name=sys_update_set" -Fields 'sys_id,name,value'
+}
+$tableChecks += Invoke-HealthTableCheck -Table 'sys_update_set' -Query 'state=in progress' -Fields 'sys_id,name,state,application,sys_updated_on'
+$tableChecks += Invoke-HealthTableCheck -Table 'sys_plugins' -Query 'active=true' -Fields 'sys_id,name,active'
 
 [ordered]@{
   generated_at = (Get-Date).ToString('o')

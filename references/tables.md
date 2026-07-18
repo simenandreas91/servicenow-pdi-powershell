@@ -59,13 +59,14 @@ Load this file only when table-specific reminders are useful.
 
 - Current app scope is stored per user as `sys_user_preference.name=apps.current_app`.
 - Scoped current update set is stored per user as `sys_user_preference.name=updateSetForScope<sys_scope.sys_id>`.
-- For `Simen Admin`, resolve the preference with:
+- Resolve the authenticated user's `sys_user` record by `user_name`, then query the preference with:
 
 ```text
-user=6816f79cc0a8016401c5a33be04be441^name=apps.current_app
+user=<resolved_user_sys_id>^name=apps.current_app
 ```
 
-- Employee Center scope value is `sn_ex_sp`.
+- Employee Center Core uses scope `sn_hr_sp`; pages such as `my_org_chart` can belong to this application even when rendered in the Employee Center portal.
+- Employee Center uses scope `sn_ex_sp`. Resolve the target record's live `sys_scope` before selecting an update set instead of treating the two applications as interchangeable.
 
 ## Update Sets
 
