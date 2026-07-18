@@ -69,7 +69,7 @@ Reject a design that duplicates OOTB behavior, edits base artifacts unnecessaril
 - Make integrations and retryable automation idempotent. Prefer connection aliases/auth profiles and IntegrationHub or REST Message records over credentials or endpoints in scripts.
 - Keep external calls out of synchronous record transactions when practical. Define timeout, error, retry, and duplicate-handling behavior.
 - Preserve upgradeability: configure or extend before cloning; clone only artifacts designed for it or when the documented benefit outweighs skipped upgrades.
-- Follow the existing deployment model. Use update sets for tracked configuration, and use application repository/source control when that is the established scoped-app pipeline. Do not mix delivery mechanisms casually.
+- Follow the existing deployment model. For a new custom scoped application, evaluate ServiceNow SDK/Fluent with Git and the Application Repository as the preferred source-based path. Use update sets for Global, operational, hotfix, plugin-owned, and established update-set work. Do not mix delivery mechanisms casually.
 - Do not use update sets to transport operational/task data. Use an approved import, migration, or idempotent data script with explicit reconciliation.
 
 ## Inspection and Debugging
@@ -119,6 +119,8 @@ Choose the cheapest tool that can produce reliable evidence:
 | Exact metadata/data read or narrow write | `Invoke-ServiceNowTable.ps1` | API ACLs block necessary evidence or behavior must execute server-side |
 | Server API/runtime probe | `Invoke-ServiceNowXploreScript.ps1` | Xplore is unavailable or comparison with Scripts - Background is explicitly required |
 | Existing file-backed source | Synced local files + sn-scriptsync | Mapping is incomplete, sync is unhealthy, or live metadata/capture must be inspected |
+| New or converted source-based custom app | ServiceNow SDK/Fluent project + Git | The artifact is unsupported in Fluent, the app is not SDK-managed, or live platform behavior must be verified |
+| Portal, Employee Center, Workspace, or custom UI design | Existing component/theme and customer design system + rendered browser inspection | Use `gpt-taste` only as an ideation layer for an explicitly premium landing page or bespoke frontend |
 | Rendered UI or builder-only behavior | In-app browser | Use API first to locate records and avoid manual navigation |
 | Release-sensitive platform behavior | Official ServiceNow docs matching the instance release | Use community material only as secondary context |
 | Broad discovery/impact mapping | Cached inventory/index or graph mapping | Verify every edit candidate live before writing |
@@ -151,6 +153,27 @@ When the workspace already contains a clear synced representation and `.vscode/s
 5. Re-read the live record, confirm update-set capture, and test the rendered/runtime behavior.
 
 Never print or persist the Agent API token. If local and live content disagree or ownership is unclear, stop writing and establish the source of truth. Use Table API/Xplore for record metadata, ACLs, runtime data, related records, and update-set verification.
+
+### ServiceNow SDK/Fluent
+
+Use the official ServiceNow SDK workflow when a workspace has `now.config.json`, or when creating or deliberately converting a custom application to source-based development. Load `references/servicenow-sdk.md` before SDK work.
+
+- Treat the local SDK project and Git repository as the source of truth for SDK-managed metadata. Do not make competing Table API, sn-scriptsync, update-set, or builder edits to the same artifact without an explicit reconciliation plan.
+- Orient through the installed CLI instead of guessing syntax: inspect the version and top-level help, then inspect each subcommand's help. Use `explain --list`, `--peek`, and the relevant full topic before generating Fluent metadata.
+- Use SDK `query` for narrow, machine-readable discovery when convenient; keep the bundled helpers for cached inventory, Xplore execution, update-set context/capture, rollback evidence, and established non-SDK work.
+- Build before install. Treat `install`/`deploy`, conversion, dependency changes, and instance synchronization as writes. Target only an explicitly confirmed non-production instance and validate the installed behavior there.
+- Do not install ServiceNow's official `now-sdk` skill globally by default: its published trigger overlaps nearly every ServiceNow task. For an active SDK project, keep it separate so it can track SDK releases, and use it only with this skill's environment, safety, delivery, and validation rules rather than duplicating its changing CLI documentation here.
+
+### ServiceNow UI Experience
+
+For visual design, layout, styling, motion, or frontend implementation, load `references/servicenow-ui-design.md` plus any applicable customer design reference.
+
+- Classify the surface before designing. Transactional forms, approvals, dashboards, and workspaces need compact predictability; portal landing pages can use stronger editorial hierarchy; bespoke campaign pages may justify richer visual direction.
+- Start from OOTB components, the active theme, reusable tokens, and the customer's design system. Scope CSS to the owned component or page and avoid global overrides that can destabilize unrelated experiences.
+- Use deliberate hierarchy, readable heading widths, consistent spacing, complete grids, legible actions, and purposeful imagery. Remove decorative labels, badges, counters, and cards that do not help the user complete or understand something.
+- Treat `gpt-taste` as inspiration, not platform law. Do not import its randomization, mandatory AIDA, huge section spacing, stock-image URLs, or motion-everywhere rules into ordinary ServiceNow experiences.
+- Motion must communicate state or hierarchy, work without hover, respect reduced-motion preferences, and preserve performance. Do not add GSAP or another dependency unless the experience genuinely needs it and the platform packaging path supports it.
+- Validate the rendered experience at relevant breakpoints with real content and the intended persona. Check keyboard/focus behavior, contrast, zoom/text expansion, localization, empty/error/loading states, horizontal overflow, and regression against surrounding OOTB components.
 
 ## Validation Standard
 
@@ -187,10 +210,12 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - Helpers and command examples: `references/toolkit.md`, `references/examples.md`
 - Official research: `references/official-docs.md`; community heuristics only as secondary context: `references/snprotips.md`
 - Scripting, stories, update sets, scoped apps: `references/development.md`, `references/custom-scoped-apps.md`
+- ServiceNow SDK, Fluent, and source-based custom apps: `references/servicenow-sdk.md`
 - ACLs, visibility, Restricted Caller Access, cross-scope: `references/debugging.md`
 - Catalog and incident: `references/lessons-catalog.md`, `references/lessons-incident.md`
 - HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`
 - Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
+- Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
 - Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
 - Platform Analytics: `references/lessons-platform-analytics.md`
