@@ -1,6 +1,6 @@
 ---
 name: servicenow-pdi
-description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for ITSM, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
+description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
 ---
 
 # ServiceNow PDI
@@ -71,6 +71,20 @@ Reject a design that duplicates OOTB behavior, edits base artifacts unnecessaril
 - Preserve upgradeability: configure or extend before cloning; clone only artifacts designed for it or when the documented benefit outweighs skipped upgrades.
 - Follow the existing deployment model. For a new custom scoped application, evaluate ServiceNow SDK/Fluent with Git and the Application Repository as the preferred source-based path. Use update sets for Global, operational, hotfix, plugin-owned, and established update-set work. Do not mix delivery mechanisms casually.
 - Do not use update sets to transport operational/task data. Use an approved import, migration, or idempotent data script with explicit reconciliation.
+
+## CMDB and CSDM Standards
+
+Load `references/cmdb-csdm.md` for CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, CMDB Health, Data Manager, service modeling, CI migration, or AI-service modeling work.
+
+- Treat CMDB as an operational graph product scoped to business outcomes, principal CI classes, and one or two pilot services—not as a universal inventory dump.
+- Treat CSDM as prescriptive conceptual and physical modeling guidance, not a product to install. Verify the target release, live table/class, Store app, plugin, licensing, UI, IRE, health, lifecycle, and product support before relying on a CSDM entity.
+- Route automated CI creates and updates through IRE. Prefer Discovery and certified Service Graph Connectors, then IntegrationHub ETL, then an explicitly IRE-aware custom integration. Do not use direct/coalesced CMDB writes as an identity strategy.
+- Inspect the target class in CI Class Manager before population or extension. Define identification, reconciliation, dependent relationships, required/recommended fields, health, ownership, freshness, and retirement behavior together.
+- Use prescribed CSDM relationships and direction. For manual infrastructure modeling, match what Discovery would produce. Add only relationships that support a named workflow, control, report, or identification need.
+- Keep Business Application, Service Instance/Application Service, discovered Application, Business Service, Technology Management Service, and offerings semantically distinct. Do not use a Business Application as the operational CI for Incident, Problem, or Change.
+- Fix duplicate/stale root causes at the source, mapping, IRE, or lifecycle layer before bulk remediation. Use De-duplication tools and CMDB Data Manager with preview, exclusions, approvals, dependent-CI analysis, and rollback/recovery planning.
+- Scope CMDB Health and Data Foundations to principal classes and critical services. Report denominators, exclusions, refresh time, remediation age, and operational outcomes rather than a single global percentage.
+- For AI agents and Workflow Data Fabric, preserve CMDB/CSDM as the governed service context. Apply least privilege, evaluations, IRE, human approval for consequential writes, and explicit contracts before joining external data or automating remediation.
 
 ## Inspection and Debugging
 
@@ -218,6 +232,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
 - Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
+- CMDB, CSDM 5, Service Graph, IRE, Discovery/Service Mapping, health, lifecycle, governance, migration, and 2026 AI/WDF alignment: `references/cmdb-csdm.md`
 - Platform Analytics: `references/lessons-platform-analytics.md`
 - Now Assist/AI/MCP and Australia AI platform: `references/now-assist.md`, `references/australia-ai-platform.md`, `references/external-mcp-evaluation.md`
 - Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
