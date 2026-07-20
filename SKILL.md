@@ -152,7 +152,7 @@ Use `sysparm_fields`, selective encoded queries, small limits, `-ExcludeReferenc
 - `Test-ServiceNowNotification.ps1`: event/notification inspection and controlled triggering.
 - `Get-ServiceNowUpdateSetSummary.ps1` and `Confirm-ServiceNowUpdateCapture.ps1`: packaging proof.
 - `Get-ServiceNowCompendiaSyncStatus.ps1`: read-only Vår Energi Compendia reconciliation across articles, staging, attachments, properties, and the scheduled job.
-- `Restore-ServiceNowPreferenceSnapshot.ps1`: handoff cleanup.
+- `Restore-ServiceNowPreferenceSnapshot.ps1`: handoff cleanup. Store intentionally retained preference snapshots under `snapshots/`; remove transient snapshots after a successful restore.
 
 See `references/toolkit.md` and `references/examples.md` for parameters and commands. Locate helpers relative to this skill instead of assuming a fixed installation path.
 
