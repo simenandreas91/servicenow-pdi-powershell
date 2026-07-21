@@ -1,6 +1,6 @@
 ---
 name: servicenow-pdi
-description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
+description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
 ---
 
 # ServiceNow PDI
@@ -71,6 +71,21 @@ Reject a design that duplicates OOTB behavior, edits base artifacts unnecessaril
 - Preserve upgradeability: configure or extend before cloning; clone only artifacts designed for it or when the documented benefit outweighs skipped upgrades.
 - Follow the existing deployment model. For a new custom scoped application, evaluate ServiceNow SDK/Fluent with Git and the Application Repository as the preferred source-based path. Use update sets for Global, operational, hotfix, plugin-owned, and established update-set work. Do not mix delivery mechanisms casually.
 - Do not use update sets to transport operational/task data. Use an approved import, migration, or idempotent data script with explicit reconciliation.
+
+## Now Assist And Agentic AI Standards
+
+Load `references/now-assist.md` for every Now Assist, AI Agent Studio, AI agent, agentic workflow, Skill Kit, Now Assist panel, Guardian, AI Control Tower, AI Search/Genius Results, agentic evaluation, AI consumption, or MCP-for-AI task.
+
+- Start with the least-agentic solution that satisfies the outcome: deterministic Flow/configuration first, then a packaged or custom skill for one bounded generation task, a single AI agent for tool-selecting work, and an agentic workflow only for adaptive coordination across genuinely distinct specialists.
+- Verify the instance family/patch, Store app versions, entitlements, plugins, model/provider availability, regional restrictions, and actual guided-setup options before designing. Australia documentation changes across patches and Store app versions.
+- Define the business outcome, success/failure states, user persona, record context, channel, interactive versus non-interactive mode, trigger, maximum side effects, human-approval points, and assist budget before authoring instructions.
+- Make each AI agent a narrow worker with a non-overlapping role. Write its List of steps as an operational algorithm with explicit tool names, inputs, decision conditions, outputs, stop conditions, retries, and an honest `insufficient evidence` path. The platform Orchestrator coordinates workers; do not create a fake custom orchestrator agent.
+- Give every tool one purpose and a precise contract. Prefer a tested Flow action or subflow for consequential writes, approvals, retries, integrations, and multi-record transactions; use bounded record operations for simple CRUD; use scripts only when supported declarative tools cannot express the requirement.
+- Treat invocation ACLs, runtime identity, role masking, downstream tool ACLs, table/field ACLs, domain separation, and data policies as separate controls. Default to Dynamic user plus the smallest approved-role intersection. Use an AI user only for a documented service-identity need, and never treat an AI user as a shortcut around user authorization.
+- Keep irreversible, high-impact, ambiguous, sensitive, external, or bulk actions in Supervised mode. Design mutating tools to validate inputs, authorize server-side, be idempotent, return durable record identifiers, and distinguish `already complete`, `not authorized`, `not found`, `validation failed`, and transient errors.
+- Test the active instruction version manually, inspect the execution plan/decision log/tool calls, run Test access for allowed and denied personas, execute dataset-based agentic evaluations, and test the real channel. Verify final records and downstream effects, not just conversational output.
+- Transport triggers inactive because they contain instance-specific data. Re-resolve dependencies on the target, test access and behavior there, then activate agents/workflows/channels before triggers. Duplicate packaged assets when customization requires it unless the installed version explicitly supports the intended edit.
+- Monitor executions, failures, latency, tool count, assist tier/consumption, Guardian logs, and user feedback. Keep the Australia Patch 3 runaway-trigger kill switch configured, use narrow trigger conditions, and retain an operational deactivation path.
 
 ## CMDB and CSDM Standards
 
