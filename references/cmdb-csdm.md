@@ -1,5 +1,7 @@
 # ServiceNow CMDB and CSDM Field Guide (2026)
 
+Use this file for architecture and service-model decisions. For operational administration, table-level diagnostics, remediation, and executable examples, also load `cmdb-admin-development.md` and `cmdb-query-library.md` from this directory.
+
 ## Purpose and version baseline
 
 Use this reference for architecture, implementation, governance, diagnosis, migration, and day-to-day work involving ServiceNow Configuration Management Database (CMDB), Service Graph, and Common Service Data Model (CSDM).

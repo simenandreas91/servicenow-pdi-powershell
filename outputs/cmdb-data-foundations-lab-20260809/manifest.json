@@ -1,0 +1,121 @@
+{
+  "run_id": "DFLAB-20260809-A",
+  "environment": "https://dev396302.service-now.com",
+  "release": {
+    "family": "Australia",
+    "war": "glide-australia-02-11-2026__patch1-03-23-2026_03-31-2026_1137.zip"
+  },
+  "state": "completed_and_retained_for_inspection",
+  "last_observed": "2026-08-09 11:07:17",
+  "preflight": {
+    "cmdb_workspace_version": "9.2.2",
+    "cmdb_ci_class_count": 56,
+    "principal_class_count_before": 0,
+    "health_scorecard_count_before": 0,
+    "cmdb_360_master_enabled": false,
+    "cmdb_360_capture_property_observed": true,
+    "existing_linux_server_count": 4
+  },
+  "itom_visibility_install": {
+    "state": "complete",
+    "verified_store_apps": [
+      {"name": "Discovery Admin Workspace", "scope": "sn_disco_workspace", "version": "1.12.0", "active": true},
+      {"name": "Discovery Framework", "scope": "sn_disco_framework", "version": "0.0.2", "active": true},
+      {"name": "ITOM Content Service", "scope": "sn_smart_content", "version": "1.6.2", "active": true},
+      {"name": "ITOM Infra Services Workspace", "scope": "sn_itom_infra_ws", "version": "1.0.2", "active": true},
+      {"name": "Kubernetes Visibility Agent", "scope": "sn_acc_visibility", "version": "3.15.0", "active": true},
+      {"name": "Service Mapping Plus", "scope": "sn_sm_scoped_app", "version": "1.23.2", "active": true},
+      {"name": "Visibility Content", "scope": "sn_pattern_design", "version": "6.29.0", "active": true}
+    ],
+    "plugin_evidence": {
+      "service_mapping": "active",
+      "itom_discovery_license": "inactive licensing metadata; engine capability verified through installed Discovery applications"
+    }
+  },
+  "ire_no_commit_tests": [
+    {"scenario": "valid_server", "observed": "INSERT", "errors": 0},
+    {"scenario": "missing_identifier", "observed": "MISSING_MATCHING_ATTRIBUTES then ABANDONED", "errors": 2},
+    {"scenario": "dependent_application_without_host", "observed": "MISSING_DEPENDENCY then ABANDONED", "errors": 2},
+    {"scenario": "complete_service_application_server_slice", "observed": "three item INSERT decisions and two relationship INSERT decisions", "errors": 0}
+  ],
+  "ire_commit_evidence": {
+    "initial_attempt": {
+      "finding": "Current Visibility content enforces a unique, non-empty cmdb_ci_service.number labelled SN App Service ID.",
+      "partial_commit": "Four independent CIs and the valid Runs on relationship committed; the service and its two dependent relationships were rejected.",
+      "correction": "Added number=DFLAB-20260809-A-SVC-001 and resumed with source-native keys."
+    },
+    "resume": {
+      "existing_before": 4,
+      "item_operations": ["INSERT service", "NO_CHANGE application", "UPDATE three servers"],
+      "relationship_operations": ["INSERT service-to-application", "NO_CHANGE application-to-server", "INSERT intentional incorrect edge"],
+      "errors": 0
+    },
+    "idempotency_rerun": {
+      "existing_before": 5,
+      "new_cis": 0,
+      "new_relationships": 0,
+      "all_three_relationships": "NO_CHANGE",
+      "match_path": "sys_object_source source-native key"
+    }
+  },
+  "governance": {
+    "update_set": {"sys_id": "2fe29b16c36ec71065eefdec050131d6", "name": "CMDB Data Foundations Lab 20260809", "state": "in progress"},
+    "principal_class": {"sys_id": "89934221535592108e66dd0b10e5e639", "class": "cmdb_ci_linux_server", "principal_class": true},
+    "recommended_fields": {"sys_id": "4f73d7d6c36ec71065eefdec05013153", "fields": ["support_group", "environment", "owned_by", "managed_by_group"]},
+    "health_inclusion_rules": [
+      {"sys_id": "46a3d31ac36ec71065eefdec050131af", "metric": "Duplicate", "condition": "nameSTARTSWITHDFLAB-20260809-A"},
+      {"sys_id": "4ea3131ac36ec71065eefdec0501314a", "metric": "Recommended", "condition": "nameSTARTSWITHDFLAB-20260809-A"},
+      {"sys_id": "82a3d31ac36ec71065eefdec050131ab", "metric": "Staleness", "condition": "nameSTARTSWITHDFLAB-20260809-A"}
+    ],
+    "identification": "Active Hardware Rule inherited by Linux Server: product_instance_id 90, serial lookup 100, serial_number 200, name 300, network adapter MAC/name 400.",
+    "reconciliation": "No static or dynamic reconciliation definitions on the Linux Server ancestor chain; source authority remains a governance gap.",
+    "lifecycle": "Active inherited life_cycle_mapping rows cover install_status=1 and operational_status=1; global lifecycle synchronization was not enabled.",
+    "cmdb_360": "Master multisource property remains false; no broad enablement was performed."
+  },
+  "created_records": [
+    {"sys_id": "a0621316656ec710980c257c94e92ebb", "class": "cmdb_ci_service_auto", "name": "DFLAB-20260809-A Commerce - Production", "source_key": "DFLAB-20260809-A-service-prod"},
+    {"sys_id": "f70213d2fa6ec710bd3e24c0a5dbf12e", "class": "cmdb_ci_appl", "name": "DFLAB-20260809-A-APP-API", "source_key": "DFLAB-20260809-A-app-api"},
+    {"sys_id": "370213d24c6ec710fbbf6f5f5856ec2e", "class": "cmdb_ci_linux_server", "name": "DFLAB-20260809-A-SRV-GOOD", "source_key": "DFLAB-20260809-A-server-good"},
+    {"sys_id": "770213d2ad6ec7102ce2efc3da783c2e", "class": "cmdb_ci_linux_server", "name": "DFLAB-20260809-A-SRV-INCOMPLETE", "source_key": "DFLAB-20260809-A-server-incomplete"},
+    {"sys_id": "b70213d2286ec710419d9a1e80d21d2e", "class": "cmdb_ci_linux_server", "name": "DFLAB-20260809-A-SRV-STALE", "source_key": "DFLAB-20260809-A-server-stale"}
+  ],
+  "current_relationships": [
+    {"sys_id": "a4621716c36ec71065eefdec05013128", "type": "Depends on::Used by", "parent": "a0621316656ec710980c257c94e92ebb", "child": "f70213d2fa6ec710bd3e24c0a5dbf12e"},
+    {"sys_id": "0012d7d2c36ec71065eefdec05013142", "type": "Runs on::Runs", "parent": "f70213d2fa6ec710bd3e24c0a5dbf12e", "child": "370213d24c6ec710fbbf6f5f5856ec2e"}
+  ],
+  "health_evidence": {
+    "collector_entry_points": ["SNC.MetricProcessorScript.completenessManager()", "SNC.MetricProcessorScript.correctnessManager()"],
+    "before": {
+      "evaluated_on": "2026-08-09 11:03:53",
+      "recommended": {"failed": 1, "total": 3, "raw_score": 33},
+      "duplicate": {"failed": 0, "total": 3, "raw_score": 0},
+      "staleness": {"failed": 0, "total": 3, "raw_score": 0},
+      "raw_failure": "DFLAB-20260809-A-SRV-INCOMPLETE missing support_group, environment, owned_by, managed_by_group"
+    },
+    "after": {
+      "evaluated_on": "2026-08-09 11:07:04",
+      "recommended": {"failed": 0, "total": 3, "raw_score": 0},
+      "duplicate": {"failed": 0, "total": 3, "raw_score": 0},
+      "staleness": {"failed": 0, "total": 3, "raw_score": 0},
+      "active_raw_failures": 0
+    },
+    "score_semantics": "On this runtime raw score equals failed/total percentage, not the healthy complement.",
+    "staleness_discrepancy": "Direct evidence showed a 120-day-old CI and an inherited 60-day rule, but the collector returned 0/3 stale. The source timestamp was refreshed through IRE; investigate source eligibility/metric implementation before relying on this widget in production.",
+    "scope_note": "Recommended, Duplicate, and Staleness denominators remained 3. Required, Orphan, Completeness, and Correctness had denominator 7 because no inclusion rule was configured for those aggregate/other metrics."
+  },
+  "remediation_evidence": {
+    "ire_updates": [
+      {"sys_id": "770213d2ad6ec7102ce2efc3da783c2e", "operation": "UPDATE", "result": "ownership, groups, environment, description, and current discovery restored"},
+      {"sys_id": "b70213d2286ec710419d9a1e80d21d2e", "operation": "UPDATE", "result": "last_discovered refreshed through source-native IRE feed"}
+    ],
+    "exact_relationship_delete": {"sys_id": "ec621716c36ec71065eefdec05013129", "type": "Depends on::Used by", "verified_removed": true},
+    "denominator_unchanged": true
+  },
+  "skill_findings": [
+    {"finding": "Global no-commit identifyCI takes the JSON payload as its first argument on this runtime.", "change": "Q04 uses identifyCI(JSON.stringify(payload))."},
+    {"finding": "cmdb_ci_service uniqueness now requires number/SN App Service ID.", "change": "The lab payload and runbook include a unique service number."},
+    {"finding": "Raw cmdb_health_scorecard.score stored failure percentage.", "change": "Health guidance and Q08 now calculate and label failure percentage explicitly."},
+    {"finding": "Execute Now produced no initial status rows, while the exact OOTB manager entry points did.", "change": "The health reference includes the guarded PDI fallback and its broad-processing warning."}
+  ],
+  "cleanup_decision": "Keep the isolated DFLAB-20260809-A dataset and scoped governance records for Workspace/Class Manager inspection. Use the manifest sys_ids and recorded rollback contexts if cleanup is later explicitly requested."
+}

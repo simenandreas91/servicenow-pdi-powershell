@@ -89,11 +89,14 @@ Load `references/now-assist.md` for every Now Assist, AI Agent Studio, AI agent,
 
 ## CMDB and CSDM Standards
 
-Load `references/cmdb-csdm.md` for CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, CMDB Health, Data Manager, service modeling, CI migration, or AI-service modeling work.
+Load both `references/cmdb-csdm.md` and `references/cmdb-admin-development.md` for CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, CMDB Health, Data Manager, service modeling, CI migration, or AI-service modeling work. Load `references/cmdb-query-library.md` when the task needs table inspection, diagnosis, scripts, imports, remediation, or validation. Load `references/cmdb-data-foundations-lab.md` for repeatable PDI exercises of the Ingest, Govern, and Insight pillars. The architecture guide defines the model; the admin/developer guide defines the operating decisions; the query library supplies bounded probes and implementation patterns.
 
 - Treat CMDB as an operational graph product scoped to business outcomes, principal CI classes, and one or two pilot services—not as a universal inventory dump.
 - Treat CSDM as prescriptive conceptual and physical modeling guidance, not a product to install. Verify the target release, live table/class, Store app, plugin, licensing, UI, IRE, health, lifecycle, and product support before relying on a CSDM entity.
 - Route automated CI creates and updates through IRE. Prefer Discovery and certified Service Graph Connectors, then IntegrationHub ETL, then an explicitly IRE-aware custom integration. Do not use direct/coalesced CMDB writes as an identity strategy.
+- For each CMDB request, identify the target class, business consumer, source, identity rule, attribute authority, relationship direction, health scope, lifecycle behavior, and rollback before proposing a write. Give exact tables, encoded queries or bounded scripts, expected evidence, and stop conditions; do not answer with dashboard navigation alone.
+- Resolve release-sensitive tables and fields live through `sys_db_object` and `sys_dictionary` before scripting. Treat workspace cards as views over governed records, not as the source of truth. Never invent an internal table name when official documentation exposes only a UI label.
+- Diagnose in this order: source/run health -> payload and target class -> identification decision -> reconciliation/provenance decision -> relationship/dependency processing -> health/lifecycle consumers. Fix the earliest broken contract and then remediate existing data.
 - Inspect the target class in CI Class Manager before population or extension. Define identification, reconciliation, dependent relationships, required/recommended fields, health, ownership, freshness, and retirement behavior together.
 - Use prescribed CSDM relationships and direction. For manual infrastructure modeling, match what Discovery would produce. Add only relationships that support a named workflow, control, report, or identification need.
 - Keep Business Application, Service Instance/Application Service, discovered Application, Business Service, Technology Management Service, and offerings semantically distinct. Do not use a Business Application as the operational CI for Incident, Problem, or Change.
@@ -247,7 +250,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
 - Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
-- CMDB, CSDM 5, Service Graph, IRE, Discovery/Service Mapping, health, lifecycle, governance, migration, and 2026 AI/WDF alignment: `references/cmdb-csdm.md`
+- CMDB/CSDM architecture, CSDM 5, governance, migration, and 2026 AI/WDF alignment: `references/cmdb-csdm.md`; practical CMDB administration/development and decision logic: `references/cmdb-admin-development.md`; bounded diagnostics, IRE/import examples, and query library: `references/cmdb-query-library.md`; repeatable PDI Ingest/Govern/Insight exercise: `references/cmdb-data-foundations-lab.md`; pre-update coverage record: `references/cmdb-coverage-audit.md`
 - Platform Analytics: `references/lessons-platform-analytics.md`
 - Now Assist/AI/MCP and Australia AI platform: `references/now-assist.md`, `references/australia-ai-platform.md`, `references/external-mcp-evaluation.md`
 - Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
