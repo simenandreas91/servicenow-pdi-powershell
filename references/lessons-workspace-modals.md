@@ -184,6 +184,14 @@ function onClick() {
   var comment = this.getParameter('sysparm_comment');
   var commentText = comment ? String(comment) : '';
   ```
+- Normalize every GlideAjax parameter at the Script Include boundary, especially IDs used in strict comparisons. `AbstractAjaxProcessor.getParameter()` can return Java-backed string values in the real request path; comparing one directly with a native JavaScript string such as `getUniqueValue()` can falsely report a mismatch even when the text is identical:
+  ```javascript
+  _getStringParameter: function(name) {
+      var value = this.getParameter(name);
+      return value === null || value === undefined ? '' : String(value);
+  }
+  ```
+  Use the normalized value before validation, strict equality checks, or GlideRecord operations.
 - Check record and field write permissions before update:
   ```javascript
   if (!gr.canWrite() || !gr.comments.canWrite())
@@ -275,7 +283,8 @@ For Incident On Hold in Simen's PDI:
 2. Confirm the action is in the correct `sys_ux_form_action_layout`.
 3. Confirm visibility logic against representative state values with `GlideFilter.checkRecord(...)` where useful.
 4. Confirm the server Script Include save path with temporary records.
-5. Visually reload Workspace and check:
+5. Exercise Java-backed GlideAjax parameter values when the save path uses strict comparisons.
+6. Visually reload Workspace and check:
    - button appears only when expected
    - modal opens
    - required fields validate

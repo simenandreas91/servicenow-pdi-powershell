@@ -135,7 +135,7 @@ Load `references/safety-checklists.md` before any of these high-impact operation
 ## Update Sets and Delivery
 
 - Before configuration writes, select the intended scope and in-progress update set with `Set-ServiceNowUpdateSetContext.ps1`; snapshot existing preferences and restore them at handoff.
-- Use a clear story/change name. Reuse a set only for the same cohesive change and application. Use separate child sets per application scope and a parent batch only when coordinated delivery requires it.
+- Use a clear story/change name. Default to one in-progress update set for the same cohesive change and application scope, including iterative fixes; do not create successive `clean`, `final`, or per-revision sets. Start another set only for a different application scope, unrelated change, explicit release isolation, or when the existing set is completed or unsafe to continue. Use separate child sets per application scope and a parent batch only when coordinated delivery requires it.
 - Do not develop in the Default update set. Do not delete update sets, back out Default, reopen a completed set, or manually change `sys_update_xml.update_set` to move a customer update.
 - Never add or misuse the `update_synch` dictionary attribute to make data travel in update sets.
 - Confirm natural capture after each coherent slice with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`. Use `Save-ServiceNowCustomerUpdate.ps1` only for a legitimate application file that should have captured but did not, after understanding why.
@@ -170,6 +170,7 @@ Use `sysparm_fields`, selective encoded queries, small limits, `-ExcludeReferenc
 - `Test-ServiceNowNotification.ps1`: event/notification inspection and controlled triggering.
 - `Get-ServiceNowUpdateSetSummary.ps1` and `Confirm-ServiceNowUpdateCapture.ps1`: packaging proof.
 - `Get-ServiceNowCompendiaSyncStatus.ps1`: read-only Vår Energi Compendia reconciliation across articles, staging, attachments, properties, and the scheduled job.
+- `Manage-VaarEnergiStoryWorkLog.ps1`: idempotently record daily Vår Energi story work and build/mark the weekly email report.
 - `Restore-ServiceNowPreferenceSnapshot.ps1`: handoff cleanup. Store intentionally retained preference snapshots under `snapshots/`; remove transient snapshots after a successful restore.
 
 See `references/toolkit.md` and `references/examples.md` for parameters and commands. Locate helpers relative to this skill instead of assuming a fixed installation path.
@@ -226,11 +227,27 @@ If a layer cannot be tested, say exactly why, what was tested instead, the remai
 Helpers load credentials from the nearest workspace `.env`. Prefer an explicit profile and env path when generic `SN_*` variables could target the wrong instance.
 
 - `pdi`: Simen's PDI at `https://dev396302.service-now.com`; default for demonstrations and safe reproduction.
-- `other`: Vår Energi DEV at `https://varenergidev.service-now.com`; Vår Energi stories commonly originate in PROD and are implemented in DEV.
-- Vår Energi PROD may be reachable with the `other` credentials plus `-Instance 'https://varenergiprod.service-now.com'`; keep it read-only without exact write authorization.
+- `vaar_dev`: Vår Energi DEV from `SN_VAAR_DEV`; use this for implementation and validation of Vår Energi stories. Legacy profile `other` remains an alias for `vaar_dev`.
+- `vaar_test`: Vår Energi TEST from `SN_VAAR_TEST`; use it for transported configuration validation and UAT preparation.
+- `vaar_prod`: Vår Energi PROD from `SN_VAAR_PROD`; keep it read-only without exact production-write authorization.
+- Vår profiles accept `SN_VAAR_<ENV>_USER` / `SN_VAAR_<ENV>_PASS` when credentials differ by environment. For compatibility with the existing Vår credential file, every `vaar_*` profile also falls back to shared `SN_OTHER_USER` / `SN_OTHER_PASS` before generic `SN_USER` / `SN_PASS`. The legacy `other` profile can also resolve DEV from `SN_OTHER_INSTANCE`. Never print any credential form.
+- Do not use `SN_OTHER_INSTANCE` as an implicit PROD or TEST destination. Configure `SN_VAAR_PROD` / `SN_VAAR_TEST` (or the corresponding `_INSTANCE` key), or pass the exact `-Instance` URL intentionally; only the legacy credentials are shared as a fallback.
+- Invoke helpers with an explicit profile, for example `-Profile vaar_dev -EnvPath '<approved-env-path>'`. Use `-Instance` only for an intentional one-off override after verifying the returned environment.
+- Values in the explicit `.env` are evaluated across canonical and compatible legacy keys before process/user environment variables. A named profile with no matching instance fails closed; it must never inherit generic `SN_INSTANCE` or a different environment's URL.
 - FFI/Personellsikkerhet is on-premise and not directly reachable. Treat the PDI as the mirror unless the user provides reachable access or exported evidence. Never route FFI work to Vår Energi implicitly.
 
 After connecting, verify the returned instance name/URL and current user before relying on results or writing. Never store credentials in the skill, references, cache, update sets, logs, or test data.
+
+## Vår Energi Story Work Log
+
+Automatically record substantive Vår Energi story work in the private local work log used by the Friday email automation. Retain known record links only in the private log; include story numbers only in the email. Do not use Jotely for this workflow.
+
+1. Trigger only when a specific Vår Energi `rm_story` record with a resolved `STRY` number is the subject of substantive inspection, analysis, implementation, testing, or delivery. Do not log a story that is merely mentioned as an example or possible next task.
+2. After the first substantive action on that story, run `scripts/Manage-VaarEnergiStoryWorkLog.ps1 -Action Record -StoryNumber '<STRY number>'`. Pass `-StoryUrl` only when a direct Vår Energi ServiceNow record URL is already known; do not make an extra production query solely to obtain a link.
+3. Let the helper resolve the current work date in Europe/Oslo. It deduplicates by date plus story, so repeated work on the same story in one day is a no-op while work on the same story on another day is recorded again.
+4. Keep the ServiceNow task independent of logging. If the local log cannot be written or verified, finish the primary task and report the failure.
+5. State compactly at handoff whether the daily entry was added, its link was enriched, was already present, or could not be logged.
+6. Never invoke this workflow for FFI/Personellsikkerhet work. Do not log incidents, changes, catalog tasks, or other records unless the user explicitly expands the rule.
 
 ## Reference Routing
 
