@@ -1,6 +1,6 @@
 ---
 name: servicenow-pdi
-description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
+description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, Service Level Management, SLA/OLA/underpinning contracts, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
 ---
 
 # ServiceNow PDI
@@ -104,6 +104,22 @@ Load both `references/cmdb-csdm.md` and `references/cmdb-admin-development.md` f
 - Scope CMDB Health and Data Foundations to principal classes and critical services. Report denominators, exclusions, refresh time, remediation age, and operational outcomes rather than a single global percentage.
 - For AI agents and Workflow Data Fabric, preserve CMDB/CSDM as the governed service context. Apply least privilege, evaluations, IRE, human approval for consequential writes, and explicit contracts before joining external data or automating remediation.
 
+## Service Level Management Standards
+
+Load both `references/sla.md` and `references/sla-query-library.md` for SLA definitions, Task SLAs, OLAs, underpinning contracts, service commitments, SLA schedules/time zones, SLA flows or notifications, SLA Timeline, SLA repair, SLA breakdowns, or SLA timer work. The runbook defines the design and delivery decisions; the query library supplies bounded inspection and validation patterns. Also load the applicable product/customer reference, such as `references/vaar-energi-lessons.md` for a Vår Energi HR SLA.
+
+- Separate the service promise from the timer configuration. Define the consumer, target, success event, duration semantics, schedule, time-zone authority, start/cancel/pause/resume/stop/reset behavior, exclusions, escalation, and reporting outcome before creating `contract_sla` metadata.
+- Treat `contract_sla` as the definition and `task_sla` as runtime evidence. Never create or repair Task SLA rows directly. Let the SLA engine attach and transition them from a real task update; use supported SLA Repair only after a bounded preview and approval.
+- Remember that Type (`SLA`, `OLA`, or underpinning contract) and Target (`response` or `resolution`) are reporting classifications. They do not implement response or resolution behavior; the conditions do.
+- Model duration as hours of SLA-running time. A Duration value of one day is 24 hours, so on an eight-hour weekday schedule it consumes three working days. Convert a business-day promise to scheduled hours deliberately and prove the planned end time across a weekend/holiday boundary.
+- Prefer a fixed user-specified duration for elapsed service commitments. Use a relative duration only for a real future deadline/cutoff rule; relative durations do not support pause conditions.
+- Resolve the schedule source and time-zone source explicitly. Inspect schedule spans, holidays, task/CI/caller location fallbacks, and daylight-saving boundary behavior instead of assuming instance or user time.
+- Design conditions as a state machine and account for precedence: stop can prevent attachment and completes an existing Task SLA; reset plus start reattaches; cancel semantics depend on `When to cancel`; pause/resume apply only while active. Avoid frequently changing dot-walked fields because Timeline and Repair replay task history, not historical values on referenced records.
+- Inspect all active definitions on the target table and ancestors before adding one. Prove that exactly the intended definitions attach; overlapping generic and service-specific SLAs are a configuration defect unless concurrent commitments are explicitly required.
+- For new notification/escalation requirements, prefer an SLA flow in Workflow Studio. Since Yokohama, ServiceNow recommends flows for new SLM work; do not configure both Flow and Workflow on one definition. Resolve the default flow by stable name rather than carrying its sys_id between instances.
+- Create definitions inactive-first where the installed form/API supports it, in the correct application scope and update set or SDK-managed application. Validate with SLA Timeline and a real non-production task before activation. Test attach, negative/no-attach, pause, resume, stop, cancel/reset when used, breach/planned-end calculation, overlap, flow side effects, security, and packaging.
+- Do not change engine-wide properties, enable async processing, run bulk repair, or activate plugins merely to make one SLA pass. Diagnose the definition/task first. Synchronous 2011-engine processing is the documented default and preferred experience; asynchronous mode is a performance exception that introduces attachment delay.
+
 ## Inspection and Debugging
 
 Debug from evidence, not from the most plausible story:
@@ -201,8 +217,11 @@ Use the official ServiceNow SDK workflow when a workspace has `now.config.json`,
 
 For visual design, layout, styling, motion, or frontend implementation, load `references/servicenow-ui-design.md` plus any applicable customer design reference.
 
+For a ServiceNow-hosted React/Vite SPA, WebGL scene, interactive floor plan, or other 3D frontend, also load `references/servicenow-react-3d-frontends.md`.
+
 - Classify the surface before designing. Transactional forms, approvals, dashboards, and workspaces need compact predictability; portal landing pages can use stronger editorial hierarchy; bespoke campaign pages may justify richer visual direction.
 - Start from OOTB components, the active theme, reusable tokens, and the customer's design system. Scope CSS to the owned component or page and avoid global overrides that can destabilize unrelated experiences.
+- For a presentation-only change limited to one Service Portal placement, evaluate `sp_instance.css` before cloning or editing the widget. Scope selectors beneath stable component markup, verify nested child-widget styles can be reached, and prove reused instances remain unchanged.
 - Use deliberate hierarchy, readable heading widths, consistent spacing, complete grids, legible actions, and purposeful imagery. Remove decorative labels, badges, counters, and cards that do not help the user complete or understand something.
 - Treat `gpt-taste` as inspiration, not platform law. Do not import its randomization, mandatory AIDA, huge section spacing, stock-image URLs, or motion-everywhere rules into ordinary ServiceNow experiences.
 - Motion must communicate state or hierarchy, work without hover, respect reduced-motion preferences, and preserve performance. Do not add GSAP or another dependency unless the experience genuinely needs it and the platform packaging path supports it.
@@ -227,6 +246,7 @@ If a layer cannot be tested, say exactly why, what was tested instead, the remai
 Helpers load credentials from the nearest workspace `.env`. Prefer an explicit profile and env path when generic `SN_*` variables could target the wrong instance.
 
 - `pdi`: Simen's PDI at `https://dev396302.service-now.com`; default for demonstrations and safe reproduction.
+- For `pdi`, a workspace `.env` may provide `SN_PDI_INSTANCE` without duplicating credentials. When `SN_PDI_USER` or `SN_PDI_PASS` is absent there, the resolver may use the canonical private fallback at `%USERPROFILE%\.codex\servicenow-pdi.env`; workspace profile-specific values still take precedence.
 - `vaar_dev`: Vår Energi DEV from `SN_VAAR_DEV`; use this for implementation and validation of Vår Energi stories. Legacy profile `other` remains an alias for `vaar_dev`.
 - `vaar_test`: Vår Energi TEST from `SN_VAAR_TEST`; use it for transported configuration validation and UAT preparation.
 - `vaar_prod`: Vår Energi PROD from `SN_VAAR_PROD`; keep it read-only without exact production-write authorization.
@@ -265,10 +285,13 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`
 - Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
+- ServiceNow-hosted React/Vite SPAs, single-file deployment, React Three Fiber, Three.js, procedural 3D scenes, and interactive floor plans: `references/servicenow-react-3d-frontends.md`
 - Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
+- Update-set retrieval, preview, conflict handling, non-forced commit, promotion validation, and DEV -> TEST -> PROD delivery: `references/update-set-promotion.md`
 - CMDB/CSDM architecture, CSDM 5, governance, migration, and 2026 AI/WDF alignment: `references/cmdb-csdm.md`; practical CMDB administration/development and decision logic: `references/cmdb-admin-development.md`; bounded diagnostics, IRE/import examples, and query library: `references/cmdb-query-library.md`; repeatable PDI Ingest/Govern/Insight exercise: `references/cmdb-data-foundations-lab.md`; pre-update coverage record: `references/cmdb-coverage-audit.md`
 - Platform Analytics: `references/lessons-platform-analytics.md`
+- Service Level Management, SLA/OLA/underpinning-contract design, creation, schedules, conditions, flows, repair, and validation: `references/sla.md`; bounded table/schema/runtime diagnostics: `references/sla-query-library.md`; Vår Energi HR-specific SLA lessons remain in `references/vaar-energi-lessons.md`
 - Now Assist/AI/MCP and Australia AI platform: `references/now-assist.md`, `references/australia-ai-platform.md`, `references/external-mcp-evaluation.md`
 - Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
 - FFI Personellsikkerhet: `references/lessons-personellsikkerhet.md`

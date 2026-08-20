@@ -78,8 +78,8 @@ Use this only when the user gives a story number or asks for story-style deliver
 ## Portal And Employee Center
 
 1. Resolve portal, page, instance, widget, theme, header/footer, and widget options.
-2. Prefer instance options, page composition, CSS variables, theme records, and existing widgets before cloning.
-3. Clone baseline widgets only with a clear reason. Keep custom selectors scoped to the clone wrapper.
+2. Prefer instance options, instance CSS for one-placement presentation fixes, page composition, CSS variables, theme records, and existing widgets before cloning.
+3. Edit or clone a baseline widget only when the requirement must be shared by its instances or needs markup, script, or behavior that instance configuration cannot express. Keep custom selectors scoped to an owned wrapper.
 4. Verify server script data with Table API/Xplore and rendered behavior with browser or Service Portal endpoints.
 5. Test desktop/mobile when layout or interaction changed.
 6. Flush cache only when needed and report that it was done.
@@ -133,10 +133,11 @@ Use this only when the user gives a story number or asks for story-style deliver
 
 Use only when native forms, lists, Portal, Workspace, or dashboards are materially insufficient for the user experience.
 
-1. Start from `https://github.com/elinsoftware/servicenow-react-app`.
-2. Keep ServiceNow as the backend and security boundary. Enforce validation, permissions, and collision checks server-side.
-3. Use Vite proxy and development credentials locally; never commit credentials.
-4. Use `HashRouter` because ServiceNow-hosted Scripted REST pages cannot handle browser path refreshes.
-5. Build one self-contained `dist/index.html` and store it in a string property only when deployment is requested.
-6. Serve the HTML through a Scripted REST GET resource and use a lightweight token endpoint following the boilerplate pattern.
-7. Run lint/build, visually inspect locally, verify ServiceNow API behavior, and confirm update-set capture for platform artifacts.
+1. Load `servicenow-react-3d-frontends.md` for the maintained single-file React pattern and the optional React Three Fiber/Three.js 3D path.
+2. Use `https://github.com/simenandreas91/servicenow-3d-desk-booking` as the working 3D reference implementation and retain the third-party MIT notice it carries.
+3. Keep ServiceNow as the backend and security boundary. Enforce validation, permissions, and collision checks server-side.
+4. Use a Vite proxy and development credentials from an ignored local `.env`; never commit credentials or a customer-specific instance URL as a reusable default.
+5. Use `HashRouter` when client-side routes are needed because ServiceNow-hosted Scripted REST pages cannot handle browser path refreshes without explicit server routing.
+6. Build one self-contained `dist/index.html` and store it in a string property only when deployment is requested and the target safely supports the resulting size.
+7. Serve the HTML through a Scripted REST GET resource and use a lightweight authenticated session-token endpoint following the reference pattern.
+8. Run lint/build, visually inspect locally, verify ServiceNow API behavior, compare the served bundle with the local artifact, and confirm clean update-set capture for platform artifacts.

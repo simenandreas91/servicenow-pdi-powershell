@@ -86,6 +86,27 @@ function Resolve-ServiceNowConnection {
       $normalizedProfile = $profileAliases[$normalizedProfile]
     }
 
+    # A workspace .env may intentionally contain environment routing without
+    # duplicating the PDI password. In that case, use the canonical private
+    # credential file as a PDI-only fallback while preserving local overrides.
+    if ($normalizedProfile -eq 'PDI') {
+      $userProfilePath = [Environment]::GetFolderPath('UserProfile')
+      if (-not [string]::IsNullOrWhiteSpace($userProfilePath)) {
+        $fallbackCredentialPath = Join-Path -Path $userProfilePath -ChildPath '.codex\servicenow-pdi.env'
+        if (Test-Path -LiteralPath $fallbackCredentialPath) {
+          $resolvedFallbackPath = (Resolve-Path -LiteralPath $fallbackCredentialPath).Path
+          if ([string]::IsNullOrWhiteSpace($dotEnvPath) -or $resolvedFallbackPath -ne $dotEnvPath) {
+            $fallbackDotEnv = Read-ServiceNowDotEnv -Path $resolvedFallbackPath
+            foreach ($fallbackKey in @('SN_PDI_INSTANCE', 'SN_PDI', 'SN_PDI_USER', 'SN_PDI_PASS')) {
+              if (-not $dotEnv.ContainsKey($fallbackKey) -and $fallbackDotEnv.ContainsKey($fallbackKey)) {
+                $dotEnv[$fallbackKey] = $fallbackDotEnv[$fallbackKey]
+              }
+            }
+          }
+        }
+      }
+    }
+
     $instanceProfiles = @($normalizedProfile)
     if ($requestedProfile -ne $normalizedProfile) {
       $instanceProfiles += $requestedProfile

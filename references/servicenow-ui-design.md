@@ -53,8 +53,9 @@ Do not make a ServiceNow surface look novel at the cost of clarity, upgradeabili
 
 ## ServiceNow Implementation Rules
 
-- Inspect the rendered DOM, active `sp_theme`, CSS variables, CSS includes, page/container/row/column hierarchy, widget instance options, and component scope before changing styles.
-- Prefer instance options, theme variables, scoped component styles, and supported OOTB composition before cloning widgets or overriding broad selectors.
+- Inspect the rendered DOM, active `sp_theme`, CSS variables, CSS includes, page/container/row/column hierarchy, widget instance options, `sp_instance.css`, and component scope before changing styles.
+- Prefer instance options and `sp_instance.css` for presentation-only changes to one widget placement, then theme variables, scoped component styles, and supported OOTB composition before cloning or editing widgets.
+- Instance CSS can style both the host widget and nested child-widget markup rendered inside that placement. Target stable component wrappers, use selector specificity before `!important`, and verify the compiled rules in the rendered page plus a reused-instance regression case.
 - Service Portal uses its own AngularJS and Bootstrap-era runtime. Do not paste React, Tailwind, or GSAP examples from a generic design skill into widget fields without adapting them to the actual runtime and packaging model.
 - Scope widget CSS beneath a stable wrapper owned by the widget. Avoid bare element selectors, fragile generated classes, blanket `!important`, and document-level event handlers.
 - Preserve localization. Keep user-facing strings translatable and test longer translated text rather than designing only for short English labels.
