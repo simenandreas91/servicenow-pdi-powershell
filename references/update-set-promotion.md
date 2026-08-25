@@ -68,6 +68,7 @@ Commit only after the clean preview is evidenced and the intended count matches.
 - Confirm `sys_remote_update_set.state=committed` and capture its update time.
 - Resolve the resulting local `sys_update_set` and query `sys_update_set_log`. Require no Error/Warning entries or unsafe-edit warnings; inspect the full commit log, not just the last message.
 - Compare the resulting local customer-update count/types with the source package.
+- After a successful PROD commit and validation, set the exact resulting local PROD `sys_update_set.state` to `ignore` so a later clone does not make the completed set eligible for transfer or reapplication. Keep the retrieved `sys_remote_update_set` in `committed`; do not use Ignore as a substitute for preview, commit, validation, or rollback. For a batch, follow the platform rule to Ignore only the parent and leave its children Complete so the hierarchy is preserved.
 
 ## 6. Validate The Target
 

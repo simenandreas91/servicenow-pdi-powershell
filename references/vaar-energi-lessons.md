@@ -39,6 +39,30 @@ Use this file before starting Vår Energi stories. It captures practical instanc
 - If HR Core portal submit reports `Access to api 'setWorkflow'` and the refusal names table scope `Enterprise Service Management Integrations Framework`, a cross-scope privilege is not sufficient because the API policy requires the caller scope to match the table scope. In DEV on 2026-05-29 the practical fix was to patch HR Core `hr_Utils.updateUserMismatchField()` so it only calls `setWorkflow(false)` when the target table is in `sn_hr_core`; the General Inquiry producer then submitted successfully while `sn_hr_core_job` remained owned by `sn_hr_integr_fw`.
 - In Xplore/GlideRecord probes on Vår Energi DEV, boolean fields may return `1`/`0` from `getValue()` even when Table API displays `true`/`false`; normalize both forms before deciding whether HR Services or record producers are active.
 
+## HR Agent Workspace Contextual Knowledge Pattern
+
+Use this read-only inventory when a Vår Energi story asks for contextual knowledge suggestions in Agent Workspace for HR Case Management:
+
+1. Confirm the configurable workspace route and application (`sys_ux_page_registry.path=hr/agent`, scope `sn_hr_agent_ws`) rather than assuming the deprecated classic HR workspace.
+2. Read the workspace `sys_ux_page_property` records `contextualSidebarVisibility` and `agentAssistConfig`. The HR case table must be present in the Agent Assist visibility array and mapped to a target-local `cxs_table_config` record.
+3. Follow the resolved configuration chain through `cxs_table_config`, `cxs_table_field_config`, `cxs_context_config`, `cxs_res_context_config`, and `cxs_search_res_config`. Also inspect the `cxs_res_context_config_prop` rows for the resolved context resource, especially `knowledge_sr.conditions`: that effective encoded query can restrict knowledge bases even when the top-level search resource has no condition. Record the active state, workspace UI type, match condition, source table, search resource, effective resource-context condition, and case fields that seed the search. If a JSON mapping points to a missing CXS record, first verify whether its table and optional Store application are installed: an absent optional table is an inert default mapping, while a missing config for an installed table is a defect. Do not copy the resolved sys_ids into reusable delivery guidance.
+4. If the panel and search text appear but results are empty, compare the effective condition with a `GlideRecordSecure('kb_knowledge')` `123TEXTQUERY321` probe using the exact workspace term. Run the probe once with the configured condition and once with the intended knowledge-base condition. This separates a source-filter defect from publication, access, or text-index problems without changing the instance.
+5. Prefer updating the existing `knowledge_sr.conditions` value over creating duplicate table, context, or resource records. Before selecting the update set, read the condition property's own `sys_scope` and `sys_package`: it can be HR Core-owned even when the linked Agent Assist table configuration belongs to the HR workspace application. Use an explicit `kb_knowledge_baseIN...` condition when the product requirement is a fixed set of knowledge bases; leave the condition empty only when Agent Assist should search every knowledge base the user can access. In both cases, preserve and test knowledge-base user criteria rather than treating the resource condition as an audience-control substitute. After the update, require one naturally captured `Search Resource Context Property` customer update in that owning scope and repeat the exact positive and negative full-text probes through the saved condition.
+6. Treat an active sidebar and CXS mapping as structural readiness only. Runtime acceptance still requires an HR-agent persona, a representative HR case, a populated search field, relevant positive results, an irrelevant/no-result case, and verification that article ACLs and user criteria are enforced.
+7. Inspect `kb_uc_can_read_mtom` and `kb_uc_cannot_read_mtom` for every knowledge base in scope. A general employee-readable knowledge base can satisfy employee content discovery but does not prove that internal agent procedures are safely separated. If the backlog contains a separate audience-segmentation story, record it as a dependency or acceptance boundary before promoting agent-only guidance.
+
+ServiceNow's current Agent Assist behavior uses the open record's configured search fields (commonly `short_description`) to provide related resources. Keep story acceptance criteria explicit about the source fields, intended knowledge bases/audiences, agent role, automatic versus manual refresh behavior, and the minimum positive/negative test set.
+
+### General Inquiry demo case
+
+When Simen asks for a retained General Inquiry demo case in Vår DEV, treat it as operational data rather than update-set content:
+
+1. Resolve the active `General Inquiry` HR service and its live `service_table`, topic detail, and topic category. Inspect the target case table's mandatory dictionary fields instead of relying on remembered identifiers.
+2. Prefer Simen's active DEV user and existing HR profile as `opened_for` and `subject_person`; do not invent employee data or use another employee merely to populate the case.
+3. Label the record clearly as demo/no-action-required. For Agent Assist testing, make `short_description` resemble the intended knowledge topic and use an active inquiry-category choice resolved from `sys_choice`.
+4. Keep normal workflow enabled when the demo is meant to exercise workspace behavior. A direct case insert can run assignment rules, service activities, flows, SLAs, and notifications; do not use `setWorkflow(false)` merely to avoid accounting for those effects.
+5. Re-read the case and inspect `task_sla`, child HR tasks, `sys_flow_context`, and `sys_email`. Report the assigned group/user, attached SLA names and planned ends, flow status, and whether email is queued. Retain the case unless Simen asks for cleanup.
+
 ## Update Set Practice
 
 - Create one update set per story and per application scope.
@@ -199,6 +223,7 @@ Step-by-step:
 ## HR Proposed Solution Auto-Close Pattern
 
 - For DEV update set `STRY0010053-55 - HR proposed solution auto-close`, runtime verification should create a General Inquiry HR case, move it to Awaiting Acceptance (`state=20`), then use work notes only for test trace. Public `comments` authored by the `opened_for` or `opened_by` user after `u_proposed_solution_at` are intentionally treated as employee responses and will suppress both the 3-business-day reminder and 7-business-day auto-close.
+- Before defending or promoting custom proposal timestamps, reminder flags, or polling jobs, inspect the active OOTB Awaiting Acceptance trigger and the installed HR case user-acceptance Flow/subflow. Record its notification, wait/timeout schedule, accept/reject branches, close behavior, and live flow contexts. A test that backdates a custom timestamp and invokes only the custom processor proves that processor in isolation; it does not prove coexistence, because the native acceptance timer can notify or close the case first. Prefer configuring or copying the supported native acceptance pattern and use Flow execution state for once-only progression. Retain custom record fields only after a real elapsed-time test proves the supported flow cannot supply the required business-time anchor or response check.
 
 ## Document Template Signing Date Lesson
 

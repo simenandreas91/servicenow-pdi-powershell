@@ -177,6 +177,7 @@ For visibility problems, distinguish ACLs, application access, domain separation
 - Define rollback before implementation. A rollback may be a configuration revert, a follow-up update set, source revision, restored preference snapshot, deactivation, or a bounded data reversal. Do not imply that update-set backout reverses runtime data.
 - Prefer additive or inactive-first changes when activation could affect many transactions. Activate only after configuration-level checks pass.
 - For bulk data work, first run a read-only count and sample; state the maximum affected rows; use stable selection, idempotency, batching, before-value capture, and post-run reconciliation. Do not run it without explicit approval.
+- For parent-child demo seeds, confirm the live reference target and display fields, resolve or insert each parent by a deterministic business key, and write the parent's resolved `sys_id` into each child. Reconcile exact parent and child totals, the expected child count per parent, key uniqueness, required field completeness, and zero orphan references; never use a display label as the reference value.
 - For ACL changes, preserve an admin recovery path and test allow and deny cases. Never disable security to make a feature appear to work.
 - For flows, notifications, scheduled jobs, imports, and integrations, prevent accidental fan-out. Use a safe record/payload, controlled activation, and inspect generated side effects.
 - Never delete or overwrite unrelated user work. Never clean records merely because they look noisy or stale.
@@ -188,6 +189,7 @@ Load `references/safety-checklists.md` before any of these high-impact operation
 ## Update Sets and Delivery
 
 - Before configuration writes, select the intended scope and in-progress update set with `Set-ServiceNowUpdateSetContext.ps1`; snapshot existing preferences and restore them at handoff.
+- When resuming an existing update set, resolve it live and pass `-UpdateSetSysId`. Treat `-Name` as creation input rather than lookup input; reusing an existing name can create an empty duplicate instead of selecting the prior set.
 - Use a clear story/change name. Default to one in-progress update set for the same cohesive change and application scope, including iterative fixes; do not create successive `clean`, `final`, or per-revision sets. Start another set only for a different application scope, unrelated change, explicit release isolation, or when the existing set is completed or unsafe to continue. Use separate child sets per application scope and a parent batch only when coordinated delivery requires it.
 - Do not develop in the Default update set. Do not delete update sets, back out Default, reopen a completed set, or manually change `sys_update_xml.update_set` to move a customer update.
 - Never add or misuse the `update_synch` dictionary attribute to make data travel in update sets.

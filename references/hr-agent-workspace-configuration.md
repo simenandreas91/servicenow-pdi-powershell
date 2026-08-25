@@ -132,6 +132,20 @@ These surfaces are configured outside UI Builder even though the current form vi
 - **ACLs, data policies, and Business Rules:** enforce security and data integrity server-side. A hidden list, field, button, or sidebar tab is never an authorization control.
 - **Actions:** use existing UI Action workspace flags or supported Declarative Action/action-assignment metadata. Avoid direct changes to ServiceNow-owned actions; add a scoped action or visibility rule when the requirement is additive.
 
+### Diagnosing a blank action bar on one HR case table
+
+Treat a Configurable Workspace form action as a chain, not as a single UI Action record:
+
+1. Resolve the implementation: a legacy `sys_ui_action` with the Workspace flags, or a `sys_declarative_action_assignment`.
+2. Confirm the corresponding active `sys_ux_form_action` wrapper.
+3. Resolve the active `sys_ux_form_action_layout` selected for the workspace action configuration and exact runtime table, including any more-specific child-table layout.
+4. If the layout uses `use_layout_items_only=true`, verify every expected action has an active `sys_ux_form_action_layout_item` and active `sys_ux_m2m_action_layout_item` membership in that layout.
+5. Only after the metadata chain is intact, evaluate the UI Action/action-assignment condition, `current.canWrite()` or other ACL result, required roles, view visibility rules, and fresh-session cache behavior as the affected persona.
+
+When actions appear on a base HR case but the entire action bar is empty on a Lifecycle Events or other COE child case, compare the selected layouts before editing the individual actions. A child-table layout can override the inherited base layout; with `use_layout_items_only=true`, omitted memberships suppress otherwise valid inherited actions. Conversely, a missing child layout can expose a Store-version, migration, or customization gap when that workspace does not resolve the base-table layout for the extension. Compare the working and failing environments at all four metadata layers and transport the coherent layout dependency set rather than recreating OOTB UI Actions.
+
+For a customer-owned unified layout, package the `sys_ux_form_action_layout`, its customer-owned `sys_ux_form_action_layout_item` records, and every active `sys_ux_m2m_action_layout_item` membership needed by the target layout. Reuse installed OOTB `sys_ux_form_action` wrappers only after confirming that the target has the same action records. Do not assume a shared OOTB layout item exists merely because its form-action wrapper exists: workspace/plugin composition can differ between environments. For a portable cross-environment layout, create customer-owned layout items that reference the installed OOTB form-action wrappers, then make the M2M rows reference those customer-owned items. Before target commit, preview for missing-reference problems and confirm that separately transported custom actions retain the same stable record identity expected by the memberships. A preview error that cannot find `sys_ux_form_action_layout_item` means the membership was transported without its referenced layout item; do not accept or skip it as a resolution. A layout with `use_layout_items_only=true` can transport successfully yet render an empty action bar if its M2M rows were omitted.
+
 ## HR Behavior Properties That Change the Workspace Experience
 
 These are HRSD behaviors observed in the workspace, not page-layout controls. Inspect current documentation and the live property record before changing:

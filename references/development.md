@@ -103,6 +103,7 @@ Use this flow only when the user explicitly asks for a story, asks for story-sty
 - Keep snippets small and self-contained. Xplore can accept larger POST bodies than the old background helper, but the skill should still use it for verification, not large script deployment.
 - Keep snippets self-contained with an IIFE. Avoid relying on ambient variables such as `current`.
 - Constrain all queries with explicit conditions and `setLimit()` unless using an aggregate count.
+- Normalize boolean fields explicitly when a script selects or excludes records. Table API responses commonly expose `true`/`false`, while `GlideRecord.getValue()` can expose `1`/`0`; use the field's boolean accessor when available or accept both representations, then post-verify every exclusion category before declaring a bulk identity/user update complete.
 - For verification output, print one small JSON object between `CODEX_RESULT_START` and `CODEX_RESULT_END`.
 - Pass `-Scope <sys_scope.scope>` or `-ScopeSysId <sys_scope.sys_id>` when the Xplore script must execute in a specific application scope. Resolve the scope through the Table API first.
 - If scoped execution returns an authorization/scope error, retry the check globally only when the logic does not require scoped execution. Some scoped app contexts can block script execution even for admin.
@@ -147,6 +148,7 @@ update_set=<sys_update_set.sys_id>
 ```
 
 - Prefer `scripts/Save-ServiceNowCustomerUpdate.ps1` to force a customer update for records such as `sysauto_script`. Manual fallback is `GlideUpdateManager2().saveRecord(gr)`, but in this PDI it may save into `Default`; verify `sys_update_xml.update_set`, move the latest customer update into the intended update set, and keep stale duplicates out.
+- Table API `DELETE` removes a record but does not reliably create the deployable `DELETE` customer update. For an explicitly approved deletion of a proven customer-created artifact, use `scripts/Remove-ServiceNowArtifactWithDeleteCapture.ps1`: it validates the exact record and application, snapshots it with `GlideUpdateManager2`, converts that customer update and its payload to `DELETE`, performs the Table API deletion, and verifies both absence and capture. Never use it for an OOTB record, and preview the resulting update set in the target before commit.
 - `sys_update_xml.name` for a Service Portal widget is usually `sp_widget_<sp_widget.sys_id>`. Query this when verifying that a cloned widget was captured.
 - A useful final update-set check is: exactly one `sys_update_xml` row for the target record exists in the intended update set, its payload contains the latest changed script or marker string, and every row in that update set has `sys_update_xml.application` equal to `sys_update_set.application`.
 

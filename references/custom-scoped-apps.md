@@ -174,6 +174,15 @@ Generated ACL proof:
 - Using scoped Xplore as a general metadata builder. Cross-scope calls made only for construction or testing can create Restricted Caller Access records and update-set noise that the application does not need at runtime; prefer Table API/owning-scope writes and inspect `Cross scope privilege` rows before handoff.
 - Adding sample/reference data to update sets unintentionally. Application Repository does not move app data; manage seed data deliberately.
 
+## Scope-Collision Creation Error
+
+For `This scope is already taken by another application`, distinguish a real collision from a broken creation path before changing anything:
+
+1. Determine the exact generated scope and query `sys_scope`/`sys_app` for that value. On enterprise instances, also check the company Application Repository because a scope can be reserved elsewhere in the same vendor namespace and therefore be absent locally.
+2. Try one deliberately unique application name or create through ServiceNow Studio's advanced/classic application creator, where the internal scope can be controlled. App Engine Studio can derive a short internal scope from the label and collide even when the friendly name looks different. Renaming the label after successful creation does not rename the internal scope.
+3. If several unrelated, deliberately unique names fail on a fresh PDI and no matching local scope exists, treat the message as a probable PDI/vendor-prefix registration failure rather than evidence that every scope is occupied. Inspect `glide.appcreator.company.code` read-only and capture the release/build and creator channel. Do not delete `sys_scope`/`sys_store_app` records, alter the company code, or create the app in Global as a routine workaround.
+4. Use a template-based creation only as a disposable PDI workaround and inspect/delete unwanted generated artifacts deliberately. For persistent failure, preserve/export needed work and use the PDI support/reset path; for a customer instance, open ServiceNow Support with the failed scope, namespace/company code, build, timestamps, and transaction/application logs.
+
 ## Official Docs Shortlist
 
 - `markdown/application-development/determining-good-candidates-for-apps.md`
