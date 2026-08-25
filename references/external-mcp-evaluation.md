@@ -12,6 +12,23 @@ Default stance:
 - Writes, update-set manipulation, script execution, fix scripts, credentials, auth profiles, plugin installs, and production access require explicit gating.
 - The bundled helpers remain the trusted implementation path unless the MCP proves equivalent context control, update capture, verification evidence, and rollback visibility.
 
+## Native ServiceNow MCP Server Console
+
+Distinguish ServiceNow's native inbound server from a local community MCP executable. **MCP Server Console** is a ServiceNow Store/on-instance capability: administrators create one or more MCP endpoints, curate the tools each endpoint exposes, and connect external standards-compliant clients through OAuth. It is the preferred production path when the customer is entitled and the requirement is to publish governed business capabilities. It is not a generic replacement for developer-oriented Table API, source-sync, or update-set tooling.
+
+Current Australia documentation supports tools built from Now Assist skills, Knowledge Graph, Subflows, Actions, and Scripted REST APIs. For Subflows and Actions, require an AI ACL with the `Invoked from AI` operation, then verify the component's compatibility before publication. Start with a draft server and a small read-only tool set; use a narrowly authorized subflow for any consequential mutation. The documented endpoint pattern is `https://<instance>.service-now.com/sncapps/mcp-server/mcp/<server-name>`.
+
+Before recommending or configuring the native server, verify all of the following live:
+
+- Product tier/entitlement and Store application availability with the ServiceNow account team. Do not assume a PDI includes MCP Server Console.
+- Instance family and patch. Australia documentation for the expanded tool categories states Zurich Patch 9 or Australia Patch 2 minimum; packaged domain servers can require newer patches and additional applications.
+- Installed MCP Server Console/MCP Platform Manager and domain-server versions, plus the required Now Assist/product applications.
+- Per-client OAuth inbound integration, redirect URI, JWT/token configuration, and revocation path.
+- `sn_mcp_server.admin`, `sn_mcp_server.tools_admin`, or `sn_mcp_server.viewer` assignment as appropriate, downstream capability ACLs, table/field ACLs, domain separation, and the real invoking user.
+- Server/tool activation, tool annotations, enabled inputs, data egress, AI Gateway/Control Tower observability, and a tested deactivation path.
+
+Authoritative starting points: [MCP Server Console](https://www.servicenow.com/docs/r/intelligent-experiences/mcp-platform-manager-landing.html), [create a server](https://www.servicenow.com/docs/r/intelligent-experiences/create-mcp-server.html), [create a tool](https://www.servicenow.com/docs/r/intelligent-experiences/create-tool-mcp-server.html), and [connect a client](https://www.servicenow.com/docs/r/intelligent-experiences/configure-client-connect-server.html). Recheck these pages because licensing, patch floors, tool categories, and setup flows are release-sensitive.
+
 Useful patterns from current ServiceNow MCP projects:
 
 - Happy Platform MCP: multi-instance routing, runtime schema discovery, update-set tools, script sync, local official-docs search, and documented REST/API limitations.

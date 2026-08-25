@@ -43,11 +43,15 @@ Keep three layers distinct:
 
 The browser must never be the security boundary. Recheck availability and permissions on the server when booking or cancelling, even when the mesh appears available.
 
+When one spatial baseline will seed multiple products, tag a stable map-only revision and give each product its own repository or source boundary, ServiceNow scope, roles, data APIs, hosted bundle property, route, update set, and release lifecycle. Preserve portable geometry identifiers across the copies, but keep business adapters and sensitive data contracts product-specific. A copied deployment helper should fail closed until its new scope, property, and route are configured; transfer later map-only commits explicitly, and extract a shared package only after repeated synchronization work justifies the added release coupling.
+
 ## Single-File ServiceNow Hosting Pattern
 
 1. Build the React app with Vite and `vite-plugin-singlefile` so `dist/index.html` contains the application JavaScript and CSS.
 2. Store the built HTML in an owned scoped artifact such as a dedicated string property only when that deployment model is already chosen and the target supports the artifact size.
 3. Return the HTML from a Scripted REST GET resource with an HTML content type.
+   - Set `produces=text/html` and `produces_customized=true` on both the Scripted REST API and its HTML resource. Calling `response.setContentType('text/html')` inside the resource is not sufficient when metadata advertises only JSON: ServiceNow can reject an explicit `Accept: text/html` request with `406` before the resource script runs.
+   - For a versioned scoped API, verify the generated route rather than guessing it; the common shape is `/api/<scope>/v1/<service_id>/<resource>`. Smoke-test that exact URL with `Accept: text/html`.
 4. Obtain a user token only from an authenticated ServiceNow session endpoint, then send it as `X-UserToken` for same-instance API mutations. Never persist or log the token.
 5. Continue to enforce table/field ACLs and server-side business rules. A public application-shell route must not make data APIs public.
 6. For local development, use Vite proxy configuration and credentials from an ignored `.env`. Externalize the instance URL; do not publish a personal PDI or customer URL as the reusable default.
@@ -77,6 +81,24 @@ camera.zoom = baseZoom * productBaselineScale * userZoom
 
 This lets the control display `100%` while using a deliberately closer product baseline. Preserve enough zoom-out range to recover a complete overview on small screens.
 
+Perform every camera-to-control conversion against the same composed baseline. Define `productBaseZoom = baseZoom * productBaselineScale`, multiply user zoom by it when driving the camera, and divide camera zoom by it after wheel or control gestures. Clamp in user-zoom space; clamping against raw `baseZoom` makes the readout drift from the actual view and can unintentionally remove the recoverable overview range.
+
+Define the product's default user zoom once and reuse it for both initial state and the reset action. After changing that baseline, verify the visible readout on first load, change zoom in both directions, and prove reset returns to the same declared value; otherwise the camera and control can silently disagree.
+
+## Geospatial Site and Campus Scenes
+
+For an exterior campus map, preserve the provenance and uncertainty of each geometry layer instead of treating the scene as one authoritative model:
+
+- Keep source footprints, site boundaries, roads, and vertical assumptions separate. Convert geographic coordinates through one documented local metric origin, retain stable source identifiers, and let the React selection state use those identifiers rather than array positions.
+- Model exterior roads from named public centerlines as their own context layer; do not infer them from a campus boundary or draw a decorative perimeter road. Preserve junction topology and road roles, clip only after coordinate conversion, and validate the plan-view alignment against a current public map or aerial reference before tuning the 3D camera.
+- Keep pedestrian shortcuts separate from vehicle and service-road geometry. When a proprietary aerial view reveals a missing path but cannot be redistributed, snap the path endpoints to reusable public footprints or road nodes, keep the intermediate curve explicitly schematic, and record that distinction in source notes. Render walkways materially narrower and lighter than service roads, validate their topology in plan and isometric views, and do not present an inferred path as an accessible route, permitted route, or navigation instruction.
+- Keep road-name labels in a deduplicated orientation layer rather than generating one label per source way. Place one restrained label per named road on a visually verified centreline segment, give destination/building labels higher visual priority, and hide or reposition edge labels at narrow breakpoints instead of accepting clipped or overlapping text. Test both the breakpoint itself and a width just above it; an off-canvas projected label can leave a visible fragment even when the narrower layout hides it cleanly.
+- Distinguish surveyed or published geometry from inferred presentation geometry. If heights, roof forms, vegetation, parking, or rooftop volumes are schematic, say so in the interface and source notes; do not let visual polish imply survey, navigation, or legal-boundary accuracy.
+- For sensitive or security-relevant sites, model only lawful public exterior context needed by the user. Omit interiors, access-control layouts, surveillance, utilities, restricted infrastructure, and operational detail even when procedural modeling makes them easy to invent.
+- Prefer procedural/static site data over runtime map tiles, remote textures, or protected 3D services when the final app must be a self-contained ServiceNow HTML artifact. Use proprietary map or satellite imagery only as a visual calibration reference unless its license explicitly permits redistribution; derive shipped geometry from a separately reusable source, retain its stable identifiers, and record attribution and reuse constraints with the project.
+- Scale an orthographic camera from the rendered viewport, not only from a desktop baseline. Prove a complete recoverable overview in both isometric and plan views at wide desktop and narrow mobile sizes; keep user zoom separate so the control can still report a meaningful `100%` product baseline.
+- Match the treatment of parking and other ground landmarks to their role. An actionable destination may need distinct geometry, an accessible label, and a legend item; a legend entry does not give anonymous WebGL primitives an accessible or spatially anchored name. A contextual orientation cue should usually remain implicit through recognizable bay striping, asphalt, vegetation, or nearby public features. Validate that either treatment remains legible without obscuring buildings in isometric, plan, and mobile views.
+
 ## Interaction and Accessibility
 
 - Use mesh `onClick`, `onPointerOver`, and `onPointerOut` handlers for direct manipulation. Clear the cursor and transient hover state during teardown.
@@ -84,6 +106,7 @@ This lets the control display `100%` while using a deliberately closer product b
 - Provide a real HTML button for every selectable mesh in a keyboard desk selector. It may be visually clipped until focused, but its accessible name must include desk name and availability.
 - Provide a non-WebGL fallback and meaningful loading, empty, and error states. WebGL support is not authorization to make the booking workflow 3D-only.
 - Essential state and actions must not depend on hover.
+- Treat labels projected over selected or hovered meshes as spatial reinforcement, not the only identification channel. Test buildings or objects near every viewport edge; on narrow screens, suppress or reposition a clipped projected label while retaining the selected styling and name in an accessible HTML panel or list.
 - Respect `prefers-reduced-motion` for panel, toast, and scene-adjacent UI transitions.
 
 ## Performance and Packaging
@@ -93,6 +116,8 @@ This lets the control display `100%` while using a deliberately closer product b
 - Reuse geometries/material decisions through component composition and avoid loading large GLTF models unless the experience requires them.
 - Use fog or background color to soften distant geometry without adding texture assets.
 - Watch the final single-file bundle size. Three.js materially increases it; verify build size and the live ServiceNow response rather than assuming the property/resource path can carry it.
+- Do not infer the usable bundle limit only from `sys_dictionary.max_length` for `sys_properties.value`; a target can accept a much larger property value through the supported API path. Prove support by deploying the real bundle, re-reading its character length, and comparing a hash of the authenticated live HTML response with `dist/index.html`.
+- If a target demonstrably cannot carry one bundle property, multiple properties can be concatenated server-side, but deploy them as immutable versioned chunks plus a small active-manifest property—not as one mutable numbered set. Write every chunk under the new version, verify declared count, total length, order, and final hash, then atomically switch the manifest; make the resource fail closed on a missing or mismatched chunk and retain the previous manifest/version for rollback. Prefer one proven property while it works because chunking multiplies application files, update-set records, cache entries, partial-deployment states, and cross-instance validation work.
 - Distinguish a benign library deprecation warning from an application error, but do not ship unresolved runtime errors.
 
 ## Data Model for Desk Booking Demos

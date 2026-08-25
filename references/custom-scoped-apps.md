@@ -41,13 +41,14 @@ For enterprise delivery, official guidance prefers Git/source control + Applicat
    - Add only required fields for the first vertical slice.
    - Enable `create_access_controls` and set `user_role` so ServiceNow generates table ACLs.
    - Keep cross-scope application access closed by default; open only read/create/update/delete/web-service access that is required.
+   - After the fields exist, open the table in Table Builder/Form Builder, configure **Default view**, add an appropriate first section and fields, and save it. Treat this as part of table creation, not optional UX polish.
 7. Add security before UX:
    - Create app roles before table ACLs.
    - Verify generated ACLs and `sys_security_acl_role` rows.
    - Test with a persona role when possible; admin-only success is not enough.
 8. Add basic experience:
    - Application menu and list module for classic navigation.
-   - Form/list layout only after fields and ACLs exist.
+   - Refine form/list layouts only after fields and ACLs exist; the saved Default form view itself must already exist for every table intended for form or Workspace use.
    - Portal, Workspace, UI Builder, or mobile only when that is the real target channel.
 9. Add logic last:
    - Prefer Flow for business-owned process and approvals.
@@ -74,8 +75,10 @@ When UI creation is unavailable and the task is a PDI/demo, this worked reliably
    - `sys_dictionary`
    - `sys_choice`
    - `sys_script`
+   - Global catalog metadata such as `sc_cat_item_producer`, `item_option_new`, `user_criteria`, and `catalog_script_client`
 4. Pass `sys_scope` and `sys_package` explicitly on metadata creates.
-5. After creating a table and dictionary fields, verify table availability before inserting data:
+5. After creating a table and dictionary fields, create and save its **Default view** through Table Builder/Form Builder. API-created table metadata does not guarantee that ServiceNow creates the form metadata needed by downstream builders. Avoid hand-building `sys_ui_section` and form-element records unless the UI path is unavailable and the exact metadata contract has been established.
+6. Verify table availability and the Default-view section before inserting data or selecting the table in a Workspace:
 
 ```powershell
 & "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
@@ -87,7 +90,19 @@ When UI creation is unavailable and the task is a PDI/demo, this worked reliably
   -Profile pdi
 ```
 
-6. Insert sample data in a later request/transaction after table creation has completed.
+```powershell
+& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
+  -Table sys_ui_section `
+  -Query "name=x_scope_table^view=Default view" `
+  -Fields "sys_id,name,view,caption,position,sys_scope" `
+  -DisplayValue all `
+  -ExcludeReferenceLink `
+  -Profile pdi
+```
+
+Require at least one matching `sys_ui_section`. App Engine Studio's Workspace table picker uses an `ONLY_DEF_VIEW_TABLES` filter and excludes a table when this record is missing, regardless of cache refresh, scope, application access, or table ACLs.
+
+7. Insert sample data in a later request/transaction after table creation has completed.
 
 ## PDI Demo Findings
 
@@ -154,6 +169,9 @@ Generated ACL proof:
 - Opening table web-service or cross-scope access broadly during early development and forgetting to tighten it.
 - Creating business logic before the data model and role model are stable.
 - Testing only as admin.
+- Assuming that creating `sys_db_object` and dictionary rows also creates a Default form view. Without a saved Default-view `sys_ui_section`, the table can exist and accept records while remaining absent from App Engine Studio's Workspace table picker; `cache.do` does not repair missing form metadata.
+- Treating a non-empty metadata row as runtime proof. Verify reference qualifiers against the live target-table dictionary, test duplicate rejection after creating a unique index, and run one valid plus one negative insert through the owning scope.
+- Using scoped Xplore as a general metadata builder. Cross-scope calls made only for construction or testing can create Restricted Caller Access records and update-set noise that the application does not need at runtime; prefer Table API/owning-scope writes and inspect `Cross scope privilege` rows before handoff.
 - Adding sample/reference data to update sets unintentionally. Application Repository does not move app data; manage seed data deliberately.
 
 ## Official Docs Shortlist

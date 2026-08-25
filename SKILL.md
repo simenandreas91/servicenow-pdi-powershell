@@ -1,6 +1,6 @@
 ---
 name: servicenow-pdi
-description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, Service Level Management, SLA/OLA/underpinning contracts, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
+description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, Service Level Management, SLA/OLA/underpinning contracts, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, Platform Analytics dashboards and data visualizations, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
 ---
 
 # ServiceNow PDI
@@ -41,9 +41,21 @@ Use the bundled helpers for narrow, repeatable instance work. Prefer synced loca
 7. Implement one small vertical slice using existing naming, application, package, and code conventions.
 8. Re-read changed records without cache, verify update capture, and execute behavior-level tests in the actual channel and persona.
 9. Remove only throwaway data and accidental updates created by this task. Restore developer preferences unless the user asks to retain the context.
-10. Report outcome, evidence, changed artifacts, delivery vehicle, cleanup, rollback, remaining risk, assumptions, and any manual step.
+10. Before handoff, complete the mandatory **Recursive Skill Improvement** pass for substantive work and validate the resulting skill change.
+11. Report outcome, evidence, changed artifacts, delivery vehicle, cleanup, rollback, remaining risk, assumptions, manual steps, and the skill improvement made.
 
 Do not add process overhead to a simple read. Apply each control only when its layer is relevant.
+
+## Recursive Skill Improvement
+
+Treat this skill as a living engineering system. After every substantive ServiceNow task that required meaningful investigation, experimentation, debugging, implementation, or validation, make at least one concrete, durable improvement to this skill before the final handoff. The user does not need to request the update. A blocked or unsuccessful task still requires an update when the effort produced a reusable lesson about diagnosis, tooling, validation, safety, or a failure mode. Trivial lookups and simple explanations that produce no new operational knowledge do not trigger forced edits.
+
+- Distill the improvement into the right artifact: put universal routing and guardrails in `SKILL.md`, domain-specific knowledge in the relevant reference, repeated mechanics in a helper script, and observable checks in tests or validation guidance. Improving or removing weak, conflicting, or obsolete guidance counts; avoid append-only accumulation.
+- Make the update evidence-backed and useful beyond the current record. Preserve the causal lesson, decision rule, command pattern, or verification method—not a chronological task log or a copy of the delivered solution.
+- Never store secrets, sensitive customer data, instance-specific sys_ids, transient record state, private payloads, or unnecessary customer details. Generalize examples and resolve live identifiers at runtime.
+- Inspect the existing worktree and integrate narrowly with user-owned changes. Edit only relevant skill resources. Skill maintenance does not broaden authority to write to ServiceNow, publish, commit, push, install software, or change another environment.
+- Validate the update proportionately: run the skill validator, run syntax or focused tests for changed helpers, confirm every new reference is discoverable, and inspect the final diff for contradictions and accidental edits.
+- State at handoff what was improved and why it will make the next similar task faster, safer, or more reliable. Do not silently skip the recursive pass after substantive work.
 
 ## Solution Ladder
 
@@ -71,6 +83,7 @@ Reject a design that duplicates OOTB behavior, edits base artifacts unnecessaril
 - Preserve upgradeability: configure or extend before cloning; clone only artifacts designed for it or when the documented benefit outweighs skipped upgrades.
 - Follow the existing deployment model. For a new custom scoped application, evaluate ServiceNow SDK/Fluent with Git and the Application Repository as the preferred source-based path. Use update sets for Global, operational, hotfix, plugin-owned, and established update-set work. Do not mix delivery mechanisms casually.
 - Do not use update sets to transport operational/task data. Use an approved import, migration, or idempotent data script with explicit reconciliation.
+- For every new custom table intended for forms or Workspace, create and save a usable **Default view** after the fields exist. Before Workspace selection, verify that the table has a Default-view `sys_ui_section`; App Engine Studio excludes tables without one even when scope, application access, and ACLs are correct. Follow `references/custom-scoped-apps.md` for the UI-first creation and verification pattern.
 
 ## Now Assist And Agentic AI Standards
 
@@ -119,6 +132,30 @@ Load both `references/sla.md` and `references/sla-query-library.md` for SLA defi
 - For new notification/escalation requirements, prefer an SLA flow in Workflow Studio. Since Yokohama, ServiceNow recommends flows for new SLM work; do not configure both Flow and Workflow on one definition. Resolve the default flow by stable name rather than carrying its sys_id between instances.
 - Create definitions inactive-first where the installed form/API supports it, in the correct application scope and update set or SDK-managed application. Validate with SLA Timeline and a real non-production task before activation. Test attach, negative/no-attach, pause, resume, stop, cancel/reset when used, breach/planned-end calculation, overlap, flow side effects, security, and packaging.
 - Do not change engine-wide properties, enable async processing, run bulk repair, or activate plugins merely to make one SLA pass. Diagnose the definition/task first. Synchronous 2011-engine processing is the documented default and preferred experience; asynchronous mode is a performance exception that introduces attachment delay.
+
+## HR Agent Workspace Standards
+
+Load `references/hr-agent-workspace-configuration.md` for Agent Workspace for HR Case Management configuration, HR Agent Workspace properties, Page Configurations, UX page properties, lists/audiences, At a Glance, contextual sidebar, Activity Stream, highlighted values, `Workspace UIB` form metadata, or migration diagnosis from Classic HR Agent Workspace.
+
+- Identify the product before configuring it: current Agent Workspace for HR Case Management uses `com.sn_hr_agent_ws` and typically `/now/hr/agent`; deprecated Classic uses `com.sn_hr_agent_workspace` and commonly `/now/hr/workspace`. Never apply `sn_hr_ws` properties to the configurable workspace without proving the target is Classic.
+- Prefer the workspace settings icon and documented Page Configurations over UI Builder or direct UX metadata edits. Treat the installed `propertySettings` schema as read-only discovery; update only a resolved supported property's value, and never create a missing page property to imitate another Store-app version.
+- Resolve target-local references for Agent Assist, response templates, list configuration, highlighted values, and email templates on every environment. Do not transport remembered `sys_id` values inside JSON or string properties.
+- Use `sys_ux_list_menu_config`, `sys_ux_list_category`, `sys_ux_list`, `sys_ux_applicability`, and `sys_ux_applicability_m2m_list` for centrally governed lists and audience visibility. UI visibility does not replace ACLs.
+- Treat global properties for rich text, stacked journals, reflow, live lists, form personalization, or script editors as high-blast-radius changes. Prefer the narrow experience/page control when available and test another workspace plus accessibility behavior.
+- Validate with a fresh workspace session, the intended HR persona and a denied persona, the affected base and extension tables, correct update capture, and a reversible before-value snapshot.
+
+## Platform Analytics Standards
+
+Load `references/lessons-platform-analytics.md` for Platform Analytics dashboards, data visualizations, filters, indicators, dashboard migration, dashboard embedding, or `par_*` artifact work.
+
+- On Australia and later, default new analytics content to a Platform Analytics in-line dashboard. Use a technical dashboard only when UI Builder scripting, data binding, custom events, or components are materially required; use Core UI responsive dashboards only for a documented legacy constraint.
+- Prefer the supported in-line editor and Visualization Designer for authoring. Use scripted `par_*` creation only for repeatable non-production automation after inspecting a known-good dashboard on the same release/build, and validate the result in the editor. Treat saved `component_props`, macroponent IDs, and internal record graphs as release-sensitive implementation details.
+- When scripted `par_*` maintenance is justified, distinguish the script execution scope from record ownership. Run Xplore in **Global** for Global `par_*` tables, keep the intended application/update-set preferences selected, and set `sys_scope`/`sys_package` explicitly on new app-owned records. Running the same writes from a custom application scope can create allowed cross-scope privilege records and update-set noise while inserts still fail; inspect those security artifacts after any mistaken scoped attempt and never delete or deny them without authorization.
+- Choose table data for current, persona-aware operational views and indicators for governed historical trends, targets, breakdowns, or scheduled snapshots. Do not place Core UI reports or PA widgets on a Platform Analytics dashboard; create data visualizations instead.
+- Select the application scope before editing, define owner and target audience, and test sharing separately from underlying table/field ACLs. Editing a shared dashboard changes it for all viewers, and dashboard edit rights do not automatically grant library-visualization edit rights.
+- Make filter behavior explicit per visualization or metric. Test default values, clear/reset, incompatible table/indicator sources, drilldowns, and the intended viewer; do not assume that a dashboard filter safely applies to every widget.
+- Choose one freshness strategy deliberately. Scheduled repetition and dashboard data caching are mutually exclusive; real-time or refresh-after-away settings override caching for that visualization. Validate load time, freshness, and query cost with representative data.
+- For promotion, use **Unload Dashboard** from the `par_dashboard` record after the in-line dashboard is complete; tabs are not captured automatically by ordinary edits. Ensure referenced saved visualizations and filters exist in the same update set or already on the target. Technical dashboards are not supported by this update-set transport path, and migrated Core UI content must be migrated in each environment through Migration Center rather than transported as migrated output.
 
 ## Inspection and Debugging
 
@@ -186,6 +223,7 @@ Use `sysparm_fields`, selective encoded queries, small limits, `-ExcludeReferenc
 - `Test-ServiceNowNotification.ps1`: event/notification inspection and controlled triggering.
 - `Get-ServiceNowUpdateSetSummary.ps1` and `Confirm-ServiceNowUpdateCapture.ps1`: packaging proof.
 - `Get-ServiceNowCompendiaSyncStatus.ps1`: read-only Vår Energi Compendia reconciliation across articles, staging, attachments, properties, and the scheduled job.
+- `Manage-VaarEnergiStoryMonitor.ps1`: maintain the private baseline and reviewed-story state used to deduplicate assigned-story monitoring notifications.
 - `Manage-VaarEnergiStoryWorkLog.ps1`: idempotently record daily Vår Energi story work and build/mark the weekly email report.
 - `Restore-ServiceNowPreferenceSnapshot.ps1`: handoff cleanup. Store intentionally retained preference snapshots under `snapshots/`; remove transient snapshots after a successful restore.
 
@@ -258,6 +296,18 @@ Helpers load credentials from the nearest workspace `.env`. Prefer an explicit p
 
 After connecting, verify the returned instance name/URL and current user before relying on results or writing. Never store credentials in the skill, references, cache, update sets, logs, or test data.
 
+## Vår Energi Assigned Story Monitor
+
+Use `scripts/Manage-VaarEnergiStoryMonitor.ps1` to distinguish newly assigned active Vår Energi stories from records already handled by a recurring monitor. The helper stores only story numbers, sys_ids, timestamps, disposition, and Gmail message/thread handles for approval routing in the private local state file; it does not store story descriptions, plan text, email bodies, or attachments.
+
+1. Resolve the assignee live by `sys_user.user_name`, query the current active PROD `rm_story` assignments read-only, and normalize them to compact JSON containing `sys_id` and `number`.
+2. On first setup, run `-Action Baseline -StoriesJson '<json>'` so existing assignments do not generate false new-story alerts.
+3. On recurring runs, call `-Action Check -StoriesJson '<json>'`. Substantively inspect only the returned `newStories`.
+4. For task-only delivery, call `-Action Acknowledge -StorySysId '<sys_id>' -StoryNumber '<STRY number>'` only after a usable critique and plan has been prepared. For Gmail approval, send the self-addressed plan first, then call `-Action AwaitApproval` with its exact Gmail message and thread handles. Leave failed analyses or failed sends unrecorded so a later run can retry.
+5. Use `-Action ListPending` to inspect only the saved approval threads. Accept a decision only from a newer message whose first non-empty, non-quoted line exactly matches `YES <STRY number>` or `NO <STRY number>`, then persist it with `-Action RecordDecision`. Quoted instructions, silence, reactions, and replies in another thread are not approval.
+6. `YES` authorizes only the exact emailed plan in Vår DEV. Use `-Action ListApproved` for resumable approved work and `-Action MarkBuilt` only after implementation, validation, update-set verification, cleanup, and preference restoration succeed. Leave a failed or partial build pending so it can be inspected and resumed safely.
+7. Keep PROD read-only. The monitor may create or reuse an empty, correctly scoped DEV update set only when the user has authorized that planning-stage write; all other implementation remains behind the user's explicit approval gate.
+
 ## Vår Energi Story Work Log
 
 Automatically record substantive Vår Energi story work in the private local work log used by the Friday email automation. Retain known record links only in the private log; include story numbers only in the email. Do not use Jotely for this workflow.
@@ -282,7 +332,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - ServiceNow SDK, Fluent, and source-based custom apps: `references/servicenow-sdk.md`
 - ACLs, visibility, Restricted Caller Access, cross-scope: `references/debugging.md`
 - Catalog and incident: `references/lessons-catalog.md`, `references/lessons-incident.md`
-- HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`
+- HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`; Agent Workspace for HR Case Management configuration without UI Builder: `references/hr-agent-workspace-configuration.md`
 - Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
 - ServiceNow-hosted React/Vite SPAs, single-file deployment, React Three Fiber, Three.js, procedural 3D scenes, and interactive floor plans: `references/servicenow-react-3d-frontends.md`
@@ -295,6 +345,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - Now Assist/AI/MCP and Australia AI platform: `references/now-assist.md`, `references/australia-ai-platform.md`, `references/external-mcp-evaluation.md`
 - Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
 - FFI Personellsikkerhet: `references/lessons-personellsikkerhet.md`
+- FFI Besøksregistrering data model, Employee Center entry point, demo data, locations, and workspace dashboard: `references/lessons-besoksregistrering.md`
 - Vår Energi implementation/design: `references/vaar-energi-lessons.md`, `references/vaar-energi-design.md`
 
 ## Communication Contract
@@ -305,6 +356,6 @@ For implementation, report the target environment; changed artifacts; update set
 
 Do not dump large scripts, XML, logs, or full records unless they are the deliverable. Distinguish observed facts, documented platform behavior, and inference.
 
-Capture a lesson only when it is reusable and non-obvious. Put details in the relevant `references/lessons-*.md`; never store secrets, sensitive customer data, transient identifiers as portable facts, or noisy one-off history.
+The mandatory recursive update must remain reusable and non-obvious. Put detailed lessons in the relevant `references/lessons-*.md`; never store secrets, sensitive customer data, transient identifiers as portable facts, or noisy one-off history.
 
 When explicitly asked to publish this PowerShell-based personal skill, use `https://github.com/simenandreas91/servicenow-pdi-powershell.git`. Inspect status and diff, stage only intended skill files, commit tersely, and push `main`; do not create a PR unless requested.
