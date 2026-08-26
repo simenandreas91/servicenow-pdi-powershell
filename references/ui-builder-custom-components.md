@@ -4,6 +4,8 @@ Use this reference for UI Builder custom components, Component Builder macropone
 
 This is the maintained operating recipe. Confirm the target instance family, patch, UI Builder/Store application versions, and installed CLI help before relying on a command or metadata shape. ServiceNow's Australia documentation was the current research baseline on 2026-08-26, but component packages and CLI extensions are release-aligned and can change independently of the family release.
 
+When implementation begins, load `ui-builder-custom-component-example.md`. It contains a complete presentational component pattern, file tree, local harness, manifest merge guide, UI Builder bindings, event wiring, Workspace test, update, and promotion sequence. Use it as a shape, not as a substitute for the current CLI-generated files.
+
 ## First Decision: Do You Need a Custom Component?
 
 Use the first option that meets the requirement:
@@ -64,6 +66,25 @@ npm --version
 
 The current Australia docs identify ServiceNow CLI 1.1.0, the separately installed `ui-component` extension, and the most recent Node.js as prerequisites. Older component projects and extension releases have required older Node/npm combinations. For an existing project, its lockfile, generated `package.json`, documented engine constraints, and known working toolchain win over generic version advice. Never run a broad `npm update`, replace ServiceNow family tags, or modernize the renderer just because npm reports newer packages.
 
+### Resolve conflicting and outdated guidance
+
+Use this authority order when two sources disagree:
+
+1. the target instance family/build, installed UI Builder and Store application versions, and approved organization support matrix;
+2. installed `snc` and `snc ui-component ... --help` output plus the newly generated scaffold;
+3. current release-matched ServiceNow product documentation and Store listing/release notes;
+4. maintained ServiceNow Developer Program examples;
+5. older blogs, videos, community posts, or copied projects only as historical clues.
+
+Apply these concrete rules:
+
+- Use the **ServiceNow CLI executable `snc`** and its separately installed `ui-component` extension. Treat tutorials whose primary command is `now-cli` as legacy unless maintaining a project that is deliberately pinned to that toolchain.
+- Do not install Node 12 or 14 merely because an older Orlando-through-Vancouver example says so. Current Australia documentation says to use the most recent Node.js, while old generated projects may still be pinned; inspect the extension, `engines`, lockfile, and known-good CI runtime and reproduce that combination.
+- ServiceNow's Australia install page says CLI 1.1.0 while the Store release-history page lists later 1.1.x fixes. Do not downgrade to match a prose page. Check `snc version`, the current Store listing's family compatibility, and organizational approval; record the version actually used.
+- The combined Washington DC-to-Australia UI Component CLI release notes report no removals or deprecations and identify Xanadu module caching as the notable addition. Absence of a deprecation does not make a copied manifest current; the generated schema remains authoritative.
+- Quebec-era instructions to create `sys_ux_event` and edit a macroponent manually described a CLI limitation at that time. First use the current scaffolded manifest/action deployment path and verify the deployed event. Create manual metadata only after proving the installed extension cannot express it, and then package and own that metadata explicitly.
+- Component Builder is a current low-code path whose output is a `sys_ux_macroponent`; a CLI component is a `sys_uib_toolbox_component`. Do not use the storage table or editing instructions for one as if they applied to the other.
+
 ## Required Dependencies
 
 ### Local workstation
@@ -78,6 +99,8 @@ The current Australia docs identify ServiceNow CLI 1.1.0, the separately install
 - Node.js and npm compatible with the installed extension and scaffolded project.
 - A code editor; Git is strongly recommended and is the normal source-of-truth/rollback mechanism.
 - Browser developer tools. The Next Experience/Page Inspector tooling is useful when available.
+
+The ServiceNow SDK/Fluent toolchain and ServiceNow IDE are separate application-development surfaces; they are not prerequisites for, or replacements for, the documented `ui-component` scaffold/build/deploy workflow. Use them only for other application artifacts when the owning project deliberately uses those tools, and do not make the same component metadata editable from two toolchains.
 
 Do not install or upgrade the CLI, Node, extensions, or npm packages on the user's workstation unless the task authorizes software installation. Report missing prerequisites and provide the exact official path.
 
@@ -107,7 +130,7 @@ Common generated runtime packages include `@servicenow/ui-core`, `@servicenow/ui
 
 ### 1. Configure a named non-production profile
 
-Use the current CLI's interactive profile flow and the organization's approved authentication method:
+Use the current CLI's interactive profile flow and the organization's approved authentication method. Current CLI documentation supports Basic, OAuth, and OAuth + MFA profiles; prefer the organization's OAuth/MFA standard when available:
 
 ```powershell
 snc configure profile set --profile dev
@@ -198,6 +221,18 @@ snc ui-component develop --open
 
 The default entry is normally `example/index.js`; use `--entry`, `--port`, or `--host` only after confirming current help. Local rendering proves the browser bundle and component logic, not UI Builder binding, platform theming, session behavior, ACLs, or workspace integration.
 
+Treat this as a local development-server loop, not a guaranteed hot-module-reload contract. Current docs guarantee the server, and Xanadu+ release notes document module caching; they do not promise that every source, style, dependency, or manifest change is injected without a refresh. Observe the installed extension: refresh the browser after a source/style change when needed, and restart the server after dependency, entry, builder configuration, or manifest changes when behavior is stale.
+
+Debug in this order:
+
+1. terminal build/compile output and the first error, not the final cascade;
+2. browser console for render/action exceptions and duplicate custom-element registration;
+3. browser Network for missing bundles/assets, wrong content types, CSP/CORS, authentication, and server responses;
+4. Next Experience Developer Tools Inspector/Profiler for component properties, state, dispatched/handled events, health indicators, traces, service-worker/cache behavior, and performance;
+5. deployed record/version, UI Builder binding, page state/data resources, and non-admin ACL behavior.
+
+The ServiceNow CLI log directory is normally `%USERPROFILE%\.snc\.logs` on Windows. Inspect only the relevant time window and redact credentials/tokens before sharing. Do not enable verbose logging in a way that persists secrets. Use the browser's Disable cache option only while DevTools is open and only for diagnosis; confirm the final behavior with normal caching restored.
+
 ### 6. Run project checks
 
 Run the scripts actually present in `package.json`; do not invent a generic build/test command:
@@ -247,6 +282,7 @@ First deployment should not use `--force`. The flag overwrites existing componen
 - Keep the view pure: derive markup from state/properties and dispatch actions. Put asynchronous work, timers, and side effects in effects/action handlers.
 - Give every request explicit idle/loading/success/empty/error/unauthorized states. Prevent stale responses from overwriting newer state and prevent duplicate submits.
 - Remove timers, subscriptions, observers, global listeners, object URLs, and imperative library roots in the current framework disconnect/teardown lifecycle.
+- Avoid direct DOM manipulation for framework-rendered nodes. If an imperative library requires DOM access, mount it only into a dedicated component-owned node after connection, never query or mutate the Workspace shell/document globally, and keep every update and teardown inside the lifecycle boundary.
 - Split substantial components into view, actions/effects, constants, selectors/normalizers, and focused child components. Avoid a monolithic `index.js`.
 
 ### Presentational versus connected
@@ -467,17 +503,24 @@ Prove whether the stale layer is source, built bundle, deployed record, UI Build
 - Create custom components using ServiceNow CLI: https://www.servicenow.com/docs/r/application-development/custom-components.html
 - ServiceNow CLI commands, including `ui-component`: https://www.servicenow.com/docs/r/application-development/servicenow-cli/sn-cli-commands.html
 - Install ServiceNow CLI: https://www.servicenow.com/docs/r/application-development/servicenow-cli/download-cli.html
+- ServiceNow CLI Store release history: https://www.servicenow.com/docs/r/store-release-notes/store-rn-ancillary-software-sn-cli.html
 - Manage CLI extensions: https://www.servicenow.com/docs/r/application-development/servicenow-cli/find-extensions.html
+- Combined UI Component CLI Extension release notes through Australia: https://www.servicenow.com/docs/r/delta-washingtondc-australia/australia-washingtondc-uicomponentcliextension-release-notes.html
 - Set up a component project: https://www.servicenow.com/docs/r/xanadu/application-development/building-applications/setup-component-project.html
 - Develop a component: https://www.servicenow.com/docs/r/washingtondc/application-development/develop-component.html
 - Deploy a component: https://www.servicenow.com/docs/r/washingtondc/application-development/deploy-to-instance.html
 - Component Builder and CLI comparison: https://www.servicenow.com/docs/r/application-development/ui-builder/component-builder.html
+- Add/configure components and bind events in UI Builder: https://www.servicenow.com/docs/r/application-development/ui-builder/add-components.html
 - UI Builder security and scope: https://www.servicenow.com/docs/r/application-development/ui-builder/security-roles.html
 - UI Builder client scripts: https://www.servicenow.com/docs/r/application-development/ui-builder/define-client-scripts.html
 - UI Builder page performance: https://www.servicenow.com/docs/r/application-development/ui-builder/performance-settings.html
+- Next Experience Developer Tools release notes: https://www.servicenow.com/docs/r/release-notes/ned-tools-rn.html
 - ATF Configurable Workspace interaction testing: https://www.servicenow.com/docs/r/application-development/automated-test-framework-atf/atf-create-tests-ws.html
 - Application sharing choices: https://www.servicenow.com/docs/r/application-development/c_SharingApplications.html
 - Publish an application to an update set: https://www.servicenow.com/docs/r/application-development/t_PublishApplicationsToAnUpdateSet.html
+- ServiceNow employee guidance on third-party support, default renderer support, Git source of truth, and update-set promotion: https://www.servicenow.com/community/developer-blog/technow-ep-78-building-now-experience-components/ba-p/2275564/page/2
+- ServiceNow UI Builder FAQ on the custom-code support boundary: https://www.servicenow.com/community/next-experience-articles/ui-builder-faq/ta-p/2331977
+- Maintained Developer Program component example (Vancouver-era; use for patterns, not current package versions): https://github.com/ServiceNowDevProgram/Menu-Generating-Operations-Program-Widget-Custom-Component
 - Official developer examples: https://github.com/ServiceNowDevProgram/now-experience-component-examples
 - Official Developer Program advanced example: https://github.com/ServiceNowDevProgram/Menu-Generating-Operations-Program-Widget-Custom-Component
 - Current framework/component documentation and usage guidance: https://developer.servicenow.com/ and https://horizon.servicenow.com/

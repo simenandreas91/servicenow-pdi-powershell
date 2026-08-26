@@ -257,7 +257,7 @@ Use the official ServiceNow SDK workflow when a workspace has `now.config.json`,
 
 For visual design, layout, styling, motion, or frontend implementation, load `references/servicenow-ui-design.md` plus any applicable customer design reference.
 
-For UI Builder custom components, Component Builder macroponents, Next Experience UI Framework, `now-ui.json`, `@servicenow/ui-core`, or ServiceNow CLI `ui-component` work, load `references/ui-builder-custom-components.md` before choosing a toolchain or editing component source.
+For UI Builder custom components, Component Builder macroponents, Next Experience UI Framework, `now-ui.json`, `@servicenow/ui-core`, or ServiceNow CLI `ui-component` work, load `references/ui-builder-custom-components.md` before choosing a toolchain or editing component source. When implementation begins, also use its routed worked example in `references/ui-builder-custom-component-example.md` as the scaffold-and-validation pattern.
 
 For a ServiceNow-hosted React/Vite SPA, WebGL scene, interactive floor plan, or other 3D frontend, also load `references/servicenow-react-3d-frontends.md`.
 
@@ -343,7 +343,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`; Agent Workspace for HR Case Management configuration without UI Builder: `references/hr-agent-workspace-configuration.md`
 - Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
-- UI Builder custom components, Component Builder versus CLI, Next Experience UI Framework, properties/events, npm/browser libraries, React boundaries, build/deploy/promotion, validation, and troubleshooting: `references/ui-builder-custom-components.md`
+- UI Builder custom components, Component Builder versus CLI, Next Experience UI Framework, properties/events, npm/browser libraries, React boundaries, build/deploy/promotion, validation, troubleshooting, and the worked implementation pattern: `references/ui-builder-custom-components.md`, `references/ui-builder-custom-component-example.md`
 - ServiceNow-hosted React/Vite SPAs, single-file deployment, React Three Fiber, Three.js, procedural 3D scenes, and interactive floor plans: `references/servicenow-react-3d-frontends.md`
 - Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
