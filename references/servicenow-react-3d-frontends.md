@@ -1,8 +1,25 @@
 # ServiceNow React and 3D Frontends
 
-Use this reference for a bespoke React/Vite application hosted by ServiceNow, especially an interactive WebGL experience, 3D floor plan, map, configurator, or digital-twin-style demo. Do not use it to bypass an adequate native ServiceNow product. For workplace mapping and enterprise reservations, evaluate licensed Workplace Service Delivery Indoor Mapping before proposing a custom replacement.
+Use this reference for a bespoke React application hosted by ServiceNow, especially an interactive WebGL experience, 3D floor plan, map, configurator, or digital-twin-style demo. Do not use it to bypass an adequate native ServiceNow product. For workplace mapping and enterprise reservations, evaluate licensed Workplace Service Delivery Indoor Mapping before proposing a custom replacement.
 
 The maintained reference implementation is `https://github.com/simenandreas91/servicenow-3d-desk-booking`. It evolves Andrew Pishchulin/ELIN Software's `https://github.com/elinsoftware/servicenow-react-app` boilerplate and preserves its MIT notice and repository history. Treat the ELIN project as the source for the ServiceNow-hosted React approach and the maintained desk-booking project as the working reference for the added Three.js scene, interaction, and responsive product UI.
+
+## Current Australia Architecture Decision
+
+ServiceNow now documents an official React UI-development path through ServiceNow IDE or the ServiceNow SDK. For a new source-managed React/3D surface, start by evaluating that path: scaffold from the current React template, define the page with the Fluent `UiPage` API in a `.now.ts` source file, build the client assets, and install them into the scoped application. The generated page receives a scoped `.do` endpoint and `direct: true` is the normal React-page configuration.
+
+This is a React page/application, not a React renderer for a CLI UI Builder toolbox component. Integrate it into an experience through an owned route/link. If it must appear inside a UI Builder composition, the iframe component is a possible boundary only after validating same-instance session behavior, frame policy, sandbox permissions, target origin, focus, scrolling, responsive sizing, CSP, and a minimal `postMessage` contract. Do not claim that a UI Builder viewport can host an arbitrary Fluent UI page without release-specific proof.
+
+The Australia documentation marks React UI development experimental and lists meaningful constraints, including no SSR, hash routing only, unsupported audio/video/WASM, restrictions on preload links and some stylesheet patterns, attachment-size settings, and one-way source ownership from IDE/SDK to the instance. Confirm the current target-release documentation and the generated project's Node/package-manager constraints before choosing it.
+
+The property-backed single-file plus Scripted REST pattern later in this reference remains an established fallback for the maintained demo and existing update-set-managed applications. Do not select it automatically for a new long-lived application when the SDK/IDE React path meets the requirement.
+
+Official starting points:
+
+- React UI development: https://www.servicenow.com/docs/r/application-development/ui-development-react.html
+- Fluent `UiPage` API: https://www.servicenow.com/docs/r/application-development/servicenow-sdk/fluent-ui-page-api.html
+- ServiceNow SDK React UI-page sample: https://github.com/ServiceNow/sdk-examples/tree/main/react-ui-page-ts-sample
+- UI Builder iframe component: https://horizon.servicenow.com/workspace/components/now-iframe?release=australia
 
 ## Proven Stack
 
@@ -12,6 +29,8 @@ The maintained reference implementation is `https://github.com/simenandreas91/se
 - **vite-plugin-singlefile** to inline JavaScript and CSS into one `dist/index.html` that ServiceNow can serve without a separate static-asset pipeline.
 - **Three.js** for cameras, vectors, materials, geometry, lighting, fog, projection updates, and WebGL rendering.
 - **@react-three/fiber** for declarative Three.js scenes in React through `Canvas`, `useFrame`, mesh event handlers, and normal component composition.
+- **@react-three/drei** for reviewed React Three Fiber helpers where they reduce lifecycle or interaction code without importing unnecessary assets or runtime assumptions.
+- **three-stdlib** for selectively imported framework-agnostic Three.js controls, loaders, and utilities; note that Drei already uses parts of this ecosystem, so inspect the final bundle for duplication.
 - **Axios** for the current ServiceNow session-token bootstrap and Table API calls. Fetch is also viable; keep one HTTP convention per app.
 
 Resolve mutually compatible current versions when starting a new app. A working combination used React 19, Three.js 0.185, React Three Fiber 9, and Vite 8, but do not freeze those versions into a general requirement.
@@ -47,7 +66,7 @@ When one spatial baseline will seed multiple products, tag a stable map-only rev
 
 When one React application opens a second React Three Fiber view, prefer source-level composition: make each scene a visual component that receives typed records and selection callbacks, while a React feature shell owns data loading, authorization-aware states, and product actions. Do not copy a second application shell, API client, or reservation workflow merely to reuse its scene. Avoid leaving two continuously rendering `Canvas`/WebGL renderers active beneath an overlay; pause or unmount the background scene while the foreground floor view is open, or deliberately swap scene graphs inside one canvas when the extra camera/state complexity is justified. Use an iframe only when independent security and release boundaries outweigh the duplicated runtime, framing-policy, session-bootstrap, focus, scrolling, and cross-window messaging costs, and validate those constraints on the real ServiceNow route.
 
-## Single-File ServiceNow Hosting Pattern
+## Established Single-File ServiceNow Hosting Pattern
 
 In project documentation and handoffs, describe bundle delivery and runtime data access as separate channels. The Scripted REST resource may stream the property-backed HTML shell, but business data should load afterward through authenticated JSON requests. Document the session bootstrap, token lifetime, API wrapper, ACL boundary, and local-development fallback explicitly; never imply that live records or the session token are embedded in or streamed with the compiled HTML. Keep repository agent instructions operational and concise; place narrative architecture, provenance, and troubleshooting detail in the README or linked docs so it is not injected into every task. A durable README should distinguish current from planned behavior and record the product boundary, source layout, natural-key contract, stable ServiceNow artifact names, local/live differences, security model, diagnostic path, deployment proof, rollback, provenance, and any missing automated-test coverage.
 

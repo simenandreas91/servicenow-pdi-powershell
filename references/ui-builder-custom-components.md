@@ -340,6 +340,17 @@ Then import it from source so the project bundler can account for it. Do not pas
 | React/Vue/Angular renderer or component ecosystem | High | Treat as unsupported framework integration, not an ordinary dependency |
 | Full React UI kit such as Material UI | Very high | Usually reject inside a leaf component; justify only at product architecture level |
 
+For 3D work, classify the libraries by renderer rather than treating them as one stack:
+
+| Package | CLI UI Builder component | Preferred use |
+| --- | --- | --- |
+| `three` | Viable with customer-owned integration risk | Mount one renderer/canvas in a component-owned node; handle resize, visibility, animation-loop shutdown, and GPU-resource disposal explicitly |
+| `three-stdlib` | Often viable selectively | Import only the controls/loaders/utilities that pass bundler, asset, worker, CSP, and teardown tests |
+| `@react-three/fiber` | High-risk custom-renderer integration | Use in a React UI page/application, not as an ordinary dependency of the supported Snabbdom component model |
+| `@react-three/drei` | Same boundary as React Three Fiber | Use with React Three Fiber in the React application path; audit every helper's asset, portal, loader, worker, and WebGL assumptions |
+
+For a small drag-and-drop 3D widget in UI Builder, prefer `three` plus only the necessary framework-agnostic `three-stdlib` exports. For a substantial 3D surface, digital twin, planner, or configurator that naturally needs React Three Fiber and Drei, use the ServiceNow React UI-page path described below.
+
 Before adding a package, document:
 
 - the user value that cannot be met cleanly with the platform/component library;
@@ -356,17 +367,21 @@ Prefer pure utility or headless libraries. Be cautious with UI frameworks that b
 
 Bundle dependencies through `package.json` and imports when the toolchain supports them. Avoid runtime CDN scripts: they add CSP/CORS, availability, version drift, privacy, integrity, offline, and support failure modes. Libraries that fetch fonts, icons, workers, WASM, maps, or chunks at runtime need an explicit asset-hosting and Content Security Policy design.
 
-Do not apply Australia's ServiceNow IDE/SDK **server-side** third-party-library support list to UI Builder browser bundles. They are different JavaScript runtimes and packaging systems.
+Do not apply Australia's ServiceNow IDE/SDK **server-side** third-party-library support list to a CLI UI Builder browser bundle. Server modules, CLI custom components, and SDK/IDE React UI-page assets are different runtimes and packaging paths. For a React UI page, declare browser dependencies in that project's `package.json`, retain its lockfile, and prove the generated client assets through the SDK/IDE build and install flow.
 
 ## React: Supported Boundary and Safer Choices
 
-The supported CLI model is Next Experience UI Framework plus the ServiceNow-supported default renderer. The component JSX is not React JSX at runtime. ServiceNow has stated that it does not provide an officially supported React renderer; third-party/custom renderers and React integration code are customer-supported.
+The supported **CLI custom-component** model is Next Experience UI Framework plus the ServiceNow-supported default renderer. The component JSX is not React JSX at runtime. ServiceNow has stated that it does not provide an officially supported React renderer for that component model; third-party/custom renderers and React integration code inside it are customer-supported.
+
+Australia also documents a distinct, official React UI-development path through ServiceNow IDE or the ServiceNow SDK. A React template builds client assets with Rollup and a Fluent `UiPage` definition links the generated `index.html` to a scoped `.do` endpoint, normally with `direct: true`. This creates a React **page/application**, not a drag-and-drop `sys_uib_toolbox_component`, and it does not make React Three Fiber a supported renderer inside a CLI custom component.
+
+Treat the current React UI-page capability as experimental until the target release documentation says otherwise. At the Australia baseline it has material limitations: no server-side rendering, hash routing only, unsupported audio/video/WASM assets, restrictions around preload links and some stylesheet patterns, attachment-size constraints, and one-way source ownership from the IDE/SDK to the instance. Validate the exact template, generated files, supported asset types, and install behavior against the target family and patch.
 
 Use this decision order:
 
 1. Implement with the default Next Experience renderer and ServiceNow components.
 2. Use a focused framework-agnostic browser library inside that component if necessary.
-3. If a whole surface must be React, evaluate a separately hosted/ServiceNow-hosted React SPA through a supported page/viewport boundary rather than hiding an application framework inside a small leaf component.
+3. If a whole surface must be React, prefer the current ServiceNow IDE/SDK React template and Fluent `UiPage` path when its experimental limitations are acceptable. Give it its own ServiceNow route; link/navigate to it from the experience, or use the UI Builder iframe component only when in-page embedding is required and its sandbox, sizing, focus, session, CSP, and `postMessage` tradeoffs are proven. Do not assume a UI Builder viewport can host an arbitrary Fluent UI page.
 4. Wrap React inside a custom component only as an explicitly accepted engineering experiment.
 
 If a React wrapper is approved, it must:
@@ -382,6 +397,27 @@ If a React wrapper is approved, it must:
 - pass accessibility, performance, UI Builder authoring, deployed runtime, upgrade, and non-admin tests.
 
 Material UI and similar React design systems are usually a poor fit inside one UI Builder component: they add React, a second design language, styling/portal/focus machinery, and substantial bundle weight while competing with the Now Design System. Use them only with a documented product-level reason and explicit ownership of the unsupported integration.
+
+### Assessing an existing React application for conversion
+
+Do not equate “it renders one screen” with “it is one component.” Before proposing a conversion, inventory:
+
+- whether the source is a reusable visual primitive or a complete page shell with navigation, panels, dialogs, routing, session bootstrap, and product workflows;
+- renderer lock-in such as React hooks, React Three Fiber, Drei, portals, or framework-specific lifecycle and state;
+- document-wide behavior such as `:root`/`html`/`body` CSS, `100vh`, fixed overlays, global listeners, body cursor/scroll changes, and direct `window.location` access;
+- deployed bundle size, asset/chunk/worker/WASM behavior, WebGL lifecycle, and whether more than one continuously rendering canvas can exist;
+- data ownership, ACL-enforcing server contracts, direct Table API calls, current-user/session handling, and which inputs/actions should become UI Builder properties, data resources, or events.
+
+Use the smallest honest migration boundary:
+
+| Existing application shape | Recommended path |
+| --- | --- |
+| Whole React product whose page boundary is natural | Keep or migrate it as a ServiceNow React UI page; link to it or use an iframe only when embedded composition is required |
+| Focused framework-independent visualization | Port it to a CLI component and expose properties in/events out |
+| Large React/React Three Fiber scene required as a true toolbox component | Treat as a substantial rewrite to the supported renderer plus imperative Three.js, or obtain explicit acceptance for an unsupported React wrapper experiment |
+| Page shell containing one valuable visualization | Put only the visualization in a custom component; let UI Builder own surrounding layout, data resources, panels, dialogs, navigation, and page state |
+
+Estimate reuse by layer rather than by file count. Static geometry, typed contracts, pure calculations, and server APIs often transfer; React component trees, hooks, React Three Fiber/Drei scene JSX, global CSS, routing, and document-level lifecycle usually do not transfer directly to a supported CLI component.
 
 ## Deployment and Promotion Recipe
 
@@ -520,6 +556,10 @@ Prove whether the stale layer is source, built bundle, deployed record, UI Build
 - Publish an application to an update set: https://www.servicenow.com/docs/r/application-development/t_PublishApplicationsToAnUpdateSet.html
 - ServiceNow employee guidance on third-party support, default renderer support, Git source of truth, and update-set promotion: https://www.servicenow.com/community/developer-blog/technow-ep-78-building-now-experience-components/ba-p/2275564/page/2
 - ServiceNow UI Builder FAQ on the custom-code support boundary: https://www.servicenow.com/community/next-experience-articles/ui-builder-faq/ta-p/2331977
+- React UI development with ServiceNow IDE/SDK, including templates, build/install behavior, and current limitations: https://www.servicenow.com/docs/r/application-development/ui-development-react.html
+- Fluent `UiPage` API for scoped `.do` endpoints and `direct` React pages: https://www.servicenow.com/docs/r/application-development/servicenow-sdk/fluent-ui-page-api.html
+- ServiceNow SDK React UI-page sample: https://github.com/ServiceNow/sdk-examples/tree/main/react-ui-page-ts-sample
+- UI Builder iframe component and `postMessage` contract: https://horizon.servicenow.com/workspace/components/now-iframe?release=australia
 - Maintained Developer Program component example (Vancouver-era; use for patterns, not current package versions): https://github.com/ServiceNowDevProgram/Menu-Generating-Operations-Program-Widget-Custom-Component
 - Official developer examples: https://github.com/ServiceNowDevProgram/now-experience-component-examples
 - Official Developer Program advanced example: https://github.com/ServiceNowDevProgram/Menu-Generating-Operations-Program-Widget-Custom-Component
