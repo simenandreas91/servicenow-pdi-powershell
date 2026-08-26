@@ -245,6 +245,7 @@ Source: ServiceNow Docs, "Defining portal styles": https://www.servicenow.com/do
 - Do not call `current.update()` from a Business Rule unless there is a very deliberate reason. Before rules save current changes automatically; `current.update()` can recursively trigger rules.
 - Keep Business Rules small and specific. Prefer Script Includes for reusable logic.
 - Always use a condition when practical, and query narrowly inside the rule.
+- For self-approval behavior on `sysapproval_approver`, use a narrowly scoped before rule that changes `current.state` instead of updating the approval or parent record recursively. Resolve the approving record through `document_id`; `source_table` can contain a base table while the document is an extension record, so do not assume it equals `getRecordClassName()`. Guard by the owning process or service, and test a matching approval plus a non-matching approval while checking and cleaning generated events or email rows.
 
 Sources:
 - ServiceNow Business Rules Technical Best Practices: https://developer.servicenow.com/dev.do?_escaped_fragment_=%2Fguides%2Fxanadu%2Fnow-platform%2Ftpb-guide%2Fbusiness_rules_technical_best_practices

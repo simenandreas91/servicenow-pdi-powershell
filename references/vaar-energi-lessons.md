@@ -63,6 +63,17 @@ When Simen asks for a retained General Inquiry demo case in Vår DEV, treat it a
 4. Keep normal workflow enabled when the demo is meant to exercise workspace behavior. A direct case insert can run assignment rules, service activities, flows, SLAs, and notifications; do not use `setWorkflow(false)` merely to avoid accounting for those effects.
 5. Re-read the case and inspect `task_sla`, child HR tasks, `sys_flow_context`, and `sys_email`. Report the assigned group/user, attached SLA names and planned ends, flow status, and whether email is queued. Retain the case unless Simen asks for cleanup.
 
+## HRSD Test Persona Setup
+
+Use this pattern when a Vår Energi DEV story asks for employee, HR agent, or HR administrator accounts for customer validation:
+
+- Treat `sys_user`, `sn_hr_core_profile`, group membership, role grants, and test cases as operational data. They do not naturally form a deployable update set, and an empty story update set is not delivery evidence. If the story changes only these records, document the manual target-environment setup instead of creating a misleading configuration update set.
+- Inspect `sys_user_role_contains` and `sys_group_has_role` before assigning roles. Role names understate their effective access: in the current DEV role hierarchy, `sn_hr_core.basic` already contains HR case-writing, Workspace, AWA, knowledge-writing, and Now Assist panel capabilities. Do not stack `sn_hr_core.manager`, `sn_hr_core.admin`, or workspace-administrator roles merely to make an agent test pass.
+- Do not infer record-level restriction from an HR role or assignment group. Current ServiceNow documentation describes `sn_hr_core.case_writer` as able to write HR cases, so an acceptance criterion such as "assigned cases only" requires positive tests on assigned cases and negative tests on unrelated employees, groups, and sensitive COEs. If the OOTB HR security model does not satisfy that boundary, stop before adding a custom ACL or before-query rule and obtain a separately approved security design.
+- Create a matching HR profile when the employee-facing or HR-case path depends on subject-person/opened-for data or HR user criteria. Validate Employee Center, knowledge-base user criteria, General Inquiry submission, My Requests ownership, and HR case visibility with non-admin personas.
+- Keep authentication separate from persona configuration. Do not place passwords in update sets, story notes, email plans, scripts, logs, or test markers. If customer testers require local credentials, leave password creation and secure distribution as an explicit manual step unless that credential operation is separately authorized through an approved secure channel.
+- For behavior tests, prefer clearly labeled DEV-only cases with non-routable test identities. Account for flows, SLAs, assignment, and email side effects. If deletion is not explicitly authorized, close or cancel retained test cases rather than deleting them.
+
 ## Update Set Practice
 
 - Create one update set per story and per application scope.

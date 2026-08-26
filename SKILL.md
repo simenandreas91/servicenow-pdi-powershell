@@ -1,6 +1,6 @@
 ---
 name: servicenow-pdi
-description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, Service Level Management, SLA/OLA/underpinning contracts, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, Platform Analytics dashboards and data visualizations, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
+description: Perform senior-level ServiceNow analysis, configuration, development, debugging, validation, and delivery against Simen's PDI and approved ServiceNow environments. Use for Now Assist, AI Agent Studio, AI agents, agentic workflows, Skill Kit, AI Control Tower, CMDB, CSDM, Service Graph, IRE, Discovery, Service Mapping, ITOM/ITAM, ITSM, Service Level Management, SLA/OLA/underpinning contracts, HRSD, CSM, Catalog, Flow Designer, IntegrationHub, ACLs, notifications, Platform Analytics dashboards and data visualizations, reports, imports, integrations, scoped apps, Service Portal, Employee Center, Workspace, UI Builder and custom Next Experience components, UI16, update sets, stories, instance inspection, and ServiceNow-hosted front ends. Provides narrow Table API and Xplore helpers, update-set controls, environment routing, domain playbooks, and safe OOTB-first implementation workflows.
 ---
 
 # ServiceNow PDI
@@ -257,8 +257,14 @@ Use the official ServiceNow SDK workflow when a workspace has `now.config.json`,
 
 For visual design, layout, styling, motion, or frontend implementation, load `references/servicenow-ui-design.md` plus any applicable customer design reference.
 
+For UI Builder custom components, Component Builder macroponents, Next Experience UI Framework, `now-ui.json`, `@servicenow/ui-core`, or ServiceNow CLI `ui-component` work, load `references/ui-builder-custom-components.md` before choosing a toolchain or editing component source.
+
 For a ServiceNow-hosted React/Vite SPA, WebGL scene, interactive floor plan, or other 3D frontend, also load `references/servicenow-react-3d-frontends.md`.
 
+- Prefer an OOTB component, preset, data resource, controller, page collection, viewport, or declarative action before owning a custom component. Use Component Builder for reusable low-code composition; use the ServiceNow CLI `ui-component` extension only when custom HTML, SCSS, JavaScript, lifecycle behavior, or a browser library is materially required.
+- A CLI component is a Next Experience web component, not a React component. Keep ServiceNow's generated framework and renderer packages aligned to the target family. Treat React or a custom renderer as an unsupported integration experiment with explicit lifecycle, bundle, accessibility, upgrade, and support acceptance.
+- Treat the component contract as properties in and typed events out. Prefer UI Builder data resources/controllers for page-owned data; enforce all reads and writes with server-side ACLs and APIs. Component visibility and client validation are not security controls.
+- Keep the CLI project, lockfile, manifest, and Git history as the source of truth. Deploy only to confirmed non-production, use `--force` only after proving ownership and reviewing overwrite impact, and promote the resulting scoped application through one established App Repository or update-set path rather than redeploying ad hoc to production.
 - Classify the surface before designing. Transactional forms, approvals, dashboards, and workspaces need compact predictability; portal landing pages can use stronger editorial hierarchy; bespoke campaign pages may justify richer visual direction.
 - Start from OOTB components, the active theme, reusable tokens, and the customer's design system. Scope CSS to the owned component or page and avoid global overrides that can destabilize unrelated experiences.
 - For a presentation-only change limited to one Service Portal placement, evaluate `sp_instance.css` before cloning or editing the widget. Scope selectors beneath stable component markup, verify nested child-widget styles can be reached, and prove reused instances remain unchanged.
@@ -337,6 +343,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`; Agent Workspace for HR Case Management configuration without UI Builder: `references/hr-agent-workspace-configuration.md`
 - Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
+- UI Builder custom components, Component Builder versus CLI, Next Experience UI Framework, properties/events, npm/browser libraries, React boundaries, build/deploy/promotion, validation, and troubleshooting: `references/ui-builder-custom-components.md`
 - ServiceNow-hosted React/Vite SPAs, single-file deployment, React Three Fiber, Three.js, procedural 3D scenes, and interactive floor plans: `references/servicenow-react-3d-frontends.md`
 - Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
