@@ -346,10 +346,15 @@ For 3D work, classify the libraries by renderer rather than treating them as one
 | --- | --- | --- |
 | `three` | Viable with customer-owned integration risk | Mount one renderer/canvas in a component-owned node; handle resize, visibility, animation-loop shutdown, and GPU-resource disposal explicitly |
 | `three-stdlib` | Often viable selectively | Import only the controls/loaders/utilities that pass bundler, asset, worker, CSP, and teardown tests |
+| `@babylonjs/core` | Technically viable with customer-owned integration risk | Consider when its more integrated engine features materially reduce product code; prove selective imports, bundle cost, canvas ownership, render-loop shutdown, and scene/engine disposal |
+| `playcanvas` standalone engine | Technically viable with customer-owned integration risk | Consider for an engine/entity-component architecture; use the npm engine without making the hosted Editor or its asset pipeline a runtime dependency, and destroy the application cleanly |
+| `@google/model-viewer` | Narrowly viable | Good for displaying one or a few prepared glTF/GLB assets with standard camera controls; usually too constrained for a record-driven campus/floor navigator, and its custom-element registration and asset delivery still require proof |
 | `@react-three/fiber` | High-risk custom-renderer integration | Use in a React UI page/application, not as an ordinary dependency of the supported Snabbdom component model |
 | `@react-three/drei` | Same boundary as React Three Fiber | Use with React Three Fiber in the React application path; audit every helper's asset, portal, loader, worker, and WebGL assumptions |
 
 For a small drag-and-drop 3D widget in UI Builder, prefer `three` plus only the necessary framework-agnostic `three-stdlib` exports. For a substantial 3D surface, digital twin, planner, or configurator that naturally needs React Three Fiber and Drei, use the ServiceNow React UI-page path described below.
+
+“Imperative Three.js” means that the component creates and owns the canvas, renderer, scene, camera, lights, meshes, raycaster, controls, resize observer, and render loop through ordinary JavaScript calls instead of describing them as React components. React Three Fiber mainly maps React state/lifecycle and JSX onto those same Three.js objects. It does not add the underlying cameras, geometry, materials, lighting, model loading, picking, animation, instancing, or GPU renderer. For an operational building/floor navigator, Three.js itself is normally sufficient; the engineering cost is explicit lifecycle and state synchronization, not missing visual capability.
 
 Before adding a package, document:
 
@@ -418,6 +423,14 @@ Use the smallest honest migration boundary:
 | Page shell containing one valuable visualization | Put only the visualization in a custom component; let UI Builder own surrounding layout, data resources, panels, dialogs, navigation, and page state |
 
 Estimate reuse by layer rather than by file count. Static geometry, typed contracts, pure calculations, and server APIs often transfer; React component trees, hooks, React Three Fiber/Drei scene JSX, global CSS, routing, and document-level lifecycle usually do not transfer directly to a supported CLI component.
+
+### Workspace-native record navigation from a spatial component
+
+For an operational Configurable Workspace, keep the workspace shell and native record pages in charge of navigation. A focused map or 3D component should emit a small selection event such as `{table, sysId}` or, preferably, a portable business key that a trusted data resource resolves to the current record. In UI Builder, map that event with **Link to destination** to the workspace record page and bind only the required route parameters. A tabbed workspace can then open and retain record pages without making the visualization own forms, tabs, or unsaved-record behavior.
+
+Treat a React `UiPage` or an iframe as a page boundary, not as a native workspace component. Neither automatically participates in UI Builder event routing or workspace tabs. The documented iframe contract covers host-to-frame data through `postMessage`; frame-to-workspace navigation therefore requires a deliberately owned adapter or wrapper. Validate the message origin, type, schema, allowed tables, and identifiers before dispatching a UI Builder event. Do not reach into the parent DOM or depend on undocumented workspace internals. `g_aw.openRecord()` is documented for Agent Workspace client scripts and is not a general custom-component API for Configurable Workspace.
+
+For large facilities, asset, or maintenance products, use the 3D surface as a spatial navigator over native ServiceNow records and workflows. Let UI Builder own page state, data resources, panels, declarative actions, and navigation; let the component own only the WebGL canvas, camera, scene, picking, and visual selection state.
 
 ## Deployment and Promotion Recipe
 
@@ -560,6 +573,14 @@ Prove whether the stale layer is source, built bundle, deployed record, UI Build
 - Fluent `UiPage` API for scoped `.do` endpoints and `direct` React pages: https://www.servicenow.com/docs/r/application-development/servicenow-sdk/fluent-ui-page-api.html
 - ServiceNow SDK React UI-page sample: https://github.com/ServiceNow/sdk-examples/tree/main/react-ui-page-ts-sample
 - UI Builder iframe component and `postMessage` contract: https://horizon.servicenow.com/workspace/components/now-iframe?release=australia
+- Link a component event to a destination page and bind route parameters: https://www.servicenow.com/docs/r/application-development/ui-builder/link-component-destination.html
+- Configure tabbed workspace navigation: https://www.servicenow.com/docs/r/application-development/workspace-builder/configure-workspace-settings.html
+- GlideAgentWorkspace scope and `openRecord()` boundary: https://www.servicenow.com/docs/r/api-reference/GlideAgentWorkspaceAPI.html
+- Three.js fundamentals and direct scene/camera/renderer lifecycle: https://threejs.org/manual/en/fundamentals.html
+- Three.js ray-based object picking: https://threejs.org/docs/pages/Raycaster.html
+- PlayCanvas standalone npm engine: https://developer.playcanvas.com/user-manual/engine/standalone/
+- Babylon.js official documentation: https://doc.babylonjs.com/
+- Google `<model-viewer>` npm/web-component project: https://github.com/google/model-viewer/tree/master/packages/model-viewer
 - Maintained Developer Program component example (Vancouver-era; use for patterns, not current package versions): https://github.com/ServiceNowDevProgram/Menu-Generating-Operations-Program-Widget-Custom-Component
 - Official developer examples: https://github.com/ServiceNowDevProgram/now-experience-component-examples
 - Official Developer Program advanced example: https://github.com/ServiceNowDevProgram/Menu-Generating-Operations-Program-Widget-Custom-Component

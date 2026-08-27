@@ -20,6 +20,10 @@ Official starting points:
 - Fluent `UiPage` API: https://www.servicenow.com/docs/r/application-development/servicenow-sdk/fluent-ui-page-api.html
 - ServiceNow SDK React UI-page sample: https://github.com/ServiceNow/sdk-examples/tree/main/react-ui-page-ts-sample
 - UI Builder iframe component: https://horizon.servicenow.com/workspace/components/now-iframe?release=australia
+- Configurable Workspace tabbed navigation: https://www.servicenow.com/docs/r/application-development/workspace-builder/configure-workspace-settings.html
+- Link a UI Builder event to a destination page: https://www.servicenow.com/docs/r/application-development/ui-builder/link-component-destination.html
+- Workplace Service Delivery suite: https://www.servicenow.com/docs/r/employee-service-management/workplace-service-delivery/workplace-service-delivery-suite-landing-page.html
+- Enterprise Asset Management: https://www.servicenow.com/docs/r/it-asset-management/enterprise-asset-management/enterprise-asset-management.html
 
 ## Proven Stack
 
@@ -61,6 +65,10 @@ Keep three layers distinct:
 3. **3D scene:** a pure visual projection of desk/space records. Selecting a mesh raises a desk identifier back to React; it never authorizes or persists a reservation itself.
 
 The browser must never be the security boundary. Recheck availability and permissions on the server when booking or cancelling, even when the mesh appears available.
+
+For a broader facilities-management or FDV solution, perform a product-fit and licensing gate before designing custom tables or workflows. Evaluate Workplace Service Delivery/Workplace Central and Indoor Mapping for the location-space hierarchy, floor maps, reservations, workplace maintenance, and leases; Enterprise Asset Management for asset lifecycle, contracts, maintenance plans, work orders, mobile work, and asset workspace; and Field Service Management when dispatch, scheduling, or technician execution is central. Reuse the licensed product data model and processes where they fit, and customize only the proven gaps.
+
+In a tabbed Configurable Workspace, the durable end state is normally native record pages and workflows plus a focused spatial navigator. A UI Builder custom component can raise a record-selection event that UI Builder links to the workspace record route. A full React `UiPage` or iframe can still serve as a standalone digital-twin/editor or a transitional embedded map, but it requires a reviewed message bridge to request native workspace navigation and does not become a workspace page merely because it is hosted on the same instance.
 
 When one spatial baseline will seed multiple products, tag a stable map-only revision and give each product its own repository or source boundary, ServiceNow scope, roles, data APIs, hosted bundle property, route, update set, and release lifecycle. Preserve portable geometry identifiers across the copies, but keep business adapters and sensitive data contracts product-specific. A copied deployment helper should fail closed until its new scope, property, and route are configured; transfer later map-only commits explicitly, and extract a shared package only after repeated synchronization work justifies the added release coupling.
 
