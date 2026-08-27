@@ -79,6 +79,7 @@ Reject a design that duplicates OOTB behavior, edits base artifacts unnecessaril
 - Preserve upgradeability: configure or extend before cloning; clone only artifacts designed for it or when the documented benefit outweighs skipped upgrades.
 - Follow the existing deployment model. For a new custom scoped application, evaluate ServiceNow SDK/Fluent with Git and the Application Repository as the preferred source-based path. Use update sets for Global, operational, hotfix, plugin-owned, and established update-set work. Do not mix delivery mechanisms casually.
 - Do not use update sets to transport operational/task data. For new custom tables used in forms or Workspace, follow `references/custom-scoped-apps.md`, including its required usable Default-view check.
+- For FFI FDV work in the EBA application, also load `references/lessons-eba-fdv.md` before changing the domain model, Workspace table set, access model, or 3D building explorer.
 
 ## Now Assist And Agentic AI Standards
 
@@ -97,6 +98,16 @@ Treat CMDB as a governed operational graph, keep portfolio/service/runtime conce
 Load both `references/sla.md` and `references/sla-query-library.md` for SLA definitions, Task SLAs, OLAs, underpinning contracts, service commitments, SLA schedules/time zones, SLA flows or notifications, SLA Timeline, SLA repair, SLA breakdowns, or SLA timer work. The runbook defines the design and delivery decisions; the query library supplies bounded inspection and validation patterns. Also load the applicable product/customer reference, such as `references/vaar-energi-lessons.md` for a Vår Energi HR SLA.
 
 Separate the service promise from timer configuration, treat `contract_sla` as definition and `task_sla` as runtime evidence, and never create/repair Task SLA rows directly. The references own duration, schedule, condition-state, flow, repair, overlap, and validation mechanics.
+
+## Configurable Workspace Standards
+
+Load `references/workspace-configuration.md` for every Configurable Workspace or UI Builder investigation involving experiences, routes, pages, variants, record pages, forms, lists, related lists, tabs, components, data resources, client state, events, viewports, page properties, visibility, or product-specific Workspace behavior.
+
+For form/list/related-list/header buttons, Declarative Actions, UI Actions in Workspace, action layouts/configurations, UXF Client Actions, UI Interactions, or action-triggered modals, also load `references/workspace-actions.md`. For a symptom-led investigation, cross-environment difference, upgrade regression, or Workspace deployment, also load `references/workspace-debugging.md`.
+
+Trace the runtime chain before editing: exact experience and URL -> route and parameters -> selected variant -> page definition and component/controller -> downstream form/list/action/product metadata -> security. Do not assume a visible Workspace element is owned by UI Builder. Record fields, sections, related lists, actions, roles, policies, and many product settings are configured outside the page composition.
+
+Prefer product admin configuration, the exact Workspace form/list view, Workspace View Rules, declarative actions/UI Interactions, page variants, page collections, and supported extension points over cloning or taking ownership of a ServiceNow page. Resolve every internal record live; Store versions can change the schema and supported extension model.
 
 ## HR Agent Workspace Standards
 
@@ -235,7 +246,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
 - UI Builder custom components, Component Builder versus CLI, Next Experience UI Framework, properties/events, npm/browser libraries, React boundaries, build/deploy/promotion, validation, troubleshooting, and the worked implementation pattern: `references/ui-builder-custom-components.md`, `references/ui-builder-custom-component-example.md`
 - ServiceNow-hosted React/Vite SPAs, single-file deployment, React Three Fiber, Three.js, procedural 3D scenes, and interactive floor plans: `references/servicenow-react-3d-frontends.md`
-- Workspace/SOW and modals: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
+- Configurable Workspace/UI Builder architecture, reverse engineering, record pages, forms, lists, related lists, tabs, components, data resources, events, routing, variants, security, and product boundaries: `references/workspace-configuration.md`; actions/action bars/UI Actions/Declarative Actions/UI Interactions/modals: `references/workspace-actions.md`; symptom recipes, tools, examples, deployment, and upgrade troubleshooting: `references/workspace-debugging.md`; SOW-specific and modal implementation lessons: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
 - Update-set retrieval, preview, conflict handling, non-forced commit, promotion validation, and DEV -> TEST -> PROD delivery: `references/update-set-promotion.md`
 - CMDB/CSDM architecture, CSDM 5, governance, migration, and 2026 AI/WDF alignment: `references/cmdb-csdm.md`; practical CMDB administration/development and decision logic: `references/cmdb-admin-development.md`; bounded diagnostics, IRE/import examples, and query library: `references/cmdb-query-library.md`; repeatable PDI Ingest/Govern/Insight exercise: `references/cmdb-data-foundations-lab.md`; pre-update coverage record: `references/cmdb-coverage-audit.md`
@@ -245,6 +256,7 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
 - FFI Personellsikkerhet: `references/lessons-personellsikkerhet.md`
 - FFI Besøksregistrering data model, Employee Center entry point, demo data, locations, and workspace dashboard: `references/lessons-besoksregistrering.md`
+- FFI EBA FDV source-of-truth boundary, foundation schema, access model, Workspace readiness, and 3D integration contract: `references/lessons-eba-fdv.md`
 - Vår Energi operational monitors/work logging: `references/vaar-energi-operations.md`; implementation/design: `references/vaar-energi-lessons.md`, `references/vaar-energi-design.md`
 
 ## Communication Contract
