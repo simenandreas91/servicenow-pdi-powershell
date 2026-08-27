@@ -80,3 +80,11 @@ Use these checklists before operations that can affect security, data, deploymen
 - Before any production write, require environment, target records, rollback plan, maintenance window/approval expectation, and verification plan.
 - Do not run exploratory scripts that mutate data in production.
 - Do not install plugins, change credentials, execute transforms, or modify update sets in production without explicit user instruction.
+
+## Test Accounts In Production-Like Environments
+
+- Resolve every requested account by exact `user_name` before inserting; stop on unexpected matches and keep the operation idempotent.
+- Prefer membership in an existing, active persona group over direct role grants. Verify the group's live roles and inherited-role closure before adding users.
+- Do not invent, print, log, or persist temporary passwords. Treat credential provisioning and delivery as a separate approved security step when no secure value or channel is supplied.
+- Verify positive and negative personas after creation: exact active users, intended memberships, expected effective roles, and zero privileged roles or memberships for employee-only accounts.
+- Use membership removal plus account deactivation as the default rollback; do not delete test accounts from production-like environments unless deletion is explicitly approved.

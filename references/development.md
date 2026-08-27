@@ -181,6 +181,7 @@ $batch = @{
 ```
 
 - After creating the batch, patch the batch's own `base_update_set` to its sys_id. Then patch each included child update set with both `parent=<batch_sys_id>` and `base_update_set=<batch_sys_id>`.
+- Re-read the parent after that patch. On Vår Energi Sandbox, the Table API can return success while silently leaving a parent's self-referencing `base_update_set` empty; when that occurs, use one constrained Global GlideRecord update for the exact batch sys_id, then verify the parent and all children again.
 - Verify with a readback query:
 
 ```text

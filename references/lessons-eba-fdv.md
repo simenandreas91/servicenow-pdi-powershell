@@ -42,6 +42,8 @@ The foundation deliberately excludes maintenance plans, work orders, service his
 
 Keep foundation configuration separate from operational data. Do not transport locations, buildings, rooms, or assets in an update set. Use an approved import/seed process with deterministic business keys and reconciliation when sample or real data is requested.
 
+Before seeding, read the live `sys_choice.value` entries instead of deriving internal values from their labels. In the current foundation schema, examples include room type `technical` and asset category `building`; label-like guesses such as `technical_room` or `building_systems` are invalid. An FDV seed should be idempotent by `u_code`/`u_asset_id`, resolve parent records to live `sys_id` values, avoid overwriting existing matches, and reconcile exact counts, duplicate keys, empty mandatory references, and asset building/floor/room consistency after insertion.
+
 ## Access model
 
 Use the existing EBA role hierarchy:
@@ -59,3 +61,7 @@ Every table exposed during Workspace creation needs a usable Default form view w
 Build Workspace navigation and record pages around the canonical hierarchy. The Three.js component should receive bounded, server-authorized data through UI Builder properties/data resources, emit selection/navigation events, and use record `sys_id` values to open the standard Workspace record route or tab. Keep rendering state separate from record ownership so the 3D scene can evolve without changing the FDV schema.
 
 Before creating the Workspace, re-query the live scope and tables, confirm the six Default views are present, and select these tables in the Workspace table step. Do not create duplicate tables if the picker appears stale; refresh the authoring session and verify scope/application context first.
+
+UI Builder can retain the scoped update-set context that was active when its browser session loaded. After switching `sys_update_set` and `updateSetForScope<scope_sys_id>`, reload or reopen UI Builder, save one small intended artifact, and confirm its `sys_update_xml.update_set` before continuing. If the first artifact lands in the previous set, stop and reopen the authoring session; do not assume the current preference records prove the builder is using them.
+
+Workspace side navigation and the workspace homepage are separate settings. `chrome_toolbar` controls the visible navigation entries and their order, while `sys_ux_app_config.landing_path` controls the route opened from the workspace root. Verify both when promoting an FDV page to the homepage; placing the route first in side navigation does not change a remaining `landing_path=home`.

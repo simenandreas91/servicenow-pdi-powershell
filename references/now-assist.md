@@ -314,6 +314,15 @@ Australia Patch 2 UI-validation controls are property-gated. Verify `glide.ai_re
 
 Triggers are optional. Chat-only agents/workflows do not need one. For automatic execution, select an available trigger, give it a precise objective, bind a table where applicable, require at least one selective condition, select the output channel, and keep it inactive until all tests pass.
 
+For record triggers, the installed Australia Flow trigger definitions distinguish launch frequency as follows:
+
+- **Once:** run once for the lifetime of the record.
+- **Only if not currently running:** run for each distinct qualifying change only when no execution is already active.
+- **For each unique change:** run for each distinct qualifying change even when another execution is active.
+- **For every update:** run for every qualifying update, including a repeated update that has occurred before.
+
+Default automatic resolution-plan workflows to **Once** during a narrow pilot. The packaged Generate resolution plan workflow can write comments or work notes, so an unrestricted Updated trigger with a repeat frequency can retrigger from its own record write. Prefer the supported UI action/Now Assist panel when the assigned fulfiller should decide when enough evidence exists. If an HR Case trigger is required, derive the runtime identity from **Assigned to [task]**, require Assigned to to be populated, and test the assigned HR persona's workflow/agent/tool/table access. Do not use Opened for or Subject person as the runtime identity for an HR fulfillment workflow; those employees normally should not inherit HR agent access to case work notes or restricted case data.
+
 Australia documentation calls out scheduled and email triggers in addition to table/condition-based definitions. Scheduled triggers process 10 records by default via `sn_aia.max_scheduled_trigger_query`; do not raise this without volume, assist, runtime, and side-effect analysis. Email triggers operate on existing reply/email records rather than unseen inbound mail; confirm the exact table in the installed version because the agent and workflow topics differ in current docs.
 
 Channel model:
@@ -323,6 +332,8 @@ Channel model:
 - **Background/non-interactive:** use the AI Agent Background Channel when Workspace/Core UI invocation must continue without live fallback questions. Define a final visible outcome and failure message.
 - **Interactive:** use when missing context may be requested from the user or supervised tools need user input.
 - **External:** A2A/secondary-agent and MCP exposure require separate authentication, ACL, governance, audit, and data-contract review.
+
+Do not identify a Workspace AI button by its label alone. Before adding a UI-action channel, trace the visible button through its `sys_ui_action` or Declarative Action, `sys_ux_form_action`/layout item, client launcher or payload mapping, and the exact `sn_aia_usecase` identifier. A product-owned action such as an HRSD resolution-plan button can launch a product-specific copilot workflow while a similarly named Platform action launches a separate generic/autopilot workflow. Adding the Platform action in that situation creates a second invocation path rather than adopting the existing button; check for duplicate buttons, competing work-note updates, overlapping execution plans, different eligibility/security conditions, and additional assist consumption.
 
 Triggered execution output can appear in the Now Assist panel or Virtual Agent; the panel user needs `now_assist_panel_user`. Agentic workflow execution/progress and supervised questions can also be reviewed in the Core UI/Workspace AI Workflows panel.
 
