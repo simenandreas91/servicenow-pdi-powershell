@@ -88,3 +88,5 @@ Use these checklists before operations that can affect security, data, deploymen
 - Do not invent, print, log, or persist temporary passwords. Treat credential provisioning and delivery as a separate approved security step when no secure value or channel is supplied.
 - Verify positive and negative personas after creation: exact active users, intended memberships, expected effective roles, and zero privileged roles or memberships for employee-only accounts.
 - Use membership removal plus account deactivation as the default rollback; do not delete test accounts from production-like environments unless deletion is explicitly approved.
+- Before correcting a wrong-environment account setup, reconcile the exact natural keys in both source and intended target. A clone or refresh may already have copied the records, so do not insert duplicates; verify target-local references and access before removing the source records.
+- When identities must remain sub-production-only, call out the refresh risk: a future PROD-to-sub-production clone can remove them unless the platform's clone-preservation process explicitly retains or recreates them.

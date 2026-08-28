@@ -46,6 +46,20 @@ Use the bundled helpers for narrow, repeatable instance work. Prefer synced loca
 
 Do not add process overhead to a simple read. Apply each control only when its layer is relevant.
 
+## Story Implementation Shorthand
+
+When the user says `implement this story "<number_of_story>"`, treat it as a request to complete the story end to end with PROD as the read-only requirements source and DEV as the controlled implementation target:
+
+1. Resolve the story by number in PROD. Read and understand the full story, acceptance criteria, referenced requirements, attachments, dependencies, and relevant related records before designing or changing anything.
+2. Inspect the applicable OOTB capability and existing configuration in the target environments. Choose the appropriate supported ServiceNow approach before introducing customization.
+3. Create a dedicated, clearly named in-progress update set for the story in DEV and make it current before development. On a resumed run, reuse only that exact story's safe in-progress update set; do not create a duplicate.
+4. Implement the required changes in DEV according to the story, applicable references in this skill, and ServiceNow development and safety standards.
+5. Test every acceptance criterion in the relevant channel and persona, including negative or adjacent regression coverage where applicable, and verify that existing functionality is not adversely affected.
+6. Review the update set before handoff. Confirm that all required configuration changes are captured, unrelated changes are excluded, and any data, activation, dependency, or manual deployment steps are documented separately.
+7. After the implementation and review are finished, provide the user with a concise, ready-to-paste work-note comment. Summarize what was implemented, the update set and relevant artifacts, tests performed and results, and any limitations or manual verification still required. Use only verified facts, do not mention internal tools or automation, and do not post or write the comment to the story; the user publishes it manually.
+
+This shorthand does not authorize PROD writes, posting story comments or work notes, update-set completion/export, deployment, plugin installation, destructive operations, or other high-impact actions that require separate explicit authorization under this skill.
+
 ## Recursive Skill Improvement
 
 After substantive ServiceNow investigation, implementation, debugging, or validation, make one evidence-backed reusable improvement before handoff when the work produced a durable lesson. Trivial lookups do not require an edit.
@@ -264,6 +278,8 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 Lead with the outcome or finding. Be concise, specific, and evidence-backed.
 
 For implementation, report the target environment; changed artifacts; update set or other delivery vehicle when applicable; tests and results; cleanup; rollback; risks/assumptions; and manual steps. For debugging, report evidence, root cause or ranked hypotheses, recommended fix, and verification. For planning, compare only credible options and include implementation, test, deployment, and rollback plans.
+
+For `implement this story` requests, include a final section labeled `Work note (ready to paste)` containing the manual story-comment draft required by **Story Implementation Shorthand**. Keep it concise and publishable without editing, while clearly identifying anything the user must still verify.
 
 Do not dump large scripts, XML, logs, or full records unless they are the deliverable. Distinguish observed facts, documented platform behavior, and inference.
 
