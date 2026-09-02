@@ -144,7 +144,7 @@ Do not use this path for technical dashboards; their update-set transport is uns
 
 ## Success Dashboard Apps
 
-- HR/ITSM Success Dashboard indicators are not ordinary `par_dashboard` dashboards. Verify them through Store app/scopes such as `sn_sd`, `sn_sd_common`, `sn_sd_hrsm`, `sn_sd_itsm`, navigation module `now/success-dashboard/home`, Success Dashboard tables (`sn_sd_*`), Self-Service Analytics tables (`ssa_*`), and PA jobs/indicators.
+- Use `success-dashboard.md` for configuration, instrumentation, collection, formulas, cost savings, Operational Success, Benchmarks, validation, troubleshooting, and delivery. HR/ITSM Success Dashboard indicators are not ordinary `par_dashboard` dashboards; load this Platform Analytics reference as well only when working on their PA backend or an Operational Success dashboard mapping.
 - In Vår Energi DEV on 2026-05-27, HR Success Dashboard indicators (`sn_sd_hrsm`), Success Dashboard Core (`sn_sd`), Success Dashboard Common (`sn_sd_common`), Self-Service Analytics Core (`sn_ssa_core`), PA Premium, PA, and HR PA content pack (`com.sn_hr_pa`) were installed. The `[SD HRSM] Daily Data Collection` and `[SD HRSM] Historic Data Collection` jobs existed but were inactive.
 - For Vår Energi STRY0010074, the OOTB HR Analytics Center dashboards existed in DEV as `par_dashboard` records: `HR Agent`, `HR Case Dashboard`, `HR Manager`, `Human Resources Overview`, `Manager Dashboard`, and `SLA Dashboard`. The relevant HR PA data jobs were `[PA HR Case] Daily Data Collection` and `[PA HR Case] Historic Data Collection` in `sn_hr_pa`; both were inactive before activation on 2026-05-27.
 

@@ -525,6 +525,13 @@ Use employee sys_id + start date + bundle version as an idempotency key. Return 
 - Treat MCP tools like integrations: validate authentication, least privilege, tool descriptions, input/output contract, error behavior, auditability, timeout, rate limits, data egress, Guardian coverage, and revocation before autonomous use.
 - Australia MCP Server Console exposes governed ServiceNow capabilities to external clients. That is a separate inbound architecture from an AI Agent Studio MCP client calling an external server; model both trust directions explicitly.
 
+## Service Portal And Employee Center Chat Configuration Trace
+
+- For modern Now Assist self-service chat, do not assume the portal owns a placed `sn-va-sp-widget`. Start with the active `sys_now_assist_deployment_channel` whose `document_table=sp_portal` and `document_id` resolves to the target portal. Its deployment points through `sys_now_assist_deployment_config` to the effective `sys_cs_context_profile` and `sys_cs_branding_setup` records.
+- Resolve `sp_agent_chat_config_sys_id` from `sys_now_assist_deployment_config_attributes`, then verify the referenced active `sp_agent_chat_config` includes the target portal. Treat this as a separate eligibility/routing control from the deployment channel.
+- Trace visible copy and presentation by layer: `sys_cs_context_profile_message` owns greeting/fallback/status messages; `sys_cs_branding_setup` owns header label, input placeholder, logo, colors, and bot profile; deployment attributes own search profile, topic/skill switches, fallbacks, live-agent configuration, and related feature flags.
+- A portal header may call `$sp.isNowAssistEnabled()` and load `now_assist_sparkle_icon`, while the actual dialog is supplied by the packaged Now Assist self-service client. Verify header behavior and `sp_page.id=nowassistselfservice` separately, and do not clone/edit the header or packaged widgets merely to change assistant configuration.
+
 ## Now Assist In AI Search / Genius Results
 
 Now Assist in AI Search (`sn_ais_assist`) combines AI Search retrieval with LLM generated/selected answer cards. It can appear in Service Portal, Virtual Agent, Employee Center, global search, and workspace search depending on search-profile configuration.

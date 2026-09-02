@@ -52,6 +52,9 @@ Is it only one environment/after upgrade?
 | Entire action bar blank | action bar/Form Controller binding missing; explicit/winning layout empty; child layout overrides parent; M2M not transported | Form Controller/action bar, exact table candidate layouts and memberships | bind correct controller/layout or restore coherent layout membership; do not recreate all actions |
 | Tab missing | wrong tab family; different variant; component visibility; form view/related list; product configuration | classify tab, selected variant, Tabs component/preset, selected form view | change tab's actual owner; test empty/unauthorized cases |
 | Component not rendering | wrong variant; hidden condition; missing/invalid page definition; missing component dependency; runtime error | Experience view, screen page definition, content tree, console/network | restore reference/dependency or binding; avoid raw macroponent edits until builder path is exhausted |
+| CLI custom component is white/blank | stale UI Builder cache; renderer exception or incompatible attribute/hook; unstable imperative mount; malformed property shape; zero-sized container | deployed component readback, **Developer > Clear UI Builder cache**, console, smallest static render | prove metadata, reopen builder/runtime, then bisect static markup -> data -> interaction -> imperative scene; preserve the page while isolating |
+| UI Builder says No URL and/or Screen; runtime says No content available | missing screen/page-definition reference or malformed `sys_ux_macroponent.composition`, commonly array/object shape damage after direct JSON automation | route -> screen -> macroponent reference; raw composition before/after and parsed top-level type | restore the captured valid composition/reference, keep top level and nested collections as arrays, reread and clear UI Builder cache |
+| Properties/events remain old after a successful CLI deploy | deployed record differs from cached builder contract; wrong component tag/scope/page instance | toolbox component/property/event timestamps, exact tag, UI Builder cache/session | read back deployment, clear UI Builder cache, reopen correct page; redeploy only if metadata did not update |
 | Different users see different page | audience/order, ACL/role/domain, user criteria, personalization, cache | variant audience/condition/order; route and table/field ACL | impersonate/test persona; compare evaluated criteria and network response |
 | Different tables/classes behave differently | table route parameter; variant condition; child view/layout/policy/action; product subtype config | `table` and `sys_class_name`; child-specific screen/view/layout | compare base and child chain; preserve intentional specificity |
 | Unexpected page variant | multiple matches/order; wrong route input; stale session; missing audience/condition after promotion | all active screens for exact screen collection | evaluate each candidate with runtime values; lower order wins equal matches |
@@ -105,6 +108,21 @@ Start with only what the user can point at.
 4. Compare request inputs with route/client-state values and response shape with the component binding.
 5. Repeat as working persona/record and diff status, payload keys, row count, and timing—not sensitive content.
 6. Map a client error's component/page ID back to UI Builder content tree/page definition.
+
+### Blank or stale CLI custom-component recipe
+
+1. Keep a known working smoke component/page revision available. Do not delete or rename it during diagnosis.
+2. Confirm the source tag, manifest key, deployed toolbox record, properties, actions/events, scope, and update timestamp are the intended ones.
+3. In UI Builder use the hamburger menu's **Developer > Clear UI Builder cache**, reopen the builder route, and separately open the actual Workspace URL in a fresh tab. A browser query-string change alone does not clear the authoring cache.
+4. Confirm the selected route, screen variant, and page-definition reference before blaming the bundle. If the editor reports **No URL and/or Screen** or runtime reports **No content available**, validate the page graph and serialized composition first.
+5. Reduce the custom component to a static semantic wrapper and heading. Add property count, plain list, hierarchy/selection, panels, imperative mount, and renderer event/hook/ref attributes back in groups, clearing cache at meaningful deployed checkpoints.
+6. Use ui-core/Snabbdom syntax from the installed version. Native controls use `on-click` and framework dispatch. Do not copy React `onClick`, raw DOM delegation, guessed lifecycle signatures, or custom `data-*` event routing.
+7. When imperative Three.js is involved, keep a stable mount node, initialize only after measurable layout, own one controller per host, and prove disconnect disposes render resources, observers, listeners, frames, cursor, and hover state.
+8. Treat a data-resource failure separately: bind a small static array first, then the real resource; inspect whether the property is an array, JSON text, or result wrapper and normalize it before hierarchy/mesh construction.
+9. If browser automation can locate but not activate a deeply nested control, use Next Experience Developer Tools, ATF Page Inspector where supported, and a documented physical keyboard/pointer test. Do not convert a harness limitation into a runtime conclusion.
+10. Only after the smallest deployed component fails with valid page metadata, a fresh UI Builder cache/session, and safe static data should deployment/toolchain corruption become the leading hypothesis.
+
+If direct API automation of `sys_ux_macroponent.composition` is explicitly authorized, snapshot the before-value and update-set context, make the smallest change, and preserve the JSON document shape. A one-element composition is still an array. PowerShell can unwrap it during conversion; serialize with an explicit array contract, assert the stored value begins with `[`, parse it again, and compare element/event-mapping counts. Prefer UI Builder for event mappings because saving the page creates the supported relay metadata.
 
 ## Practical Example A: Backend UI Action Missing in Workspace
 
@@ -293,6 +311,7 @@ Remaining release/product-specific risk or manual check:
 - [Workspace API / UX metadata](https://www.servicenow.com/docs/r/application-development/servicenow-sdk/fluent-workspace-api.html)
 - [Resolve a missing page definition](https://www.servicenow.com/docs/r/application-development/ui-builder/resolve-missing-page-definition.html)
 - [Next Experience Developer Tools release notes](https://www.servicenow.com/docs/r/release-notes/ned-tools-rn.html)
+- [UI Builder Essentials troubleshooting guide](https://www.servicenow.com/community/next-experience-blog/ui-builder-essentials-troubleshooting-guide/bc-p/3197241)
 - [Application Repository](https://www.servicenow.com/docs/r/application-development/application-repository-self-hosted/app-repo.html)
 
 Recheck the applicable family and product documentation during a real task. Use official docs for current behavior; community guidance can suggest a table relationship but must not override the live Store version or supported configuration surface.

@@ -331,6 +331,8 @@ open `/now/<experience>/<route>/<table>/<sysId>`
 
 Events do nothing until mapped to one or more handlers. Trace a click from the emitting component or declarative action, not from the destination you expect.
 
+When a customer-owned UI Builder component/page event must be created, repaired, or validated through backend metadata rather than the builder UI, also load `ui-builder-event-automation.md`. It distinguishes event definitions (`sys_ux_event`) from component/page composition mappings (`sys_ux_macroponent`) and active variant relay mappings (`sys_ux_screen`).
+
 1. Select the exact component/data resource/page variant and open its Events panel.
 2. Identify the emitted event and payload contract.
 3. Enumerate every handler in order: navigation, state update, data operation, client script, inherited handler, modal/viewport, UI interaction, or handled/dispatched event.

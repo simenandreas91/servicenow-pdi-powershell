@@ -74,6 +74,23 @@ When one spatial baseline will seed multiple products, tag a stable map-only rev
 
 When one React application opens a second React Three Fiber view, prefer source-level composition: make each scene a visual component that receives typed records and selection callbacks, while a React feature shell owns data loading, authorization-aware states, and product actions. Do not copy a second application shell, API client, or reservation workflow merely to reuse its scene. Avoid leaving two continuously rendering `Canvas`/WebGL renderers active beneath an overlay; pause or unmount the background scene while the foreground floor view is open, or deliberately swap scene graphs inside one canvas when the extra camera/state complexity is justified. Use an iframe only when independent security and release boundaries outweigh the duplicated runtime, framing-policy, session-bootstrap, focus, scrolling, and cross-window messaging costs, and validate those constraints on the real ServiceNow route.
 
+### Migrating a React/Three prototype into a native UI Builder component
+
+When an existing React prototype is only the design/geometry reference for a native CLI component, assess reuse by concern rather than copying its application architecture:
+
+| Prototype feature | Existing implementation | Native UI Builder approach | Reuse or rebuild |
+| --- | --- | --- | --- |
+| Campus/building geometry and coordinate transforms | static data and pure Three.js/math helpers | normalized records feed imperative core Three.js scene builders | reuse pure, licensed algorithms/assets; validate natural-key mapping |
+| Scene components | React Three Fiber JSX and hooks | explicit scene/controller modules and ui-core lifecycle actions | rebuild |
+| Camera/orbit behavior | Drei or React hook state | small bounded core-Three.js/local controls with plan, isometric, reset, and recoverable zoom | rebuild; reuse numeric framing concepts |
+| Hover/selection | mesh handlers update React state | raycaster/pointer controller dispatches ui-core actions; HTML buttons dispatch the same selection action | rebuild interaction plumbing |
+| Labels, navigator, legends, panels | React components | semantic Snabbdom-rendered HTML synchronized with component state | rebuild; reuse useful information design |
+| Data/API/session code | standalone router and direct app API client | UI Builder data resources provide ACL-authorized bounded properties | rebuild boundary; reuse pure normalization only |
+| Navigation | standalone routes or `window` navigation | emit `{table, sysId, source}` and let UI Builder link to the Workspace record route | rebuild |
+| Responsive shell | Vite application layout and global CSS | host-sized component layout using scoped styles and Workspace breakpoints | rebuild; reuse tested breakpoint intent |
+
+Do not bring React, ReactDOM, React Three Fiber, Drei, a router, global `html/body` styling, session bootstrap, or a second application shell into the native component merely because the prototype used them successfully. Preserve a stable HTML fallback and navigator so WebGL is enhancement rather than the only operational surface. Load `ui-builder-custom-components.md` for the renderer, cache, event, lifecycle, deployment, and blank-component failure playbook.
+
 ## Established Single-File ServiceNow Hosting Pattern
 
 In project documentation and handoffs, describe bundle delivery and runtime data access as separate channels. The Scripted REST resource may stream the property-backed HTML shell, but business data should load afterward through authenticated JSON requests. Document the session bootstrap, token lifetime, API wrapper, ACL boundary, and local-development fallback explicitly; never imply that live records or the session token are embedded in or streamed with the compiled HTML. Keep repository agent instructions operational and concise; place narrative architecture, provenance, and troubleshooting detail in the README or linked docs so it is not injected into every task. A durable README should distinguish current from planned behavior and record the product boundary, source layout, natural-key contract, stable ServiceNow artifact names, local/live differences, security model, diagnostic path, deployment proof, rollback, provenance, and any missing automated-test coverage.

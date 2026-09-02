@@ -223,6 +223,8 @@ The default entry is normally `example/index.js`; use `--entry`, `--port`, or `-
 
 Treat this as a local development-server loop, not a guaranteed hot-module-reload contract. Current docs guarantee the server, and Xanadu+ release notes document module caching; they do not promise that every source, style, dependency, or manifest change is injected without a refresh. Observe the installed extension: refresh the browser after a source/style change when needed, and restart the server after dependency, entry, builder configuration, or manifest changes when behavior is stale.
 
+If the local development page reports a UI Framework sandbox error such as `TypeError: fn is not a function` before any component markup renders, add or retain a minimal known-good smoke-test component from the same project on that page. When the unchanged smoke test and the component under development fail with the same stack, treat the local CLI/runtime as the failing layer rather than rewriting the new view. Clear the CLI persistent build cache once with the installed `develop --clear-cache` option, restart, and compare again. If the shared failure persists while source tests and the offline production bundle pass, record the exact CLI/extension/Node/framework versions and keep rendered acceptance pending for the deployed target or a repaired local toolchain; do not claim a visual pass and do not deploy merely to disguise an unresolved local-runner defect.
+
 Debug in this order:
 
 1. terminal build/compile output and the first error, not the final cascade;
@@ -436,6 +438,12 @@ For large facilities, asset, or maintenance products, use the 3D surface as a sp
 
 ### DEV deployment
 
+Before assembling deployment commands, look for a repository-owned `AGENTS.md`, deployment runbook, or checked-in wrapper script and use it when it preserves these controls. Project-specific profile, scope, component identity, runtime route, and capture expectations belong beside the source; keep this reference focused on reusable guardrails.
+
+Audit the intended in-progress update set before the first CLI deployment. Confirm its state, owning application, captured application set, and suspicious record types. If it is mixed, unrelated, completed, or otherwise unsafe, select or explicitly create an isolated update set before deploying; discovering the problem afterward needlessly forces a second full build/deploy cycle. Do not move suspicious customer-update rows to repair the set.
+
+Avoid redundant production builds. When the installed `ui-component deploy` command already performs the production bundle build, run source tests first and deploy once; run a separate offline/generate-update-set build only when its artifact or independent build gate is required. A repository wrapper should fail on dirty Git state, avoid implicit commits/pushes, deploy without `--force`, require the CLI's final success marker, read back the live component and capture, and restore developer preferences in a `finally` path.
+
 1. Confirm source branch/status, lockfile, CLI/extension/Node versions, profile host/user, scope, component tag, and app ownership.
 2. Run local checks and the representative local harness.
 3. Deploy without `--force`; record CLI output and time.
@@ -466,6 +474,107 @@ On every target:
 ### Rollback
 
 Keep the previous Git revision, lockfile, application version/package, and component contract. Roll back with the approved prior application version or a reviewed redeployment of the prior source to DEV followed by normal promotion. A UI rollback does not reverse records, messages, uploads, integrations, or other runtime side effects created while the component was active; plan those separately.
+
+## Deployed Runtime Failure Playbook
+
+Use this sequence when a CLI component builds and deploys but UI Builder or the Workspace shows a blank area, stale markup, **No content available**, **No URL and/or Screen**, missing properties/events, or a component that works only after recreating the page. These symptoms can originate in different cache, metadata, renderer, data, or page-composition layers; do not treat them as one generic deployment failure.
+
+### Establish a cache-aware baseline
+
+After a source, manifest, deployed component-metadata, data-resource, or page-event change:
+
+1. Read back the deployed toolbox component, properties, actions/events, and updated timestamp. Prove the instance received the intended artifact before touching the page.
+2. In the page variant editor, use the hamburger menu's **Developer > Clear UI Builder cache** action. ServiceNow's own UI Builder troubleshooting guidance recommends this action when authoring behavior is stale. A browser reload or cache-busting query parameter is not an equivalent proof.
+3. Save when appropriate, close/reopen the affected builder route, and open the actual Workspace route in a fresh tab. A cache clear can briefly leave the stage rebuilding; allow it to reload before diagnosing the page as corrupt.
+4. Compare UI Builder stage, Preview/Open URL path, and actual Workspace. Record which surface is stale or blank.
+
+If a deployment may have overlapped instance maintenance or a restart, run a fresh instance health check before retrying, rebuild from the unchanged source, and deploy normally without `--force`. CLI lines that say individual records are being updated are only partial progress: require the final successful deployment marker, then read back the target component and its customer-update record and confirm their timestamps advanced. A missing final marker or unchanged live timestamp means the retry is not yet proven, even when several assets appeared to update.
+
+Do not make `cache.do`, broad server-cache mutation, direct cache-table updates, repeated force-deployment, or page deletion the normal first response. Use the UI Builder cache command and a fresh authoring/runtime session first. Recreating a page can hide the original layer and discard working bindings or event mappings.
+
+### Bisect the renderer boundary before rewriting architecture
+
+When the deployed component itself is blank, reduce the view to a known-safe vertical slice and add behavior back in controlled groups:
+
+1. static semantic wrapper and heading;
+2. one normalized property and a count;
+3. a plain HTML list;
+4. hierarchy and selection state;
+5. details/assets panels;
+6. the stable imperative-library mount node;
+7. renderer event attributes, hooks/refs, and scene interactions.
+
+Clear the UI Builder cache and retest the deployed runtime at meaningful boundaries. Preserve a working smoke-test component or revision alongside the new component so page, toolbox, and deployment behavior have a comparison point.
+
+An Australia PDI investigation found that framework-generated dynamic custom `data-*` attributes on repeated hierarchy nodes coincided with a white/blank render; removing that event-plumbing pattern restored the component. Treat this as an empirical renderer/version compatibility warning, not a universal prohibition. Use closures and framework actions for interaction. If a custom dataset is genuinely needed, introduce one attribute at a time and prove it in the deployed target release. During bisection, remove custom `data-*`, `hook-*`, `ref`, and event attributes early because each crosses the renderer/DOM boundary.
+
+### Use the installed ui-core renderer contract
+
+The JSX used by `@servicenow/ui-core` with the Snabbdom renderer is not React. For native HTML controls, the established interaction shape is:
+
+```js
+const view = (state, {dispatch}) => (
+    <button
+        type="button"
+        on-click={() => dispatch('ACME_OPEN_RECORD', {id: state.properties.id})}
+    >
+        Open record
+    </button>
+);
+```
+
+Do not substitute React-style `onClick`, raw `onclick`, a delegated `data-*` router, or an additional Now component package merely to make an ordinary button clickable. A real HTML button already supplies keyboard Enter/Space behavior; retain visible focus and an accurate accessible name.
+
+Do not copy an `onConnect` signature from memory or an old tutorial. In one installed ui-core version, treating the lifecycle arguments as `(host, helpers)` instead of the renderer's actual `(rootNode, dispatch, next)` contract created a request-animation-frame loop that waited forever for the wrong nested shadow root. Top-level `onConnect` was also deprecated in that toolchain. Inspect the installed package source/types and a release-matched framework example before implementing lifecycle code. Prefer the supported framework lifecycle actions such as `SEISMIC_COMPONENT_RENDERED` and `SEISMIC_COMPONENT_DISCONNECTED`, or verified `hook-*`/`ref` contracts, for imperative roots. Never start observers, listeners, render loops, or Three.js resources from `view`.
+
+For an imperative Three.js component:
+
+- keep one stable mount element in the virtual DOM rather than conditionally replacing it with selection/loading markup;
+- store one controller per host/root, commonly in a `WeakMap`, and synchronize it after framework render actions;
+- create the renderer only after the mount has usable dimensions;
+- use a bounded device-pixel ratio, `ResizeObserver`, visibility handling, demand rendering where practical, reduced-motion behavior, and bounded camera controls;
+- destroy and recreate only when the mount identity truly changes;
+- dispose geometry, materials, textures, render targets, renderer resources, observers, pointer/keyboard listeners, pending frames, cursor, and transient hover state on disconnect;
+- resolve floor/room selection back to its owning building before updating mesh emphasis so HTML and WebGL selection cannot diverge.
+
+### Keep page event mapping out of component source
+
+The component manifest should declare the event/action and payload; the component dispatches a small intent such as `{table, sysId, source}`. UI Builder owns the **Link to destination** handler, record route, required parameter bindings, and same-workspace tab behavior. Current UI Builder creates the appropriate relay/mapping metadata when the event is configured and the page is saved. Do not hard-code route metadata or a page-definition sys_id in the component bundle.
+
+For controlled backend creation or repair when the Events surface saves invalid metadata or repeated manual work is explicitly being replaced, load `ui-builder-event-automation.md`. It defines the complete source-event -> component mapping -> page relay -> active-screen mapping -> Workspace shell chain, idempotent resolution, invalid-handler signatures, exact JSON invariants, validation, and rollback. Do not automate only the `sys_ux_event` row or component target; a relay without the active screen mapping is inert.
+
+Prefer the UI Builder Events surface for this mapping. Directly patching `sys_ux_macroponent.composition` is fragile because it is serialized JSON with a release-specific schema. If a narrowly authorized automation must edit it:
+
+1. capture the exact before-value and owning update set;
+2. parse without changing the document shape;
+3. make the smallest insertion;
+4. serialize and assert that the top level remains an array, even when it contains one component;
+5. preserve nested arrays such as `eventMappings` and `targets`;
+6. reread the record, parse it again, and compare element counts/references;
+7. clear UI Builder cache, reopen the builder, and test the real route.
+
+PowerShell pipelines can unwrap a one-element JSON array during `ConvertFrom-Json`/`ConvertTo-Json`. Use `ConvertTo-Json -AsArray` or an explicit `@(...)` wrapper as appropriate, then assert that the stored JSON begins with `[` and parses to the expected count. An object where UI Builder expects the composition array can produce **No URL and/or Screen** in the editor and **No content available** at runtime.
+
+Before browser authoring, confirm the application scope and intended in-progress update set, reopen UI Builder after changing update-set preferences, save one small page artifact, and verify its `sys_update_xml.update_set`. An already-open UI Builder session can retain the earlier context. Operational records supplied to the component are not update-set content.
+
+### Separate data-binding failures from rendering failures
+
+UI Builder property editors display static defaults such as `[]` until a real data resource is bound; deploying the component does not retrieve table data automatically. Standard bounded record-query resources are preferred when they can supply the contract. Bind only the necessary fields, stable natural keys, and resolved live `sys_id` values.
+
+At the component boundary, accept the shapes actually produced by the target data resource: depending on the resource and binding, a collection may arrive as an array, a JSON string, or a wrapper such as `result`/`records`. Normalize once, then report duplicates, missing parents, inconsistent placements, and unknown choices as partial/invalid data rather than throwing in mesh construction. A custom endpoint is not justified merely because six related collections require six bounded standard resources.
+
+### Interpret browser automation carefully
+
+Workspace and UI Builder use nested web components, shadow roots, frames, and editor overlays. An automation accessibility snapshot can expose a control while the harness cannot deliver a physical click or key event through the same nesting. Treat that as an automation limitation to investigate, not proof that the component works or fails. Supplement with Next Experience Developer Tools, ATF Page Inspector where supported, browser console/network evidence, and a documented manual keyboard/pointer check. Do not claim runtime acceptance until the real Workspace interaction is observed.
+
+### Dependency and CLI lessons
+
+- Run `snc version` and installed command help; `snc --version` is not portable across CLI releases.
+- Pass the known named profile to build/deploy scripts when the project configuration requires it. A script that omits `--profile` can fail even though the repository has a working profile.
+- Add only the browser dependency that provides real value. Adding a release-aligned button package can pull a large transitive tree and will not repair incorrect native event syntax or lifecycle usage.
+- Record vulnerabilities in the ServiceNow-pinned dependency tree and assess exposure; do not use `npm audit fix --force` or a broad upgrade that downgrades/breaks `@servicenow/ui-core`.
+- Treat generated `.now-cli` or deployment bundles as output, never source. Verify normal deploy/readback before considering `--force`.
+- Build success is one gate. Source tests should also cover manifest/tag/action consistency, normalization and relationship faults, unknown choices, selection/event payloads, empty states, and lifecycle/interaction invariants such as approved `on-click` use and teardown ownership.
 
 ## Validation Matrix
 
@@ -560,6 +669,10 @@ Prove whether the stale layer is source, built bundle, deployed record, UI Build
 - Deploy a component: https://www.servicenow.com/docs/r/washingtondc/application-development/deploy-to-instance.html
 - Component Builder and CLI comparison: https://www.servicenow.com/docs/r/application-development/ui-builder/component-builder.html
 - Add/configure components and bind events in UI Builder: https://www.servicenow.com/docs/r/application-development/ui-builder/add-components.html
+- Manage actions and event mappings in UI Builder: https://www.servicenow.com/docs/r/application-development/ui-builder/work-events.html
+- Bind an event to a page: https://www.servicenow.com/docs/r/application-development/ui-builder/bind-event-page.html
+- Link a component event to another page: https://www.servicenow.com/docs/r/application-development/ui-builder/link-component-destination.html
+- ServiceNow employee UI Builder troubleshooting guide, including **Developer > Clear UI Builder cache**: https://www.servicenow.com/community/next-experience-blog/ui-builder-essentials-troubleshooting-guide/bc-p/3197241
 - UI Builder security and scope: https://www.servicenow.com/docs/r/application-development/ui-builder/security-roles.html
 - UI Builder client scripts: https://www.servicenow.com/docs/r/application-development/ui-builder/define-client-scripts.html
 - UI Builder page performance: https://www.servicenow.com/docs/r/application-development/ui-builder/performance-settings.html

@@ -415,6 +415,8 @@ Use `npm ci` after the lockfile exists and is known good. On the first deploymen
 - no unexpected application files or cross-scope privileges;
 - the component appears once in the intended UI Builder toolbox.
 
+Before diagnosing a missing or stale toolbox entry, use the page variant editor's hamburger menu and select **Developer > Clear UI Builder cache**, then reopen the builder route. Readback proves deployment; the cache clear proves the authoring session is not showing an older component contract. Do not repeatedly deploy, add `--force`, or recreate the page until both checks have been made.
+
 ## Add and Configure in UI Builder
 
 1. Open the intended non-production experience and a dedicated test page or safe page variant in the page's correct application scope.
@@ -442,6 +444,8 @@ Use `npm ci` after the lockfile exists and is known good. On the first deploymen
 9. Save, preview, and open the actual Workspace route in a fresh session.
 
 If the component and page reside in different application scopes, inspect application dependencies and generated cross-scope access. Do not approve broad cross-scope privileges merely to make a data resource work.
+
+Prefer this UI Builder event workflow over direct edits to the page definition. If narrowly authorized automation must patch `sys_ux_macroponent.composition`, retain the exact release-specific schema and its top-level array. PowerShell JSON conversion can unwrap a one-element array into an object; after serialization, assert that the stored value starts with `[`, parse it again, and confirm the component/event-mapping counts before reopening UI Builder. A malformed composition can surface as **No URL and/or Screen** or **No content available**, which is a page-metadata failure rather than a component-bundle failure.
 
 ## Workspace Validation
 
@@ -508,6 +512,10 @@ If the organization uses update sets for this application, publish the completed
 - **Admin works, agent is empty:** inspect the data resource response and table/field ACLs as the agent. Do not add a client role bypass.
 - **Duplicate navigation:** inspect duplicate UI Builder event handlers and action traces before changing the component.
 - **Stale source after deploy:** compare source commit, built/deployed component version, record update time, UI Builder page instance, service-worker/cache state, and fresh-session result.
+- **White or blank component:** clear UI Builder cache once, then bisect the deployed view from a static heading through list, selection, panels, imperative mount, and renderer attributes. Do not delete the page while isolating the bundle/renderer boundary.
+- **Native button does not dispatch:** use `on-click={() => dispatch(...)}` with the `dispatch` argument provided to `view`; do not substitute React `onClick`, raw `onclick`, or delegated `data-*` routing.
+- **Lifecycle never finds the mount:** do not guess an `onConnect` signature or search indefinitely through nested shadow roots. Verify the installed ui-core lifecycle/action contract and keep one stable imperative mount node.
+- **Automation sees but cannot activate a control:** nested Workspace/UI Builder shadow roots and frames can exceed a harness's input support. Collect Inspector/console evidence and perform a documented real keyboard/pointer or ATF check before judging runtime behavior.
 - **Long list is slow:** impose a small server-side query limit first; the client `maxItems` clamp protects rendering but does not reduce network/database work.
 
 ## Definition of Done

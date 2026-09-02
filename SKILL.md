@@ -135,6 +135,12 @@ Load `references/lessons-platform-analytics.md` for Platform Analytics dashboard
 
 On Australia and later, default new content to an in-line dashboard; use a technical dashboard only for capabilities that genuinely require UI Builder. The reference owns authoring, data-source, filter, freshness, scope, migration, and transport rules.
 
+## Success Dashboard Standards
+
+Load `references/success-dashboard.md` for every ITSM or HR Success Dashboard indicators task, including the Success Dashboard Admin Console, Getting Started, self-service/deflection instrumentation, `sn_sd_*` registries, cost savings, targets, Operational Success, Benchmarks, or Success Dashboard PA jobs and formulas.
+
+Treat Success Dashboard as a Store-delivered outcome framework backed by Performance Analytics and Self-Service Analytics, not as an ordinary `par_dashboard`. Preserve prescribed primary indicators, prefer documented contributing-indicator registries and Admin Console configuration, and treat Benchmarks opt-in as an explicit external data-sharing decision. The handbook owns installation, roles, configuration order, instrumentation, collection, customization, validation, troubleshooting, delivery, and upgrade safety.
+
 ## Inspection and Debugging
 
 Debug from evidence, not from the most plausible story:
@@ -208,7 +214,7 @@ Treat the local project/Git repository as source of truth for SDK-managed metada
 
 For visual design, layout, styling, motion, or frontend implementation, load `references/servicenow-ui-design.md` plus any applicable customer design reference.
 
-For UI Builder custom components, Component Builder macroponents, Next Experience UI Framework, `now-ui.json`, `@servicenow/ui-core`, or ServiceNow CLI `ui-component` work, load `references/ui-builder-custom-components.md` before choosing a toolchain or editing component source. When implementation begins, also use its routed worked example in `references/ui-builder-custom-component-example.md` as the scaffold-and-validation pattern.
+For UI Builder custom components, Component Builder macroponents, Next Experience UI Framework, `now-ui.json`, `@servicenow/ui-core`, or ServiceNow CLI `ui-component` work, load `references/ui-builder-custom-components.md` before choosing a toolchain or editing component source. This reference also owns the cache-aware blank/stale-component playbook and renderer/lifecycle bisection. For backend creation, repair, or validation of component/page/Workspace event mappings, also load `references/ui-builder-event-automation.md`; it owns the multi-record event chain and direct serialized-metadata safeguards. When component implementation begins, use the routed worked example in `references/ui-builder-custom-component-example.md` as the scaffold-and-validation pattern; for symptoms in the surrounding route/screen/page graph, also load `references/workspace-debugging.md`.
 
 For a ServiceNow-hosted React/Vite SPA, WebGL scene, interactive floor plan, or other 3D frontend, also load `references/servicenow-react-3d-frontends.md`.
 
@@ -258,13 +264,14 @@ Treat any sys_ids recorded in references as instance observations or lookup hint
 - HRSD, COE, Journey/Lifecycle Events: `references/hrsd-coe-selection.md`, `references/hrsd-development-guide.md`, `references/hrsd-lifecycle.md`; Agent Workspace for HR Case Management configuration without UI Builder: `references/hr-agent-workspace-configuration.md`
 - Portal/Employee Center and UI16: `references/tables.md`, `references/lessons-portal.md`, `references/lessons-ui16.md`
 - Cross-channel UI design, layout, accessibility, motion, and `gpt-taste` adaptation: `references/servicenow-ui-design.md`
-- UI Builder custom components, Component Builder versus CLI, Next Experience UI Framework, properties/events, npm/browser libraries, React boundaries, build/deploy/promotion, validation, troubleshooting, and the worked implementation pattern: `references/ui-builder-custom-components.md`, `references/ui-builder-custom-component-example.md`
+- UI Builder custom components, Component Builder versus CLI, Next Experience UI Framework, properties/events, npm/browser libraries, React boundaries, build/deploy/promotion, validation, troubleshooting, event-mapping backend automation, and the worked implementation pattern: `references/ui-builder-custom-components.md`, `references/ui-builder-event-automation.md`, `references/ui-builder-custom-component-example.md`
 - ServiceNow-hosted React/Vite SPAs, single-file deployment, React Three Fiber, Three.js, procedural 3D scenes, and interactive floor plans: `references/servicenow-react-3d-frontends.md`
 - Configurable Workspace/UI Builder architecture, reverse engineering, record pages, forms, lists, related lists, tabs, components, data resources, events, routing, variants, security, and product boundaries: `references/workspace-configuration.md`; actions/action bars/UI Actions/Declarative Actions/UI Interactions/modals: `references/workspace-actions.md`; symptom recipes, tools, examples, deployment, and upgrade troubleshooting: `references/workspace-debugging.md`; SOW-specific and modal implementation lessons: `references/lessons-sow.md`, `references/lessons-workspace-modals.md`
 - Integrations/imports: `references/integrations.md`, `references/lessons-integrations.md`; for Vår Energi Compendia deployment and full sync, use `references/vaar-energi-compendia-runbook.md`
 - Update-set retrieval, preview, conflict handling, non-forced commit, promotion validation, and DEV -> TEST -> PROD delivery: `references/update-set-promotion.md`
 - CMDB/CSDM architecture, CSDM 5, governance, migration, and 2026 AI/WDF alignment: `references/cmdb-csdm.md`; practical CMDB administration/development and decision logic: `references/cmdb-admin-development.md`; bounded diagnostics, IRE/import examples, and query library: `references/cmdb-query-library.md`; repeatable PDI Ingest/Govern/Insight exercise: `references/cmdb-data-foundations-lab.md`; pre-update coverage record: `references/cmdb-coverage-audit.md`
 - Platform Analytics: `references/lessons-platform-analytics.md`
+- Success Dashboard indicators, Admin Console, self-service instrumentation, cost savings, Operational Success, Benchmarks, and `sn_sd_*`: `references/success-dashboard.md`
 - Service Level Management, SLA/OLA/underpinning-contract design, creation, schedules, conditions, flows, repair, and validation: `references/sla.md`; bounded table/schema/runtime diagnostics: `references/sla-query-library.md`; Vår Energi HR-specific SLA lessons remain in `references/vaar-energi-lessons.md`
 - Now Assist/AI/MCP and Australia AI platform: `references/now-assist.md`, `references/australia-ai-platform.md`, `references/external-mcp-evaluation.md`
 - Discovery/indexing/impact maps: `references/service-now-indexing.md`, `references/servicenow-graph-mapping.md`
