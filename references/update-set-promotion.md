@@ -1,6 +1,6 @@
 # Update Set Promotion
 
-Use this runbook to promote a completed update set from DEV to TEST or from TEST to PROD. It applies to direct update-set retrieval from an Update Source and to the CI/CD Update Set API. Load `references/development.md` and `references/safety-checklists.md` as well.
+Use this runbook to promote a completed update set from DEV to TEST or from TEST to PROD. It applies to direct update-set retrieval from an Update Source and to the CI/CD Update Set API. Load `safety-checklists.md` for PROD or another high-impact gate. Consult the Update Sets section of `development.md` only when source capture, scope, or packaging is unresolved.
 
 ## Guardrails
 
@@ -77,7 +77,7 @@ Commit only after the clean preview is evidenced and the intended count matches.
 3. Run the real target behavior and negative/security persona tests. Missing target test data is a limitation, not a pass; record the exact missing prerequisite and required UAT step.
 4. Verify operational data was not silently changed. If a transported Fix Script or migration must run, obtain separate approval, run a dry count with a hard ceiling, execute it once, and reconcile changed/unchanged/error counts.
 5. Inspect logs and one adjacent regression path. Account for any test records, attachments, outbound calls, emails, events, imports, or queued work.
-6. Record the source set, target remote/local set identifiers, preview outcome, commit outcome, validation evidence, limitations, and rollback plan in the story/change record without mentioning tools or automation.
+6. Prepare a concise story/change note with source set, target remote/local set identifiers, preview and commit outcomes, validation evidence, limitations, and rollback. Write it to the record only when the user explicitly requested that external update; never mention internal tools or automation.
 
 ## Rollback
 

@@ -50,42 +50,7 @@ https://developer.servicenow.com/print_page.do?category=course-module&identifier
 
 ## Story Delivery Workflow
 
-Use this flow only when the user explicitly asks for a story, asks for story-style delivery, or provides an existing story number to work under. For ordinary ad hoc ServiceNow jobs, do not create an `rm_story`; make the requested change directly in the appropriate existing context and still verify records plus update-set capture when relevant.
-
-1. Create or identify the story first.
-   - Capture the requested behavior in `rm_story.short_description` and `description`.
-   - Set required fields such as `assigned_to` and `eap_team`.
-   - Keep the story in Draft or the user's requested starting state while development is in progress.
-2. Identify the affected application scope before creating update sets.
-   - Resolve the original artifact by stable keys, then read `sys_scope` and `sys_package`.
-   - For clones, create the clone in the same scope/package as the original unless the user explicitly wants a different scope.
-3. Create one update set per affected scope.
-   - Name each update set after the story: `<story number> - <story short description or concise short change name>`. Example: `STRY0010007 - Norwegian postcode lookup table`.
-   - Put the story number first and do not use internal prefixes such as `CODX -`.
-   - Set `sys_update_set.application` to the target `sys_scope.sys_id`.
-   - If the work touches multiple scopes, create a separate update set in each scope and switch the current scoped update set before editing records in that scope.
-4. Make the update set current like a developer would.
-   - Prefer `scripts/Set-ServiceNowUpdateSetContext.ps1` with `-SnapshotPath` to create/switch context and preserve preferences.
-   - Restore preferences with `scripts/Restore-ServiceNowPreferenceSnapshot.ps1` before handoff.
-   - If doing it manually, set `apps.current_app`, `updateSetForScope<sys_scope.sys_id>`, and `sys_update_set`, then re-check before writes.
-5. Implement the smallest scoped change that satisfies the story.
-   - Clone baseline artifacts before modifying behavior when the baseline record is ServiceNow-owned.
-   - Keep original records unchanged unless the request explicitly asks to modify them.
-6. Verify update capture before functional testing.
-   - Prefer `scripts/Confirm-ServiceNowUpdateCapture.ps1` for the target update set and affected records.
-   - Group captured `sys_update_xml` rows by their `application` field, not just by update set. A deployment update set should contain customer updates for one application scope only.
-   - If one story touches multiple scopes, create sibling update sets with the same story name in each `sys_update_xml.application` scope and move each customer update row to the matching scoped update set.
-   - Confirm the captured payload contains the latest script, markup, or marker string.
-   - If a customer update lands in `Default`, move the latest customer update for that target into the story update set and keep stale duplicates out of the delivery update set.
-7. Test the change using both record-level and behavior-level checks.
-   - Record-level checks should verify scope, package, active/current state, and key script/template contents.
-   - Behavior-level checks should exercise the relevant endpoint, server-side API, or portal response where possible.
-   - Also verify the baseline/original artifact is unchanged when cloning was required.
-8. Document the test result on the story.
-   - Add concise work notes that mention the artifact changed, update set capture, and the important test evidence.
-9. Move the story to the agreed test state only after checks pass.
-   - In this PDI, `Ready for testing` is `rm_story.state=-7`.
-   - Do not set the story to a test-ready state while update capture or functional verification is still unresolved.
+Load `story-delivery.md` for story-number or story-style work. It owns requirements-source routing, acceptance-matrix execution, update-set reuse, validation, state/comment authorization, and the ready-to-paste work note. Do not create an `rm_story` for an ordinary ad hoc task.
 
 ## Environment Variables
 

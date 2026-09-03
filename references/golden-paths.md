@@ -36,14 +36,7 @@ Use these workflows to move quickly without guessing. Keep each run narrow: insp
 
 ## Story Delivery
 
-Use this only when the user gives a story number or asks for story-style delivery. Do not create `rm_story` for ordinary ad hoc tasks.
-
-1. Read the story from `rm_story`; capture number, short description, description, acceptance criteria, assigned team, state, and links.
-2. Find target artifacts and scope before creating update sets.
-3. Name update sets `<story number> - <short change name>` and create one per application scope.
-4. Keep the story in development until record checks, update-set checks, and behavior tests pass.
-5. Add concise work notes with changed artifacts and verification evidence.
-6. Move to the agreed test state only after capture and behavior are verified.
+Load `story-delivery.md` when the user gives a story number or asks for story-style delivery. It is the authority for requirements routing, implementation, validation, and the manual work-note handoff. Do not create an `rm_story`, post journal content, or change story state unless explicitly requested.
 
 ## Business Rules And Script Includes
 

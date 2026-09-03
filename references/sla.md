@@ -2,7 +2,7 @@
 
 ## Purpose and baseline
 
-Use this guide to design, create, diagnose, test, transport, and operate ServiceNow SLA definitions, OLAs, and underpinning contracts. Load `sla-query-library.md` with it for bounded inspection commands and scripts. Product- or customer-specific guidance supplements this runbook but does not replace it.
+Use this guide to design, create, diagnose, test, transport, and operate ServiceNow SLA definitions, OLAs, and underpinning contracts. Load `sla-query-library.md` only when the task needs its bounded live inspection commands or scripts. Product- or customer-specific guidance supplements this runbook but does not replace it.
 
 The research baseline is ServiceNow **Australia (2026)** and the 2011 SLA engine. Release, patch, Store-app version, plugins, roles, table fields, choices, schedules, flows, domain behavior, and application scope must still be verified on the target instance. Official anchors:
 
@@ -490,4 +490,3 @@ Evidence
 ## 12. PDI verification note
 
 On 2026-08-16, the configured PDI URL resolved but the saved credentials returned HTTP 401 for both Xplore and Table API, so no current live schema or behavior claim was added from that instance and no writes were attempted. Previous Vår Energi DEV work recorded successful `contract_sla`/`task_sla` behavior for HR cases in `vaar-energi-lessons.md`; treat those customer-specific observations as dated evidence, not portable defaults. Re-run `sla-query-library.md` probes when PDI access is restored.
-
