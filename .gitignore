@@ -30,3 +30,14 @@
 .github/prompts/nowdev-review.prompt.md
 .github/prompts/nowdev-compact.prompt.md
 .env
+
+# Local dependencies and generated task artifacts are not skill source.
+node_modules/
+/.artifact-work/
+/.tmp/
+/tmp/
+/.playwright-cli/
+/outputs/
+/exports/
+/snapshots/
+/tmp_story_*_attachments/
