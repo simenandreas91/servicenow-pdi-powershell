@@ -18,7 +18,8 @@ function Get-ServiceNowToolkitCacheKey {
   param([string]$Text)
 
   $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
-  $hash = [System.Security.Cryptography.SHA256]::Create().ComputeHash($bytes)
+  $algorithm = [System.Security.Cryptography.SHA256]::Create()
+  try { $hash = $algorithm.ComputeHash($bytes) } finally { $algorithm.Dispose() }
   return (($hash | ForEach-Object { $_.ToString('x2') }) -join '')
 }
 
@@ -39,14 +40,20 @@ function Invoke-ServiceNowToolkitTable {
     [switch]$NoCache
   )
 
-  $cacheInput = @{
+  . (Join-Path $PSScriptRoot 'Resolve-ServiceNowConnection.ps1')
+  $connection = Resolve-ServiceNowConnection -Profile $Profile -EnvPath $EnvPath -Instance $Instance
+  # Key by resolved destination and principal, not optional caller arguments.
+  # Passwords/tokens must never enter the key or cache payload.
+  $cacheInput = [ordered]@{
+    version = 2
     table = $Table
     query = $Query
     fields = $Fields
     limit = $Limit
     display_value = $DisplayValue
-    profile = $Profile
-    instance = $Instance
+    exclude_reference_link = [bool]$ExcludeReferenceLink
+    instance = $connection.Instance
+    user = $connection.UserName
   } | ConvertTo-Json -Compress
   $cacheFile = $null
   if (-not $NoCache) {
@@ -57,7 +64,8 @@ function Invoke-ServiceNowToolkitTable {
   if (-not $NoCache -and -not $Refresh -and (Test-Path -LiteralPath $cacheFile)) {
     $age = (Get-Date) - (Get-Item -LiteralPath $cacheFile).LastWriteTime
     if ($age.TotalMinutes -le $CacheTtlMinutes) {
-      return Get-Content -LiteralPath $cacheFile -Raw | ConvertFrom-Json
+      try { return Get-Content -LiteralPath $cacheFile -Raw | ConvertFrom-Json -ErrorAction Stop }
+      catch { Write-Verbose 'Unreadable cache entry; fetching fresh data.' }
     }
   }
 
@@ -66,19 +74,26 @@ function Invoke-ServiceNowToolkitTable {
     Table = $Table
     Limit = $Limit
     DisplayValue = $DisplayValue
+    AsObject = $true
   }
   if ($Query) { $params.Query = $Query }
   if ($Fields) { $params.Fields = $Fields }
   if ($ExcludeReferenceLink) { $params.ExcludeReferenceLink = $true }
   if ($Profile) { $params.Profile = $Profile }
   if ($EnvPath) { $params.EnvPath = $EnvPath }
-  if ($Instance) { $params.Instance = $Instance }
+  $params.Instance = $connection.Instance
 
-  $raw = & $tableScript @params
+  $response = & $tableScript @params
   if (-not $NoCache) {
-    $raw | Set-Content -LiteralPath $cacheFile -Encoding UTF8
+    $temporaryFile = "$cacheFile.$([guid]::NewGuid().ToString('N')).tmp"
+    try {
+      $response | ConvertTo-Json -Depth 12 -Compress | Set-Content -LiteralPath $temporaryFile -Encoding UTF8
+      Move-Item -LiteralPath $temporaryFile -Destination $cacheFile -Force
+    } finally {
+      if (Test-Path -LiteralPath $temporaryFile) { Remove-Item -LiteralPath $temporaryFile }
+    }
   }
-  return $raw | ConvertFrom-Json
+  return $response
 }
 
 function Resolve-ServiceNowToolkitUserSysId {
@@ -131,6 +146,7 @@ function Resolve-ServiceNowToolkitScope {
   if ($Scope -eq 'global') {
     return [pscustomobject]@{ sys_id = 'global'; scope = 'global'; name = 'Global' }
   }
+  if ($Scope -match '[\^\r\n]') { throw 'Scope must be a scope name, display name, or sys_id, not an encoded query.' }
   if ($Scope -match '^[0-9a-f]{32}$') {
     $query = "sys_id=$Scope"
   } else {
@@ -141,7 +157,7 @@ function Resolve-ServiceNowToolkitScope {
     -Table 'sys_scope' `
     -Query $query `
     -Fields 'sys_id,scope,name' `
-    -Limit 1 `
+    -Limit 2 `
     -DisplayValue all `
     -ExcludeReferenceLink `
     -Profile $Profile `
@@ -152,8 +168,8 @@ function Resolve-ServiceNowToolkitScope {
     -NoCache:$NoCache
 
   $rows = @($response.result)
-  if ($rows.Count -lt 1) {
-    throw "Could not resolve scope '$Scope'."
+  if ($rows.Count -ne 1) {
+    throw "Could not resolve exactly one scope for '$Scope'. Use the unique scope name or live sys_id."
   }
 
   return [pscustomobject]@{

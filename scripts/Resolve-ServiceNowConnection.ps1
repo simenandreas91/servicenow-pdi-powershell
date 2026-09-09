@@ -8,9 +8,10 @@ function Get-ServiceNowDotEnvPath {
     throw "ServiceNow .env file was not found: $ExplicitPath"
   }
 
-  $current = Get-Location
+  # Get-Location returns PathInfo, which has no Parent directory property.
+  $current = Get-Item -LiteralPath (Get-Location).Path
   while ($null -ne $current) {
-    $candidate = Join-Path -Path $current.Path -ChildPath '.env'
+    $candidate = Join-Path -Path $current.FullName -ChildPath '.env'
     if (Test-Path -LiteralPath $candidate) {
       return (Resolve-Path -LiteralPath $candidate).Path
     }
@@ -194,8 +195,15 @@ function Resolve-ServiceNowConnection {
     throw 'Set SN_USER/SN_PASS or SN_<PROFILE>_USER/SN_<PROFILE>_PASS in environment variables or .env before calling ServiceNow.'
   }
 
+  $instanceUri = $null
+  if (-not [uri]::TryCreate($resolvedInstance, [UriKind]::Absolute, [ref]$instanceUri) -or
+      $instanceUri.Scheme -ne 'https' -or $instanceUri.UserInfo -or
+      $instanceUri.Query -or $instanceUri.Fragment -or $instanceUri.AbsolutePath -ne '/') {
+    throw 'ServiceNow Instance must be an HTTPS origin (no credentials, path, query, or fragment).'
+  }
+
   [pscustomobject]@{
-    Instance = $resolvedInstance.TrimEnd('/')
+    Instance = $instanceUri.GetLeftPart([UriPartial]::Authority)
     UserName = $userName
     Password = $password
     Profile = if ([string]::IsNullOrWhiteSpace($Profile)) { $null } else { $normalizedProfile.ToLowerInvariant() }

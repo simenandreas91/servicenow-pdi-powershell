@@ -74,7 +74,7 @@ if (-not $saved.saved) {
 }
 
 $capture = (Invoke-TableJson -Method GET -TableName 'sys_update_xml' `
-  -Query "name=$updateName^ORDERBYDESCsys_updated_on" `
+  -Query "name=$updateName^update_set=$UpdateSetSysId^ORDERBYDESCsys_updated_on" `
   -Fields 'sys_id,name,action,application,payload,target_name,type,update_set' -Limit 1).result
 if (-not $capture) {
   throw "Customer update not found in update set ${UpdateSetSysId}: $updateName"

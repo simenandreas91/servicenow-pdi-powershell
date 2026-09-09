@@ -1,155 +1,51 @@
-# ServiceNow Indexing And Knowledge Cache
+# ServiceNow Instance Index
 
-Use this when the task asks for broad OOTB knowledge, repeated artifact lookup, unfamiliar-instance navigation, or blast-radius analysis across many ServiceNow records.
+Use for repeated broad discovery or dependency analysis. For a known artifact, use a narrow live read.
 
-## Principle
+## Contents and limits
 
-Do not paste massive OOTB catalogs into `SKILL.md`. Keep the skill as the operating manual and generate compact indexes for large, changing platform facts.
+The builder writes `metadata.json`, `tables.json`, `fields.json`, `choices.json`, `artifacts.json`, `symbols.json`, and `edges.json` under the chosen output folder. They describe table/dictionary metadata, configured artifact types, names, and metadata relationships.
 
-Good skill content:
+- This is a local snapshot. Re-resolve edit targets live; refresh affected discovery after changes.
+- The artifact list is not exhaustive. Impact edges such as `runs_on`, `references`, `notifies`, `triggers`, and `secures` do not capture every dynamic script call.
+- Keep generated files out of Git. Exclude credentials, auth/session data, and unnecessary sensitive content. Fetch script bodies only for targeted analysis.
+- Broad scans of production-like instances require explicit approval. Prefer a scope filter.
+- No semantic-search or embedding dependency is required. Use `rg` and the bundled helpers first. Any external processing of ServiceNow-derived content requires explicit task-level approval.
 
-- stable workflows, safety rules, helper commands, table families, caveats, and proven patterns.
-- small curated lists of high-value tables or known PDI records.
+## Build
 
-Good generated index content:
-
-- all tables and labels from `sys_db_object`.
-- dictionary fields, references, choices, and mandatory/default hints from `sys_dictionary` and `sys_choice`.
-- Script Includes, Business Rules, Client Scripts, UI Actions, ACLs, notifications, events, flows, modules, portal widgets, UX routes, REST messages, import maps, and HRSD metadata.
-- cross-record relationships such as table targets, event names, called Script Includes, roles, generated runtime tables, update-set capture, and UI routes.
-
-## Why
-
-Large static lists rot quickly, waste context, and can mislead. An index can be regenerated, queried narrowly, and verified live before edits.
-
-The useful idea from `scheidydude/codeindex` is the architecture:
-
-1. build a deterministic local index.
-2. store symbol/artifact locations separately from instructions.
-3. support O(1) lookup by name/key.
-4. calculate blast radius from relationships.
-5. expose small lookup tools to the agent instead of loading the whole corpus.
-
-Do not use `codeindex` directly for this skill without adaptation: current repo analysis targets code files such as Python, JavaScript, Go, Java, PHP, Docker, CI, and schema files. It does not index ServiceNow records, Markdown references, or PowerShell helpers well out of the box.
-
-The useful idea from `cocoindex-io/cocoindex-code` is optional semantic discovery:
-
-1. use exact search (`rg`) and the ServiceNow metadata helpers first when names, table keys, or sys_ids are known.
-2. use `ccc` only when the query is conceptual or fuzzy, such as "where do we handle update-set noise", "workspace modal save pattern", or "approval rejection logic".
-3. keep semantic results as candidate pointers. Read the matched file/record context and verify live ServiceNow facts before edits.
-4. prefer local embeddings for ServiceNow-derived content. Do not send exported instance metadata, scripts, or customer-sensitive content to cloud embedding providers unless Simen explicitly approves it for that task.
-
-`ccc` is optional. Do not make it a required dependency for the skill or block ServiceNow work when it is unavailable.
-
-The useful idea from `chopratejas/headroom` is reversible context compression:
-
-1. route large outputs by content type before summarizing them, such as JSON arrays, search results, logs, diffs, Markdown, and script/code.
-2. preserve stable identifiers and structure first: table names, sys_ids, update-set ids, artifact names, field names, choices, timestamps, errors, and exact file paths.
-3. store compact summaries separately from retrievable originals, so a narrow follow-up can fetch the full record, script body, log, or export when needed.
-4. measure usefulness by task quality and verification evidence, not token savings alone.
-5. keep compression local-first for ServiceNow-derived data; do not send exported metadata, scripts, logs, or customer-sensitive records to external compression, embedding, or telemetry services without explicit task-level approval.
-
-Do not add Headroom as a default dependency for this skill. Borrow the architecture for generated indexes, helper output shaping, and lessons extraction. Install or wrap an agent with Headroom only after a concrete repeated context-size problem is identified and Simen approves the extra local service.
-
-## ServiceNow Index Shape
-
-Prefer a generated JSON or SQLite index outside the base skill context. Suggested files:
-
-- `.servicenow-index/tables.json`: table name, label, superclass, scope, package, extensible, number prefix, access flags.
-- `.servicenow-index/fields.json`: table, element, type, reference, mandatory, default, choice, attributes.
-- `.servicenow-index/artifacts.json`: artifact table, sys_id, name/key, target table, scope, package, active, updated timestamp.
-- `.servicenow-index/symbols.json`: Script Include names/API names, function-like symbols, event names, REST API paths, Flow/action names, widget IDs.
-- `.servicenow-index/edges.json`: `reads`, `writes`, `calls`, `triggers`, `notifies`, `secures`, `renders`, `extends`, `references`, `captured_in`.
-
-Keep records compact. Store `sys_id`, display name/key, table, scope, and relationship fields. Fetch script bodies only for targeted search, suspicious impact, or implementation.
-
-## Workflow
-
-1. Build or refresh the index only when broad lookup is needed, the cache is stale, or the instance has changed materially.
-2. Search the index first for table/artifact candidates.
-3. Confirm the exact candidate live with Table API or Xplore before changing anything.
-4. For impact analysis, traverse one or two hops:
-   - upstream: who creates, calls, triggers, references, or secures this artifact?
-   - downstream: what records, events, notifications, UI channels, flows, integrations, or ACLs depend on it?
-5. Load full script/config bodies only for the narrowed candidates.
-6. After edits, refresh only affected index slices or mark the index stale.
-
-## Helper Commands
-
-Build a compact metadata index:
+Resolve the skill directory and approved environment first:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Build-ServiceNowInstanceIndex.ps1" `
-  -Artifacts `
-  -OutputPath .\.servicenow-index `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
+$build = @{
+  Profile = '<approved-profile>'
+  EnvPath = '<approved-env-path>'
+  Scope = '<resolved-scope-name>'
+  Artifacts = $true
+  OutputPath = '.servicenow-index'
+}
+& (Join-Path '<skill-root>' 'scripts/Build-ServiceNowInstanceIndex.ps1') @build
 ```
 
-Useful switches:
+| Option | Purpose |
+| --- | --- |
+| `-TablesOnly` | Only `sys_db_object`; fastest table-name lookup |
+| `-Scope` | Restrict to one application |
+| `-Artifacts` | Include configured artifact tables, e.g. scripts, ACLs, notifications, widgets |
+| `-IncludeBodies` | Add script/template/condition fields; increases size and sensitivity |
+| `-OutputPath` | Choose local index directory |
+| `-PageSize` | Default 500 |
+| `-MaxPagesPerTable` | Default 1000; a budget error means incomplete coverage |
 
-- `-TablesOnly`: only `sys_db_object`; fastest way to answer table-name/navigation questions.
-- `-Scope <scope>`: limit generated rows to one application scope.
-- `-Artifacts`: include common app artifacts such as Script Includes, Business Rules, ACLs, notifications, REST messages, import maps, widgets, and modules.
-- `-IncludeBodies`: include scripts/templates/conditions for artifact tables. Use only when needed for local search; it increases size and may capture sensitive implementation detail.
-- `-OutputPath`: choose the generated index folder. Keep generated indexes out of git.
+Pagination follows server next-page metadata through ACL-filtered short/empty pages, with a `sys_id` ordering tie-breaker. Concurrent changes can still affect offset traversal. Inspect artifact-table errors before treating coverage as complete.
 
-Search the local index:
+## Search and impact
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Find-ServiceNowIndexedArtifact.ps1" `
-  -Text "holiday approval" `
-  -IndexPath .\.servicenow-index `
-  -Limit 25
+$search = @{ Text = 'holiday approval'; IndexPath = '.servicenow-index'; Limit = 25 }
+& (Join-Path '<skill-root>' 'scripts/Find-ServiceNowIndexedArtifact.ps1') @search
+$impact = @{ Key = 'sysapproval_approver'; IndexPath = '.servicenow-index' }
+& (Join-Path '<skill-root>' 'scripts/Get-ServiceNowIndexedImpact.ps1') @impact
 ```
 
-Check basic relationship impact:
-
-```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowIndexedImpact.ps1" `
-  -Key "sysapproval_approver" `
-  -IndexPath .\.servicenow-index
-```
-
-The impact helper is intentionally conservative. It uses deterministic metadata edges such as `runs_on`, `references`, `notifies`, `triggers`, and `secures`; it does not infer every dynamic script call.
-
-## Optional Semantic Search With ccc
-
-Use `cocoindex-code` / `ccc` as an exploratory layer over local files when exact search is too brittle. Good targets are this skill repository's Markdown references, PowerShell helpers, examples, and generated safe text exports. It is most useful for finding patterns by intent rather than identifier.
-
-Check availability:
-
-```powershell
-Get-Command ccc -ErrorAction SilentlyContinue
-```
-
-If installed, initialize or refresh the local index from the repository root:
-
-```powershell
-ccc init
-ccc index
-ccc search "workspace modal save pattern"
-ccc search --lang markdown "update set noise"
-ccc search --path "references/*" "approval rejection"
-```
-
-If `ccc` reports that the project is not initialized, run `ccc init`, then `ccc index`, then retry the search. If `ccc` is missing, fall back to `rg`, `Find-ServiceNowIndexedArtifact.ps1`, and focused file reads. Do not ask Simen to install it during a ServiceNow task unless semantic search is clearly the blocker.
-
-For ServiceNow instance metadata, do not point `ccc` directly at raw broad exports with scripts or sensitive records. If semantic search over instance metadata becomes useful repeatedly, create a separate sanitized export step that converts `.servicenow-index/*.json` into compact text chunks containing safe fields such as artifact table, sys_id, name, target table, scope, active state, and relationship summaries. Keep credential/auth tables, secrets, tokens, and unnecessary script bodies out of that export.
-
-## What Not To Do
-
-- Do not add all OOTB Script Includes, all tables, or full script bodies to the skill prompt.
-- Do not trust a generated index as final truth before writes; ServiceNow metadata and ACL behavior must be verified live.
-- Do not index credential records, secrets, auth profile secrets, OAuth tokens, or session data.
-- Do not broad-scan production-like instances without explicit approval.
-- Do not make `ccc` or any embedding provider part of the default ServiceNow operating loop.
-- Do not use cloud embeddings for ServiceNow-derived content without explicit task-level approval.
-
-## Current Limits
-
-- Generated indexes are local snapshots; use `-NoCache` Table API/Xplore reads before writing.
-- The builder intentionally skips credential/auth-profile tables.
-- The default artifact list is practical, not exhaustive. Add table configs only when repeated lookup justifies it.
-- Full script-body indexing can be useful for call searches, but prefer targeted live reads when the candidate set is already small.
-- `ccc` is semantic and approximate; it can miss exact records or return plausible but irrelevant matches.
+Inspect incoming/outgoing relationships for the small candidate set, then retrieve current records and relevant bodies live. For richer graph design, read `servicenow-graph-mapping.md`.

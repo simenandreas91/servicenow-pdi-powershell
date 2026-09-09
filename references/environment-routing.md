@@ -4,6 +4,8 @@ Load this reference before connecting to a ServiceNow instance, selecting a prof
 
 Helpers load credentials from the nearest workspace `.env`. Prefer an explicit profile and env path when generic `SN_*` variables could target the wrong instance.
 
+The resolver walks parent directories to find the nearest `.env`, then falls back to the private credential file if none exists. Instance values must be HTTPS origins, such as `https://example.service-now.com`, without paths, query strings, fragments, or embedded credentials. Preserve this shared resolver when adding helpers.
+
 - `pdi`: Simen's PDI at `https://dev396302.service-now.com`; default for demonstrations and safe reproduction.
 - For `pdi`, a workspace `.env` may provide `SN_PDI_INSTANCE` without duplicating credentials. When `SN_PDI_USER` or `SN_PDI_PASS` is absent there, the resolver may use the canonical private fallback at `%USERPROFILE%\.codex\servicenow-pdi.env`; workspace profile-specific values still take precedence.
 - `vaar_dev`: Vår Energi DEV from `SN_VAAR_DEV`; use this for implementation and validation of Vår Energi stories. Legacy profile `other` remains an alias for `vaar_dev`.

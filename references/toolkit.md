@@ -1,6 +1,6 @@
 # ServiceNow Helper Router
 
-Use these PowerShell helpers for deterministic, low-noise ServiceNow work. Resolve every script relative to the directory containing `SKILL.md`; do not assume a fixed installation path.
+Resolve helper paths relative to `SKILL.md`.
 
 Before guessing parameters, inspect the installed script:
 
@@ -18,11 +18,9 @@ Most live-instance helpers accept `-Profile`, `-EnvPath`, and `-Instance`. Read 
 | Helper | Use | State |
 | --- | --- | --- |
 | `Resolve-ServiceNowConnection.ps1` | Dot-source shared profile/env resolution; fail closed on missing named targets | Local/read |
-| `Invoke-ServiceNowTable.ps1` | Exact Table API GET/POST/PATCH/DELETE with fields, limits, display mode, and debug header | Read or write by method |
+| `Invoke-ServiceNowTable.ps1` | Exact Table API GET/POST/PATCH/DELETE; UTF-8 body files, object/JSON output, bounded GET retries, explicit paging | Read or write by method |
 | `Invoke-ServiceNowXploreScript.ps1` | Scoped server execution with structured output; preferred runtime probe | Depends on submitted script |
 | `Invoke-ServiceNowBackgroundScript.ps1` | Background Script fallback when Xplore is unavailable or comparison is required | Depends on submitted script |
-
-Default to Table API GET. Use Xplore when server semantics or API-blocked metadata must be observed. Background Script is last choice. Treat both execution helpers as admin capability even when the submitted code is read-only.
 
 ### Discovery, schema, and impact
 
@@ -37,13 +35,11 @@ Default to Table API GET. Use Xplore when server semantics or API-blocked metada
 | `Find-ServiceNowIndexedArtifact.ps1` | Fast offline search of an existing index | Local/read |
 | `Get-ServiceNowIndexedImpact.ps1` | Offline incoming/outgoing impact from index edges | Local/read |
 
-Use live exact search for one artifact. Build an index only when repeated broad discovery justifies its cost. Verify every index-derived edit target live.
-
 ### Update-set lifecycle
 
 | Helper | Use | State |
 | --- | --- | --- |
-| `Set-ServiceNowUpdateSetContext.ps1` | Create/select scoped update set and snapshot developer preferences | Controlled write |
+| `Set-ServiceNowUpdateSetContext.ps1` | Validate/select scoped update set; requires a new `-SnapshotPath` saved before any remote write | Controlled write |
 | `Restore-ServiceNowPreferenceSnapshot.ps1` | Restore saved application/update-set preferences | Controlled write |
 | `Confirm-ServiceNowUpdateCapture.ps1` | Check expected update XML names/application | Read |
 | `Get-ServiceNowUpdateSetSummary.ps1` | Contents, types, scope mixing, and likely noise | Read |
@@ -51,7 +47,7 @@ Use live exact search for one artifact. Build an index only when repeated broad 
 | `Export-ServiceNowUpdateSetXml.ps1` | Export one update set; `-Complete` also changes its state | Local file; conditional write |
 | `Remove-ServiceNowArtifactWithDeleteCapture.ps1` | Snapshot, delete, and create deployable DELETE capture for one proven customer artifact | Destructive write |
 
-Never use a write helper merely because it is convenient. The SKILL write gate, exact stable-key resolution, before-value capture, and post-write readback still apply. `Save-ServiceNowCustomerUpdate.ps1` does not repair a wrong scope/context. The delete helper requires explicit deletion authority and target preview planning.
+The delete helper requires explicit deletion authority and target preview planning.
 
 ### Focused workflows
 
@@ -62,31 +58,25 @@ Never use a write helper merely because it is convenient. The SKILL write gate, 
 | `Initialize-ServiceNowAndrewReactApp.ps1` | Configure the maintained React/Vite boilerplate for a confirmed non-production instance; `-Install` installs dependencies | Local write; optional install |
 | `Manage-VaarEnergiStoryMonitor.ps1` | Maintain local assigned-story approval/monitor state | Local state write |
 | `Manage-VaarEnergiStoryWorkLog.ps1` | Maintain local Vår story work log/report state | Local state write |
+| `Test-ServiceNowToolkit.ps1` | Offline regression checks with synthetic credentials and intercepted HTTP; run after changing core helpers | Local test |
 
-Load the matching domain/customer reference before these focused helpers. Their presence does not authorize a trigger, install, external call, or instance mutation.
+Load the matching domain/customer reference for focused workflows.
 
-## Efficient Sequences
+## Command and response contracts
 
-For a known narrow read:
+Use PowerShell 7. Prefer `& $helper @params` in the existing shell or `pwsh -NoProfile -File <path>`; avoid nested command strings. Table `-AsObject` returns native objects; default output is compact JSON with a `result` envelope. Use UTF-8 `-BodyPath` for substantial JSON and `-ScriptPath` or a single-quoted here-string for JavaScript. Python can process offline exports; share the existing credential resolver for instance calls.
 
-1. Resolve the profile and run one `Invoke-ServiceNowTable.ps1` GET with exact query, fields, and limit.
-2. Escalate only if the record/schema/runtime evidence is insufficient.
+### Table API
 
-For substantial controlled configuration:
+- `-TimeoutSec`: default 60; connection and stalled reads on PowerShell 7.4+.
+- `-MaxRetries`: default 2; only GET HTTP 429/502/503/504. Retry-After up to 60 seconds is honored; longer waits fail. No automatic replay of writes, transport failures, or permanent errors.
+- HTTPS origin required; redirects refused. These contracts are specific to the Table helper, not Xplore/Background Script.
+- Collection GET: `-Offset`, `-Limit`, `-IncludePaginationInfo`. `pagination.next_offset` comes from the Link header; null means no next link supplied. Keep query/order/page size fixed and impose a budget. ACL-filtered short/empty pages can have a next link. Changing data prevents offset traversal from being a consistent snapshot.
 
-1. Health check when context is uncertain.
-2. Exact artifact lookup and table shape.
-3. Snapshot and set scope/update set.
-4. Apply one coherent slice.
-5. Fresh record read plus update-capture check.
-6. Behavior/security/regression test.
-7. Restore preferences.
+Sources: [PowerShell HTTP behavior](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-restmethod), [ServiceNow pagination](https://www.servicenow.com/docs/r/api-reference/rest-api-explorer/c_RESTAPI.html).
 
-For broad unfamiliar work:
+### Cache and recovery
 
-1. Scope inventory or existing index.
-2. Targeted artifact/impact lookup.
-3. Live verification of the small candidate set.
-4. Continue with the controlled-change sequence.
+Discovery cache keys include resolved instance, username, and response shape. `-Refresh` replaces a cached entry; `-NoCache` bypasses caching for sensitive reads, permission changes, and post-write proof. Cached admin results cannot prove another persona's access.
 
-Avoid habitual health checks, full inventories, body searches, and indexes when an exact read answers the question.
+`Set-ServiceNowUpdateSetContext.ps1` requires a new snapshot filename with a writable parent directory. It validates resumed sets as in-progress, non-Default, and scope-matching before writes. Restore checks instance/username; verify legacy snapshot origin locally before adding missing binding fields. `Save-ServiceNowCustomerUpdate.ps1 -UpdateSetSysId` asserts the capture destination; correct context and recapture on mismatch.

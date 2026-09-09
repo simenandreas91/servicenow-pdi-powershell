@@ -1,130 +1,114 @@
 # ServiceNow Helper Examples
 
-Find a user:
+Run in PowerShell 7. Resolve this skill's actual directory and the approved environment before using these examples. Values in angle brackets are task inputs.
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
-  -Table sys_user `
-  -Query 'name=Simen Admin' `
-  -Fields 'sys_id,name,user_name,email' `
-  -Limit 1 `
-  -ExcludeReferenceLink
+$skillRoot = '<directory containing SKILL.md>'
+$scripts = Join-Path $skillRoot 'scripts'
+$tableHelper = Join-Path $scripts 'Invoke-ServiceNowTable.ps1'
+$connectionArgs = @{ Profile = 'pdi'; EnvPath = '<approved-env-path>' }
+Get-Command $tableHelper -Syntax
 ```
 
-Inspect mandatory fields before inserting:
+Resolve one exact user without hiding duplicate matches:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
-  -Table sys_dictionary `
-  -Query 'name=rm_story^mandatory=true' `
-  -Fields 'element,column_label,internal_type,reference,default_value,mandatory' `
-  -ExcludeReferenceLink
+$read = @{
+  Table = 'sys_user'
+  Query = 'user_name=<exact-user-name>'
+  Fields = 'sys_id,user_name,active'
+  Limit = 2
+  ExcludeReferenceLink = $true
+  AsObject = $true
+}
+$users = @((& $tableHelper @connectionArgs @read).result)
+if ($users.Count -ne 1) { throw 'Expected exactly one user.' }
+$userSysId = $users[0].sys_id
 ```
 
-Create a story only when explicitly requested:
+Inspect schema before writing:
 
-Resolve the intended assignee by a stable key such as `user_name` and use the returned `sys_id` only for this write.
+```powershell
+& (Join-Path $scripts 'Get-ServiceNowTableShape.ps1') @connectionArgs -Table rm_story -NoCache
+```
+
+Create a story only when requested. Resolve every reference on the intended target before constructing its body:
 
 ```powershell
 $body = @{
   short_description = 'Example story'
-  description = 'As a user, I want an example story so that I can verify API writes.'
-  assigned_to = '<resolved_assignee_sys_id>'
-  eap_team = '<resolved_team_sys_id>'
-} | ConvertTo-Json
-
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowTable.ps1" `
-  -Method POST `
-  -Table rm_story `
-  -Fields 'sys_id,number,short_description,assigned_to,eap_team,state' `
-  -DisplayValue all `
-  -BodyJson $body `
-  -ExcludeReferenceLink
+  description = 'As a user, I want an example story so that I can verify the workflow.'
+  assigned_to = $userSysId
+} | ConvertTo-Json -Depth 5 -Compress
+$create = @{
+  Method = 'POST'
+  Table = 'rm_story'
+  Fields = 'sys_id,number,short_description,assigned_to,state'
+  BodyJson = $body
+  ExcludeReferenceLink = $true
+  AsObject = $true
+}
+$created = & $tableHelper @connectionArgs @create
 ```
 
-Read-only Xplore verification:
+For larger JSON payloads, save a UTF-8 JSON object to a task file and pass `-BodyPath <path>` instead of `-BodyJson`. Do not construct nested shell command strings containing the body.
+
+Read-only Xplore probe, using a single-quoted here-string so PowerShell does not expand JavaScript content:
 
 ```powershell
-$script = @'
+$probe = @'
 (function () {
   var result = { activeUsers: 0 };
-  var grUser = new GlideAggregate('sys_user');
-  grUser.addQuery('active', true);
-  grUser.addAggregate('COUNT');
-  grUser.query();
-  if (grUser.next()) {
-    result.activeUsers = parseInt(grUser.getAggregate('COUNT'), 10);
-  }
-  gs.print('CODEX_RESULT_START' + JSON.stringify(result) + 'CODEX_RESULT_END');
+  var users = new GlideAggregate('sys_user');
+  users.addQuery('active', true);
+  users.addAggregate('COUNT');
+  users.query();
+  if (users.next()) result.activeUsers = parseInt(users.getAggregate('COUNT'), 10);
+  gs.print('SN_RESULT_START' + JSON.stringify(result) + 'SN_RESULT_END');
 })();
 '@
-
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Invoke-ServiceNowXploreScript.ps1" -Script $script
+& (Join-Path $scripts 'Invoke-ServiceNowXploreScript.ps1') @connectionArgs -Script $probe
 ```
 
-For scoped Xplore, pass `-Scope <sys_scope.scope>` or `-ScopeSysId <sys_scope.sys_id>`.
+For substantial JavaScript, save a `.js` file and use `-ScriptPath`. For scoped Xplore, pass `-Scope <sys_scope.scope>` or `-ScopeSysId <live-sys-id>`.
 
-## Toolkit Helpers
-
-Create a cached inventory for a scope:
+Resume an existing scoped update set. Resolve the set and scope live first; choose a new snapshot filename in an existing directory:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowScopeInventory.ps1" `
-  -Scope x_personellsikkerh `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
+$contextArgs = @{
+  Scope = '<resolved-scope-name>'
+  UpdateSetSysId = '<resolved-update-set-sys-id>'
+  SnapshotPath = Join-Path (Get-Location).Path 'preferences-before-change.json'
+}
+& (Join-Path $scripts 'Set-ServiceNowUpdateSetContext.ps1') @connectionArgs @contextArgs
+# Perform the authorized change and verify records, behavior, and capture.
+& (Join-Path $scripts 'Restore-ServiceNowPreferenceSnapshot.ps1') @connectionArgs -SnapshotPath $contextArgs.SnapshotPath
 ```
 
-Search common artifact tables:
+Page a bounded discovery query without assuming a short page is the last one:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Find-ServiceNowArtifact.ps1" `
-  -Text reklarering `
-  -Scope x_personellsikkerh `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
+$pageArgs = @{
+  Table = 'sys_script_include'
+  Query = 'sys_scope=<resolved-scope-sys-id>^ORDERBYsys_id'
+  Fields = 'sys_id,name,sys_updated_on'
+  Limit = 100
+  Offset = 0
+  IncludePaginationInfo = $true
+  ExcludeReferenceLink = $true
+  AsObject = $true
+}
+for ($pageNumber = 0; $pageNumber -lt 10; $pageNumber++) {
+  $page = & $tableHelper @connectionArgs @pageArgs
+  $page.result | Select-Object sys_id,name,sys_updated_on
+  if ($null -eq $page.pagination.next_offset) { break }
+  if ($pageNumber -eq 9) { throw 'Page budget reached; results are incomplete.' }
+  $pageArgs.Offset = $page.pagination.next_offset
+}
 ```
 
-Inspect table shape, choices, and ACL summary:
+Run the local regression suite after changing shared helpers:
 
 ```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowTableShape.ps1" `
-  -Table x_personellsikkerh_personellsikkerhet `
-  -IncludeChoices `
-  -IncludeAclSummary `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
-
-Summarize an update set and flag likely noise:
-
-```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Get-ServiceNowUpdateSetSummary.ps1" `
-  -UpdateSetSysId '<sys_update_set>' `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
-
-Export changed artifacts since a timestamp:
-
-```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Export-ServiceNowDelta.ps1" `
-  -Scope x_personellsikkerh `
-  -Since '2026-05-13 00:00:00' `
-  -OutputPath '.servicenow-cache/personellsikkerhet-delta.json' `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
-```
-
-Test event notification configuration and optionally trigger an event:
-
-```powershell
-& "$HOME/.codex/skills/servicenow-pdi/scripts/Test-ServiceNowNotification.ps1" `
-  -EventName x_personellsikkerh.klarering_utlop_1mnd `
-  -RecordTable x_personellsikkerh_personellsikkerhet `
-  -RecordSysId '<record_sys_id>' `
-  -Parm1 'leader@example.com' `
-  -Trigger `
-  -Profile pdi `
-  -EnvPath 'C:\Users\simen\Documents\Codex\ServiceNow\.env'
+& (Join-Path $scripts 'Test-ServiceNowToolkit.ps1')
 ```

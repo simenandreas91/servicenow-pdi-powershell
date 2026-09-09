@@ -1,8 +1,10 @@
 param(
   [Parameter(Mandatory = $true)]
+  [ValidatePattern('^[A-Za-z][A-Za-z0-9_]*$')]
   [string]$Table,
 
   [Parameter(Mandatory = $true)]
+  [ValidatePattern('^[0-9a-fA-F]{32}$')]
   [string]$SysId,
 
   [string]$UpdateSetSysId,
@@ -13,8 +15,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $xploreScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowXploreScript.ps1'
-$tableScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowTable.ps1'
 $updateName = "${Table}_${SysId}"
+if ($UpdateSetSysId -and $UpdateSetSysId -notmatch '^[0-9a-fA-F]{32}$') { throw 'UpdateSetSysId must be a 32-character sys_id.' }
 
 $serverScript = @"
 (function () {
@@ -26,12 +28,17 @@ $serverScript = @"
     return;
   }
 
+  if (gr.isValidField('sys_update_name') && gr.getValue('sys_update_name')) {
+    result.updateName = gr.getValue('sys_update_name');
+  } else {
+    result.updateName = '$updateName';
+  }
   new GlideUpdateManager2().saveRecord(gr);
   result.saved = true;
 
   var grUpdate = new GlideRecord('sys_update_xml');
-  grUpdate.addQuery('name', '$updateName');
-  grUpdate.orderByDesc('sys_created_on');
+  grUpdate.addQuery('name', result.updateName);
+  grUpdate.orderByDesc('sys_updated_on');
   grUpdate.setLimit(3);
   grUpdate.query();
   while (grUpdate.next()) {
@@ -54,24 +61,13 @@ if ($EnvPath) { $xParams.EnvPath = $EnvPath }
 if ($Instance) { $xParams.Instance = $Instance }
 $saveResult = (& $xploreScript @xParams) | ConvertFrom-Json
 
-if ($UpdateSetSysId -and $saveResult.updateXml -and @($saveResult.updateXml).Count -gt 0) {
+if (-not $saveResult.saved -or -not $saveResult.updateXml) {
+  throw 'The application file was not captured. Inspect the record and capture eligibility before retrying.'
+}
+if ($UpdateSetSysId) {
   $latest = @($saveResult.updateXml)[0]
   if ($latest.update_set -ne $UpdateSetSysId) {
-    $body = @{ update_set = $UpdateSetSysId } | ConvertTo-Json
-    $tParams = @{
-      Method = 'PATCH'
-      Table = 'sys_update_xml'
-      SysId = $latest.sys_id
-      Fields = 'sys_id,name,update_set,application,target_name,type'
-      DisplayValue = 'all'
-      BodyJson = $body
-      ExcludeReferenceLink = $true
-    }
-    if ($Profile) { $tParams.Profile = $Profile }
-    if ($EnvPath) { $tParams.EnvPath = $EnvPath }
-    if ($Instance) { $tParams.Instance = $Instance }
-    $moved = (& $tableScript @tParams) | ConvertFrom-Json
-    $saveResult | Add-Member -NotePropertyName moved_to_update_set -NotePropertyValue $moved.result -Force
+    throw "Capture landed in update set '$($latest.update_set)', expected '$UpdateSetSysId'. Correct the execution scope/update-set context and recapture; customer updates were not moved."
   }
 }
 

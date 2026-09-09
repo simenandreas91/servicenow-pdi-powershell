@@ -4,7 +4,8 @@ param(
   [switch]$Artifacts,
   [switch]$IncludeBodies,
   [string]$OutputPath,
-  [int]$PageSize = 500,
+  [ValidateRange(1, 10000)][int]$PageSize = 500,
+  [ValidateRange(1, 100000)][int]$MaxPagesPerTable = 1000,
   [string]$Profile,
   [string]$EnvPath,
   [string]$Instance
@@ -13,18 +14,6 @@ param(
 $ErrorActionPreference = 'Stop'
 . "$PSScriptRoot/Resolve-ServiceNowConnection.ps1"
 
-function New-ServiceNowIndexAuthHeaders {
-  param($Connection)
-
-  $pair = '{0}:{1}' -f $Connection.UserName, $Connection.Password
-  $auth = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
-  return @{
-    Authorization = "Basic $auth"
-    Accept = 'application/json'
-    'Content-Type' = 'application/json'
-  }
-}
-
 function Invoke-ServiceNowIndexTablePage {
   param(
     [Parameter(Mandatory = $true)][string]$Table,
@@ -32,25 +21,12 @@ function Invoke-ServiceNowIndexTablePage {
     [string]$Fields,
     [int]$Limit,
     [int]$Offset,
-    [string]$InstanceUrl,
-    [hashtable]$Headers
+    [string]$InstanceUrl
   )
 
-  $path = "$InstanceUrl/api/now/table/$([uri]::EscapeDataString($Table))"
-  $params = @{
-    sysparm_limit = [string]$Limit
-    sysparm_offset = [string]$Offset
-    sysparm_display_value = 'all'
-    sysparm_exclude_reference_link = 'true'
-  }
-  if (-not [string]::IsNullOrWhiteSpace($Query)) { $params.sysparm_query = $Query }
-  if (-not [string]::IsNullOrWhiteSpace($Fields)) { $params.sysparm_fields = $Fields }
-
-  $queryParts = foreach ($key in $params.Keys) {
-    '{0}={1}' -f [uri]::EscapeDataString($key), [uri]::EscapeDataString($params[$key])
-  }
-  $uri = "$path`?$($queryParts -join '&')"
-  Invoke-RestMethod -Uri $uri -Headers $Headers -Method GET
+  & (Join-Path $PSScriptRoot 'Invoke-ServiceNowTable.ps1') -Table $Table -Query $Query -Fields $Fields `
+    -Limit $Limit -Offset $Offset -DisplayValue all -ExcludeReferenceLink -AsObject -IncludePaginationInfo `
+    -Profile $Profile -EnvPath $EnvPath -Instance $InstanceUrl
 }
 
 function Get-ServiceNowIndexRows {
@@ -59,12 +35,14 @@ function Get-ServiceNowIndexRows {
     [string]$Query,
     [string]$Fields,
     [int]$PageSize,
-    [string]$InstanceUrl,
-    [hashtable]$Headers
+    [string]$InstanceUrl
   )
 
   $rows = [System.Collections.Generic.List[object]]::new()
   $offset = 0
+  $pageCount = 0
+  # Deterministic tie-breaker; pagination is still not a transactional snapshot.
+  $Query = if ($Query) { "$Query^ORDERBYsys_id" } else { 'ORDERBYsys_id' }
   while ($true) {
     $response = Invoke-ServiceNowIndexTablePage `
       -Table $Table `
@@ -72,13 +50,15 @@ function Get-ServiceNowIndexRows {
       -Fields $Fields `
       -Limit $PageSize `
       -Offset $offset `
-      -InstanceUrl $InstanceUrl `
-      -Headers $Headers
+      -InstanceUrl $InstanceUrl
 
     $page = @($response.result)
     foreach ($row in $page) { $rows.Add($row) }
-    if ($page.Count -lt $PageSize) { break }
-    $offset += $PageSize
+    $pageCount++
+    # ACL filtering can leave a short/empty page with a valid next link.
+    if ($null -eq $response.pagination.next_offset) { break }
+    if ($pageCount -ge $MaxPagesPerTable) { throw "Index page budget reached for '$Table'. Narrow the scope or deliberately raise -MaxPagesPerTable." }
+    $offset = $response.pagination.next_offset
   }
   return @($rows)
 }
@@ -160,23 +140,11 @@ if (-not (Test-Path -LiteralPath $OutputPath)) {
 $OutputPath = (Resolve-Path -LiteralPath $OutputPath).Path
 
 $connection = Resolve-ServiceNowConnection -Profile $Profile -Instance $Instance -EnvPath $EnvPath
-$headers = New-ServiceNowIndexAuthHeaders -Connection $connection
 
 $scopeFilter = $null
 if (-not [string]::IsNullOrWhiteSpace($Scope)) {
-  if ($Scope -match '^[0-9a-f]{32}$') {
-    $scopeFilter = $Scope
-  } else {
-    $scopeRows = Get-ServiceNowIndexRows `
-      -Table sys_scope `
-      -Query "scope=$Scope^ORname=$Scope" `
-      -Fields 'sys_id,scope,name' `
-      -PageSize 10 `
-      -InstanceUrl $connection.Instance `
-      -Headers $headers
-    if ($scopeRows.Count -lt 1) { throw "Could not resolve scope '$Scope'." }
-    $scopeFilter = (Convert-ServiceNowIndexRow -Row $scopeRows[0]).sys_id
-  }
+  . (Join-Path $PSScriptRoot '_ServiceNowToolkitCommon.ps1')
+  $scopeFilter = (Resolve-ServiceNowToolkitScope -Scope $Scope -Profile $Profile -EnvPath $EnvPath -Instance $connection.Instance -NoCache).sys_id
 }
 
 $metadata = [ordered]@{
@@ -194,8 +162,7 @@ $tableRows = Get-ServiceNowIndexRows `
   -Query $tablesQuery `
   -Fields 'sys_id,name,label,super_class,sys_scope,sys_package,is_extendable,number_ref,access,create_access,read_access,update_access,delete_access,sys_updated_on' `
   -PageSize $PageSize `
-  -InstanceUrl $connection.Instance `
-  -Headers $headers
+  -InstanceUrl $connection.Instance
 $tables = @($tableRows | ForEach-Object { Convert-ServiceNowIndexRow -Row $_ })
 $indexedTableNames = @($tables | ForEach-Object { $_.name } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 
@@ -213,8 +180,7 @@ if (-not $TablesOnly) {
     -Query $dictionaryQuery `
     -Fields 'sys_id,name,element,column_label,internal_type,reference,mandatory,read_only,default_value,attributes,choice,sys_scope,sys_updated_on' `
     -PageSize $PageSize `
-    -InstanceUrl $connection.Instance `
-    -Headers $headers
+    -InstanceUrl $connection.Instance
   $fields = @($dictionaryRows | ForEach-Object {
       $row = Convert-ServiceNowIndexRow -Row $_
       Add-ServiceNowIndexEdge -Edges $edges -Type references -FromTable sys_dictionary -FromSysId $row.sys_id -ToTable sys_db_object -ToKey $row.reference
@@ -229,8 +195,7 @@ if (-not $TablesOnly) {
       -Query $choiceQuery `
       -Fields 'sys_id,name,element,value,label,sequence,dependent_value,language,inactive,sys_updated_on' `
       -PageSize $PageSize `
-      -InstanceUrl $connection.Instance `
-      -Headers $headers
+      -InstanceUrl $connection.Instance
     $choices = @($choiceRows | ForEach-Object { Convert-ServiceNowIndexRow -Row $_ })
   }
 }
@@ -265,8 +230,7 @@ if ($Artifacts -and -not $TablesOnly) {
         -Query $query `
         -Fields $fieldsForRead `
         -PageSize $PageSize `
-        -InstanceUrl $connection.Instance `
-        -Headers $headers
+        -InstanceUrl $connection.Instance
     } catch {
       $artifactsOut += [pscustomobject]@{
         artifact_table = $config.table

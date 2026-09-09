@@ -16,6 +16,14 @@ $ErrorActionPreference = 'Stop'
 $tableScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowTable.ps1'
 . (Join-Path $PSScriptRoot '_ServiceNowToolkitCommon.ps1')
 
+if (-not $UpdateSetSysId -and [string]::IsNullOrWhiteSpace($Name)) {
+  throw 'Provide -Name to create an update set or -UpdateSetSysId to resume one.'
+}
+if ($UpdateSetSysId -and $UpdateSetSysId -notmatch '^[0-9a-fA-F]{32}$') { throw 'UpdateSetSysId must be a 32-character sys_id.' }
+if ($Name -eq 'Default') { throw 'Do not develop in the Default update set.' }
+if ([string]::IsNullOrWhiteSpace($SnapshotPath)) { throw 'Provide a new -SnapshotPath to persist recovery evidence before changing preferences.' }
+if (Test-Path -LiteralPath $SnapshotPath) { throw 'SnapshotPath already exists. Preserve the original recovery snapshot and choose a new path.' }
+
 function Invoke-Table {
   param(
     [string]$Method = 'GET',
@@ -48,15 +56,7 @@ function Invoke-Table {
 
 function Get-ScopeSysId {
   param([string]$ScopeValue)
-  if ($ScopeValue -eq 'global') { return 'global' }
-  if ($ScopeValue -match '^[0-9a-f]{32}$') { return $ScopeValue }
-
-  $query = "scope=$ScopeValue^ORname=$ScopeValue"
-  $scopeResponse = Invoke-Table -Table 'sys_scope' -Query $query -Fields 'sys_id,name,scope' -Limit 1
-  if (-not $scopeResponse.result -or $scopeResponse.result.Count -eq 0) {
-    throw "Could not resolve scope '$ScopeValue'."
-  }
-  return $scopeResponse.result[0].sys_id
+  return (Resolve-ServiceNowToolkitScope -Scope $ScopeValue -Profile $Profile -EnvPath $EnvPath -Instance $Instance -NoCache).sys_id
 }
 
 function Get-Preference {
@@ -85,8 +85,19 @@ $UserSysId = Resolve-ServiceNowToolkitUserSysId `
   -EnvPath $EnvPath `
   -Instance $Instance
 $scopeSysId = Get-ScopeSysId -ScopeValue $Scope
+if ($UpdateSetSysId) {
+  $existingSet = (Invoke-Table -Table 'sys_update_set' -SysId $UpdateSetSysId -Fields 'sys_id,name,state,application').result
+  if (-not $existingSet -or $existingSet.application -ne $scopeSysId -or
+      $existingSet.state -ne 'in progress' -or $existingSet.name -eq 'Default') {
+    throw 'The selected update set must exist, be in progress, be non-Default, and match the requested scope.'
+  }
+}
+. (Join-Path $PSScriptRoot 'Resolve-ServiceNowConnection.ps1')
+$connection = Resolve-ServiceNowConnection -Profile $Profile -EnvPath $EnvPath -Instance $Instance
 $prefNames = @('apps.current_app', 'sys_update_set', "updateSetForScope$scopeSysId")
 $snapshot = [ordered]@{
+  instance = $connection.Instance
+  user_name = $connection.UserName
   user_sys_id = $UserSysId
   scope_sys_id = $scopeSysId
   captured_at = (Get-Date).ToString('o')
@@ -102,6 +113,15 @@ foreach ($prefName in $prefNames) {
     value = if ($pref) { $pref.value } else { $null }
   }
 }
+
+# Persist recovery evidence BEFORE the first remote mutation; never overwrite it.
+$snapshotJson = $snapshot | ConvertTo-Json -Depth 8
+$snapshotFile = [System.IO.File]::Open($ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($SnapshotPath),
+  [System.IO.FileMode]::CreateNew, [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+try {
+  $snapshotBytes = [System.Text.Encoding]::UTF8.GetBytes($snapshotJson)
+  $snapshotFile.Write($snapshotBytes, 0, $snapshotBytes.Length)
+} finally { $snapshotFile.Dispose() }
 
 Set-Preference -Name 'apps.current_app' -Value $scopeSysId | Out-Null
 
@@ -123,10 +143,6 @@ if (-not $UpdateSetSysId) {
 
 Set-Preference -Name "updateSetForScope$scopeSysId" -Value $UpdateSetSysId | Out-Null
 Set-Preference -Name 'sys_update_set' -Value $UpdateSetSysId | Out-Null
-
-if ($SnapshotPath) {
-  $snapshot | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $SnapshotPath -Encoding UTF8
-}
 
 [ordered]@{
   scope_sys_id = $scopeSysId

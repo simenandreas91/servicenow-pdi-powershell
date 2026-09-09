@@ -10,6 +10,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $tableScript = Join-Path $PSScriptRoot 'Invoke-ServiceNowTable.ps1'
 $snapshot = Get-Content -LiteralPath $SnapshotPath -Raw | ConvertFrom-Json
+. (Join-Path $PSScriptRoot 'Resolve-ServiceNowConnection.ps1')
+$connection = Resolve-ServiceNowConnection -Profile $Profile -EnvPath $EnvPath -Instance $Instance
+if (-not $snapshot.instance -or -not $snapshot.user_name) {
+  throw 'Legacy snapshot has no instance/principal binding. Verify its origin and add instance/user_name locally before restoring.'
+}
+if ($snapshot.instance -ne $connection.Instance -or $snapshot.user_name -cne $connection.UserName) {
+  throw 'Snapshot destination or authenticated user does not match the selected connection.'
+}
 
 function Invoke-Table {
   param(
