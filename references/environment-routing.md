@@ -7,6 +7,8 @@ Helpers load credentials from the nearest workspace `.env`. Prefer an explicit p
 The resolver walks parent directories to find the nearest `.env`, then falls back to the private credential file if none exists. Instance values must be HTTPS origins, such as `https://example.service-now.com`, without paths, query strings, fragments, or embedded credentials. Preserve this shared resolver when adding helpers.
 
 - `pdi`: Simen's PDI at `https://dev396302.service-now.com`; default for demonstrations and safe reproduction.
+- `pdi_2` (user-facing `PDI_2`, case-insensitive): Simen's second PDI. Resolve `SN_PDI_2_INSTANCE` and its own `SN_PDI_2_USERNAME` / `SN_PDI_2_PASSWORD` from the `.env` beside `SKILL.md`. Pass `-Profile pdi_2 -EnvPath '<skill-root>/.env'` on every live helper, including when working from another folder. Do not replace the original `pdi` default, reuse its private credential fallback, or substitute another profile if this target is unavailable.
+- Named-profile credentials accept `_USER` / `_PASS` and `_USERNAME` / `_PASSWORD`. Within one source and profile, the shorter keys take precedence; profile-specific file values, including the longer aliases, precede process variables and generic credentials.
 - For `pdi`, a workspace `.env` may provide `SN_PDI_INSTANCE` without duplicating credentials. When `SN_PDI_USER` or `SN_PDI_PASS` is absent there, the resolver may use the canonical private fallback at `%USERPROFILE%\.codex\servicenow-pdi.env`; workspace profile-specific values still take precedence.
 - `vaar_dev`: Vår Energi DEV from `SN_VAAR_DEV`; use this for implementation and validation of Vår Energi stories. Legacy profile `other` remains an alias for `vaar_dev`.
 - `vaar_test`: Vår Energi TEST from `SN_VAAR_TEST`; use it for transported configuration validation and UAT preparation.
@@ -18,3 +20,5 @@ The resolver walks parent directories to find the nearest `.env`, then falls bac
 - FFI/Personellsikkerhet is on-premise and not directly reachable. Treat the PDI as the mirror unless the user provides reachable access or exported evidence. Never route FFI work to Vår Energi implicitly.
 
 After connecting, verify the returned instance name/URL and current user before relying on results or writing. Never store credentials in the skill, references, cache, update sets, logs, or test data.
+
+For a newly prepared instance where Xplore is downloaded but its update set is not committed, use bounded Table API GETs for the initial access check. Downloaded update XML does not establish that Xplore is installed. Respect any user-stated plugin dependency wait; an access check does not authorize committing the Xplore set or installing plugins. Recheck capability live before using Xplore or the Xplore-based health helper.

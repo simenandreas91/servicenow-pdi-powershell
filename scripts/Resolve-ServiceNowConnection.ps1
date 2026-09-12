@@ -140,28 +140,32 @@ function Resolve-ServiceNowConnection {
     }
 
     foreach ($credentialProfile in $credentialProfiles) {
-      $profileUserKey = "SN_${credentialProfile}_USER"
-      $profilePassKey = "SN_${credentialProfile}_PASS"
-      if ([string]::IsNullOrWhiteSpace($userName) -and $dotEnv.ContainsKey($profileUserKey)) {
-        $userName = $dotEnv[$profileUserKey]
+      foreach ($profileUserKey in @("SN_${credentialProfile}_USER", "SN_${credentialProfile}_USERNAME")) {
+        if ([string]::IsNullOrWhiteSpace($userName) -and $dotEnv.ContainsKey($profileUserKey)) {
+          $userName = $dotEnv[$profileUserKey]
+        }
       }
-      if ([string]::IsNullOrWhiteSpace($password) -and $dotEnv.ContainsKey($profilePassKey)) {
-        $password = $dotEnv[$profilePassKey]
+      foreach ($profilePassKey in @("SN_${credentialProfile}_PASS", "SN_${credentialProfile}_PASSWORD")) {
+        if ([string]::IsNullOrWhiteSpace($password) -and $dotEnv.ContainsKey($profilePassKey)) {
+          $password = $dotEnv[$profilePassKey]
+        }
       }
     }
     foreach ($credentialProfile in $credentialProfiles) {
-      $profileUserKey = "SN_${credentialProfile}_USER"
-      $profilePassKey = "SN_${credentialProfile}_PASS"
-      if ([string]::IsNullOrWhiteSpace($userName)) {
-        $environmentUser = [Environment]::GetEnvironmentVariable($profileUserKey)
-        if (-not [string]::IsNullOrWhiteSpace($environmentUser)) {
-          $userName = $environmentUser
+      foreach ($profileUserKey in @("SN_${credentialProfile}_USER", "SN_${credentialProfile}_USERNAME")) {
+        if ([string]::IsNullOrWhiteSpace($userName)) {
+          $environmentUser = [Environment]::GetEnvironmentVariable($profileUserKey)
+          if (-not [string]::IsNullOrWhiteSpace($environmentUser)) {
+            $userName = $environmentUser
+          }
         }
       }
-      if ([string]::IsNullOrWhiteSpace($password)) {
-        $environmentPassword = [Environment]::GetEnvironmentVariable($profilePassKey)
-        if (-not [string]::IsNullOrWhiteSpace($environmentPassword)) {
-          $password = $environmentPassword
+      foreach ($profilePassKey in @("SN_${credentialProfile}_PASS", "SN_${credentialProfile}_PASSWORD")) {
+        if ([string]::IsNullOrWhiteSpace($password)) {
+          $environmentPassword = [Environment]::GetEnvironmentVariable($profilePassKey)
+          if (-not [string]::IsNullOrWhiteSpace($environmentPassword)) {
+            $password = $environmentPassword
+          }
         }
       }
     }
@@ -192,7 +196,7 @@ function Resolve-ServiceNowConnection {
     throw 'Set the named profile instance with SN_<PROFILE>_INSTANCE or a supported direct profile key such as SN_VAAR_DEV, pass -Instance explicitly, or omit -Profile to use SN_INSTANCE.'
   }
   if ([string]::IsNullOrWhiteSpace($userName) -or [string]::IsNullOrWhiteSpace($password)) {
-    throw 'Set SN_USER/SN_PASS or SN_<PROFILE>_USER/SN_<PROFILE>_PASS in environment variables or .env before calling ServiceNow.'
+    throw 'Set SN_USER/SN_PASS or SN_<PROFILE>_USER/SN_<PROFILE>_PASS (also accepts _USERNAME/_PASSWORD) in environment variables or .env before calling ServiceNow.'
   }
 
   $instanceUri = $null

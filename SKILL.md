@@ -9,6 +9,7 @@ description: Develop, diagnose, validate, and deliver ServiceNow changes in Sime
 
 - Resolve the target environment, artifact, application scope, channel/persona, acceptance criteria, and delivery model from the request and available evidence. Review/diagnosis is read-only unless a fix is requested.
 - Read `references/environment-routing.md` before connecting; verify returned instance and user. PDI defaults only to demonstrations/safe reproduction. PROD requires explicit authorization for the exact write; DEV/PDI authority never transfers.
+- When Simen requests `PDI_2`, use `-Profile pdi_2` with this skill folder's `.env` explicitly for all live helpers. It is a separate instance from `pdi`; never substitute the original PDI or assume its installed capabilities are shared.
 - Read `references/safety-checklists.md` before production writes, deletes, bulk repair/import, ACL/role changes, credentials/SSO/OAuth/MID changes, plugins, real external side effects, or edits to ServiceNow-owned artifacts. Establish targets, blast radius, rollback, and stopping condition.
 - Resolve write targets live by stable keys. Reference sys_ids are historical observations, not portable constants. Preserve unrelated work and developer preferences.
 - Exclude secrets and unnecessary sensitive data from output, caches, source, and delivery artifacts. Keep instance-visible text professional and free of Codex/tooling/authorship provenance; legitimate product terms such as "AI Agent" are allowed.

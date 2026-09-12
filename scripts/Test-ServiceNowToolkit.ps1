@@ -75,6 +75,44 @@ try {
     Assert-Throws { Resolve-ServiceNowConnection @argsA -Instance 'http://a.example.invalid' } '*HTTPS origin*'
   }
 
+  Test-Case 'PDI_2 uses its own destination and long credential keys' {
+    $secondPdiEnv = Join-Path $testRoot 'second-pdi.env'
+    @(
+      'SN_PDI_INSTANCE=https://first.example.invalid'
+      'SN_PDI_USER=first_user'
+      'SN_PDI_PASS=first_password'
+      'SN_PDI_2_INSTANCE=https://second.example.invalid'
+      'SN_PDI_2_USERNAME=second_user'
+      'SN_PDI_2_PASSWORD=second_password'
+      'SN_INSTANCE=https://generic.example.invalid'
+      'SN_USER=generic_user'
+      'SN_PASS=generic_password'
+    ) | Set-Content -LiteralPath $secondPdiEnv
+    $savedSecondUser = $env:SN_PDI_2_USER
+    $savedSecondPass = $env:SN_PDI_2_PASS
+    try {
+      $env:SN_PDI_2_USER = 'process_user'
+      $env:SN_PDI_2_PASS = 'process_password'
+      $connection = Resolve-ServiceNowConnection -Profile PDI_2 -EnvPath $secondPdiEnv
+      Assert-True ($connection.Profile -eq 'pdi_2') 'Profile normalization changed.'
+      $state.handler = {
+        param($request)
+        Assert-True (([uri]$request.Uri).Host -eq 'second.example.invalid') 'Request reached the wrong PDI.'
+        $expected = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('second_user:second_password'))
+        Assert-True ($request.Headers.Authorization -ceq $expected) 'Request used credentials from another source or profile.'
+        @{ data = [pscustomobject]@{ result = @() }; headers = @{} }
+      }
+      & $table -Profile PDI_2 -EnvPath $secondPdiEnv -Table sys_user | Out-Null
+      Assert-True ($state.calls -eq 1 -and $state.writes -eq 0) 'Expected one read.'
+      Add-Content -LiteralPath $secondPdiEnv -Value @('SN_PDI_2_USER=short_user', 'SN_PDI_2_PASS=short_password')
+      $connection = Resolve-ServiceNowConnection -Profile pdi_2 -EnvPath $secondPdiEnv
+      Assert-True ($connection.UserName -ceq 'short_user' -and $connection.Password -ceq 'short_password') 'Short credential keys lost precedence.'
+    } finally {
+      $env:SN_PDI_2_USER = $savedSecondUser
+      $env:SN_PDI_2_PASS = $savedSecondPass
+    }
+  }
+
   Test-Case 'invalid writes fail before transport' {
     Assert-Throws { & $table @argsA -Table incident -Method PATCH -BodyJson '{}' } '*require one exact*'
     Assert-Throws { & $table @argsA -Table incident -Method DELETE -Query 'active=false' } '*require one exact*'
