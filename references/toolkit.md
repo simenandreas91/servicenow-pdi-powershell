@@ -76,6 +76,11 @@ Use PowerShell 7. Prefer `& $helper @params` in the existing shell or `pwsh -NoP
 
 Sources: [PowerShell HTTP behavior](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-restmethod), [ServiceNow pagination](https://www.servicenow.com/docs/r/api-reference/rest-api-explorer/c_RESTAPI.html).
 
+### Xplore fidelity and impersonation
+
+- Pass `-NoFixGsLog` when scripts contain source code as data, including embedded expected JSON, payload comparisons and code hashes. Xplore's log rewriting can alter a `gs.error(...)` string inside that data and manufacture a source mismatch. Compare the original values before diagnosing an import failure.
+- After server-side impersonation, use `gs.getUser().hasRole(...)` for the current persona's role checks. In a multi-persona probe, `gs.hasRole(...)` returned stale results while the current user object and inherited role records agreed. Verify effective access through `GlideRecordSecure` or the relevant user-criteria API, and restore the original identity in `finally`.
+
 ### Cache and recovery
 
 Discovery cache keys include resolved instance, username, and response shape. `-Refresh` replaces a cached entry; `-NoCache` bypasses caching for sensitive reads, permission changes, and post-write proof. Cached admin results cannot prove another persona's access.
