@@ -191,6 +191,14 @@ Observed component variants:
 - Use only approved icons; do not download random icons from the web.
 - For ServiceNow portal widgets, use icons for navigation, category cards, status summaries, and help actions only when they clarify meaning.
 
+### Preparing Approved Icons And Topic Banners
+
+- Retrieve approved SVGs from the iconography page before inventing substitutes. Match the asset filename exactly: substring matching can select `Contact IT.svg` when requesting `IT.svg`. Verify the downloaded file is SVG and inspect its actual shape.
+- If the guide's download control produces no file, inspect the current public page's attachment metadata. The observed Zeroheight read path was `/api/load_page` followed by `/api/attachments/download_file` with the returned `filepath`. Resolve page identifiers from current metadata; do not hard-code a historic page ID. Page data can contain nested JSON strings as well as objects. Use only the public page's anonymous session, keep tokens/CSRF values in memory, and fetch the returned signed asset URL with a fresh session so authentication headers are not sent to the asset host. Store the stable guide URL and filename as provenance, not tokens or expiring URLs. If access is restricted, use the authorized browser session instead.
+- Preserve approved SVG geometry. Some outline artwork is encoded as filled compound paths: changing it to `fill=none` can erase the drawing. Recolour its existing path paint to a permitted brand colour while retaining hollow interiors. Center non-square artwork in a square viewBox with the required clear space; a 256px export is suitable for crisp portal scaling. Verify it at the actual small card size as well as at full size.
+- Generate topic banner artwork for the rendered crop, not merely the source aspect ratio. With a shallow desktop `background-size: cover` crop, group complete heads in the middle vertical band and use ample headroom; seated colleagues at the same level worked better than mixed standing/seated figures. Reserve quiet dark space where the live title appears. Keep text and logos out of the generated bitmap and do not invent seismic-wave assets. Check the desktop crop and narrow viewport before changing widget layout to accommodate the image.
+- For native topic image fields, attachment-processing checks and update-set binary verification, follow [Topic Banners, Icons, And Image Capture](lessons-portal.md#topic-banners-icons-and-image-capture).
+
 ## Accessibility
 
 - Minimum target: WCAG 2.0 Level AA.

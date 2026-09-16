@@ -45,6 +45,7 @@ Most live-instance helpers accept `-Profile`, `-EnvPath`, and `-Instance`. Read 
 | `Get-ServiceNowUpdateSetSummary.ps1` | Contents, types, scope mixing, and likely noise | Read |
 | `Save-ServiceNowCustomerUpdate.ps1` | Force capture of one legitimate application file after diagnosing missed natural capture | Controlled write |
 | `Export-ServiceNowUpdateSetXml.ps1` | Export one update set; `-Complete` also changes its state | Local file; conditional write |
+| `Export-ServiceNowUpdateSetBatchXml.ps1` | Export a completed batch through the native hierarchy exporter and UI session; validate XML; optional remote-ID recovery | Creates temporary remote export records; local file |
 | `Remove-ServiceNowArtifactWithDeleteCapture.ps1` | Snapshot, delete, and create deployable DELETE capture for one proven customer artifact | Destructive write |
 
 The delete helper requires explicit deletion authority and target preview planning.

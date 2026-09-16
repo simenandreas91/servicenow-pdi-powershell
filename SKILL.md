@@ -51,6 +51,7 @@ For update-set work:
 - Check each slice with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`. Force capture with `Save-ServiceNowCustomerUpdate.ps1` only after diagnosing missed natural capture for a legitimate application file.
 - `Remove-ServiceNowArtifactWithDeleteCapture.ps1` requires an explicitly approved deletion of a proven customer artifact. Backout does not reverse runtime data.
 - Complete/export/promote only when requested. Read `references/update-set-promotion.md` before promotion; resolve preview conflicts and retest on the target.
+- For a requested batch completion and XML download, follow `references/update-set-batch-export.md` directly. It covers the native hierarchy exporter, UI-session authentication, and package verification; the single-set export helper does not export children.
 
 ## Reference router
 
@@ -67,7 +68,7 @@ Paths below are under `references/`. Choose by task; do not bulk-load adjacent h
 | Visual/frontend; custom components | `servicenow-ui-design.md`; `ui-builder-custom-components.md`. For backend event mappings add `ui-builder-event-automation.md`; for its pro-code example add `ui-builder-custom-component-example.md` |
 | ServiceNow-hosted React/Vite/WebGL/3D | `servicenow-react-3d-frontends.md` |
 | HRSD COE/table selection; service/producer/task; Journey/Lifecycle; Workspace | `hrsd-coe-selection.md`; `hrsd-development-guide.md`; `hrsd-lifecycle.md`; `hr-agent-workspace-configuration.md` respectively |
-| Table anchors; Portal/Employee Center; UI16; catalog; incident | `tables.md`; `lessons-portal.md`; `lessons-ui16.md`; `lessons-catalog.md`; `lessons-incident.md` respectively |
+| Table anchors; Portal/Employee Center; UI16; catalog; incident | `tables.md`; `lessons-portal.md` (including topic banner/icon selection, native image attachments and binary update capture); `lessons-ui16.md`; `lessons-catalog.md`; `lessons-incident.md` respectively |
 | Integrations/imports | `integrations.md`; `lessons-integrations.md` for local findings; `vaar-energi-compendia-runbook.md` only for Compendia |
 | CMDB/CSDM architecture | `cmdb-csdm.md` |
 | CMDB administration/IRE/health/remediation/Discovery/Service Mapping | Relevant sections of `cmdb-admin-development.md` and `cmdb-csdm.md`; `cmdb-query-library.md` for executable probes. `cmdb-data-foundations-lab.md` only for that PDI lab |
@@ -76,7 +77,7 @@ Paths below are under `references/`. Choose by task; do not bulk-load adjacent h
 | Now Assist/AI Search/agents/governance | `now-assist.md`; `australia-ai-platform.md` for Australia-specific notes; `external-mcp-evaluation.md` only for MCP evaluation |
 | Instance indexes; dependency graphs | `service-now-indexing.md`; `servicenow-graph-mapping.md` |
 | FFI applications | Matching `lessons-personellsikkerhet.md`, `lessons-besoksregistrering.md`, or `lessons-eba-fdv.md` |
-| Vår implementation/design | `vaar-energi-lessons.md`; `vaar-energi-design.md` |
+| Vår implementation/design | `vaar-energi-lessons.md`; `vaar-energi-design.md` (including approved SVG retrieval/preparation and banner crop guidance) |
 | Vår assigned-story monitoring/approval or substantive work on a resolved story | `vaar-energi-operations.md`; approval applies only to the exact plan in Vår DEV |
 
 ## Local conventions

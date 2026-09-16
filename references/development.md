@@ -67,6 +67,8 @@ update_set=<sys_update_set.sys_id>
 
 ### Update Set Batches
 
+For the complete-and-download workflow, use [update-set-batch-export.md](update-set-batch-export.md). It includes the native hierarchy export and authentication path; the single-set XML helper does not export children.
+
 - Update set batching is represented directly on `sys_update_set` in this PDI:
   - parent batch record: `parent` empty, `base_update_set` points to itself, always create it in Global scope (`application=global`)
   - child update sets: both `parent` and `base_update_set` point to the batch update set sys_id
