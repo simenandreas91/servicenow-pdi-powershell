@@ -2,6 +2,8 @@
 
 Use this reference for configuration of **Agent Workspace for HR Case Management** through supported properties, records, form metadata, and administration pages. It deliberately excludes UI Builder page composition, variants, component placement, and client-state wiring.
 
+For HR playbook activity buttons, their task/template conditions, and portal navigation, load [Playbook buttons](playbook-buttons.md), which covers the separate visibility and click-event configuration.
+
 ## Product Boundary First
 
 Do not treat the two HR workspaces as interchangeable:

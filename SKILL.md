@@ -46,6 +46,8 @@ Cache discovery; use `-Refresh` for stale discovery and `-NoCache` for sensitive
 
 For update-set work:
 
+- **Vår Energi: every update set must reference a story.** Before developing in DEV, resolve a suitable existing story in PROD. If none exists for the work, create a new story in PROD describing the requested change and acceptance criteria, then reference that story from the DEV update set. Apply this to every related set, including sibling sets across scopes and resumed work.
+- Keep the PROD story number and direct record link in the DEV update set's description; use an established story-reference field as well when available and verified. Do not assume a PROD story sys_id resolves in DEV. Verify the reference before capturing development changes. Story creation remains subject to the production-write authority rules above; a missing story must be resolved before development proceeds.
 - Resolve scope, then use `Set-ServiceNowUpdateSetContext.ps1` with a new recovery snapshot. Resume by `-UpdateSetSysId`; `-Name` creates a set.
 - Use one cohesive in-progress set per scope. No Default, casual scope mixing, `clean/final` duplicates, reopening completed sets, or moving `sys_update_xml` to disguise a context mistake. Correct context and recapture.
 - Check each slice with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`. Force capture with `Save-ServiceNowCustomerUpdate.ps1` only after diagnosing missed natural capture for a legitimate application file.
@@ -65,6 +67,7 @@ Paths below are under `references/`. Choose by task; do not bulk-load adjacent h
 | Synced files or `.vscode/sn-agent-port.json`; `now.config.json` or SDK work | `sn-scriptsync.md`; `servicenow-sdk.md` respectively |
 | ACL/visibility/cross-scope/Restricted Caller Access; high-impact gates | `debugging.md`; `safety-checklists.md` |
 | Workspace pages/routes/forms/lists; actions/modals; failures/deployment | `workspace-configuration.md`; `workspace-actions.md`; `workspace-debugging.md` respectively. Add `lessons-sow.md` or `lessons-workspace-modals.md` for those patterns |
+| Playbook activity/card buttons; HR task portal navigation; visible button with no click result | `playbook-buttons.md`; add `ui-builder-event-automation.md` when tracing page/variant navigation relays |
 | Visual/frontend; custom components | `servicenow-ui-design.md`; `ui-builder-custom-components.md`. For backend event mappings add `ui-builder-event-automation.md`; for its pro-code example add `ui-builder-custom-component-example.md` |
 | ServiceNow-hosted React/Vite/WebGL/3D | `servicenow-react-3d-frontends.md` |
 | HRSD COE/table selection; service/producer/task; Journey/Lifecycle; Workspace | `hrsd-coe-selection.md`; `hrsd-development-guide.md`; `hrsd-lifecycle.md`; `hr-agent-workspace-configuration.md` respectively |

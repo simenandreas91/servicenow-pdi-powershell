@@ -4,6 +4,8 @@ Load this reference for missing or new Workspace buttons, form action bars, list
 
 This reference was verified against ServiceNow's Australia documentation on 2026-08-27. Declarative Action and UI Interaction capabilities are Store/version-sensitive; inspect the installed UI Builder and Configurable Workspace versions and the live record forms before applying internal field names.
 
+For buttons inside playbook activity cards, use [Playbook buttons](playbook-buttons.md). Playbook experience membership controls availability; it does not supply the UX event mapping needed to make a UXF action navigate or open a modal.
+
 ## Choose the Action Model Before Debugging It
 
 | Mechanism | Best use | Configuration center | Runtime/placement |
