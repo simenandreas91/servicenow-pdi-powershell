@@ -78,6 +78,8 @@ Sources: [PowerShell HTTP behavior](https://learn.microsoft.com/en-us/powershell
 
 ### Xplore fidelity and impersonation
 
+- An Xplore response with `status=finished` can still contain a thrown script error. Inspect the result type/value and error output, require the expected structured success result, and verify persisted state after writes. A wrapper that checks only `finished` can report a failed script as successful.
+
 - Pass `-NoFixGsLog` when scripts contain source code as data, including embedded expected JSON, payload comparisons and code hashes. Xplore's log rewriting can alter a `gs.error(...)` string inside that data and manufacture a source mismatch. Compare the original values before diagnosing an import failure.
 - After server-side impersonation, use `gs.getUser().hasRole(...)` for the current persona's role checks. In a multi-persona probe, `gs.hasRole(...)` returned stale results while the current user object and inherited role records agreed. Verify effective access through `GlideRecordSecure` or the relevant user-criteria API, and restore the original identity in `finally`.
 

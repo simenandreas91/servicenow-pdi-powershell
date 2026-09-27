@@ -89,6 +89,10 @@ In the exact component element inside `sys_ux_macroponent.composition`:
 
 Do not append a duplicate target when the same relay API name and payload mapping already exist.
 
+A client handler running successfully, or calling `api.emit()` with a relay name, does not prove the configured Workspace navigation chain received it. In a verified Australia repair, a direct component `EVENT` target with a client-transform payload, followed by the active-screen pass-through, opened the native record where an ad hoc client-script emit had not. Prefer the configured event mapping and trace its complete chain; this observation is not a general claim that `api.emit()` is unsupported.
+
+When the component emits only an object identifier, resolve the destination from the server-authorized selection context rather than trusting a client-supplied table/URL. Validate the target contract and preserve native record ACL checks. Verify both the component's own open-record control and any surrounding page button, then test native tab return and browser Back separately. Retention within the current workspace session does not establish persistence across a full reload or a bookmark.
+
 When the page already has a valid generic `NAV_ITEM_SELECTED` relay and active-screen pass-through, record and list source events can reuse that same page-owned relay. Clone the schema of the working component-to-relay mapping, change only the source contract and route payload, and leave the page relay plus screen mapping untouched. For a `simplelist` target, bind `fields.table`, `params.query`, and `params.listTitle`; use an exact encoded query such as `sys_idIN...` when the component has already computed the authoritative scoped record set. Do not dispatch for an empty set, because an empty or missing query can expose an unfiltered table.
 
 ### 4. Relay to Workspace shell
@@ -146,6 +150,16 @@ Do not infer that null source IDs are broken when the source API name matches kn
 - A malformed or missing record identity does not navigate.
 - Intended non-admin succeeds; an unauthorized user cannot read the destination record.
 - Expected application/update-set records are captured and unrelated metadata is absent.
+
+## Explicit mutating data resources
+
+Observed on Australia with a transform broker marked `mutates_server_data`: `api.data.<resource>.execute(input)` completed through `sn_uxf.DATA_OP_SUCCEEDED`, with the transform return value at `event.payload.data.output`. Reading `api.data.<resource>.output` as if this were a read resource left the UI without the saved record/result. Verify the exact payload against an installed working mapping or the event inspector before reusing this contract on another build.
+
+- Execute only on the intended user action; do not make registration a reactive read-resource evaluation.
+- Handle success and failure resource events. On success, check the returned business status before displaying success or navigating: a completed operation can still return a validation/permission error.
+- Clear a previous result/record link before a new attempt, release the busy state on both paths, and refresh the affected list/controller and overview after a successful write.
+- For generated page metadata, resolve deployed client-script IDs in data-resource event mappings as well as component composition mappings. Include resource handlers when pruning unused client scripts. A correct handler body is insufficient if the resource still references a local placeholder.
+- Test creation, repeated submission, business rejection and a subsequent successful attempt in the actual persona. Confirm the saved record, visible feedback and refreshed list; do not infer completion from the execute call alone.
 
 ## Rollback
 

@@ -68,11 +68,12 @@ Paths below are under `references/`. Choose by task; do not bulk-load adjacent h
 | ACL/visibility/cross-scope/Restricted Caller Access; high-impact gates | `debugging.md`; `safety-checklists.md` |
 | Workspace pages/routes/forms/lists; actions/modals; failures/deployment | `workspace-configuration.md`; `workspace-actions.md`; `workspace-debugging.md` respectively. Add `lessons-sow.md` or `lessons-workspace-modals.md` for those patterns |
 | Playbook activity/card buttons; HR task portal navigation; visible button with no click result | `playbook-buttons.md`; add `ui-builder-event-automation.md` when tracing page/variant navigation relays |
-| Visual/frontend; custom components | `servicenow-ui-design.md`; `ui-builder-custom-components.md`. For backend event mappings add `ui-builder-event-automation.md`; for its pro-code example add `ui-builder-custom-component-example.md` |
+| Visual/frontend; custom components | `servicenow-ui-design.md` (including native composition/layout and view-selection pitfalls); `ui-builder-custom-components.md` (including installed SVG renderer and refresh contracts). For backend event mappings add `ui-builder-event-automation.md`; for its pro-code example add `ui-builder-custom-component-example.md` |
 | ServiceNow-hosted React/Vite/WebGL/3D | `servicenow-react-3d-frontends.md` |
 | HRSD COE/table selection; service/producer/task; Journey/Lifecycle; Workspace | `hrsd-coe-selection.md`; `hrsd-development-guide.md`; `hrsd-lifecycle.md`; `hr-agent-workspace-configuration.md` respectively |
 | Table anchors; Portal/Employee Center; UI16; catalog; incident | `tables.md`; `lessons-portal.md` (including topic banner/icon selection, native image attachments and binary update capture); `lessons-ui16.md`; `lessons-catalog.md`; `lessons-incident.md` respectively |
 | Integrations/imports | `integrations.md`; `lessons-integrations.md` for local findings; `vaar-energi-compendia-runbook.md` only for Compendia |
+| Persistent investigations or custom task workflows; native task forms, assignment, audit and repeat observations | `workspace-task-workflows.md`; add `ui-builder-event-automation.md` for explicit mutation resources |
 | CMDB/CSDM architecture | `cmdb-csdm.md` |
 | CMDB administration/IRE/health/remediation/Discovery/Service Mapping | Relevant sections of `cmdb-admin-development.md` and `cmdb-csdm.md`; `cmdb-query-library.md` for executable probes. `cmdb-data-foundations-lab.md` only for that PDI lab |
 | SLM design/engine/repair/delivery | `sla.md`; `sla-query-library.md` for executable probes |

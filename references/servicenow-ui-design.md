@@ -61,6 +61,23 @@ Do not make a ServiceNow surface look novel at the cost of clarity, upgradeabili
 - Preserve localization. Keep user-facing strings translatable and test longer translated text rather than designing only for short English labels.
 - Separate design tokens from one-off component rules. For Vår Energi work, also load `references/vaar-energi-design.md`; for portal implementation details, load `references/lessons-portal.md`.
 
+## Native UI Builder composition lessons
+
+These observations were verified on Australia with UI Builder 29.6.11. Inspect the installed definitions before applying them to another release; they are not a replacement for the component contract.
+
+- **Text CSS is a stylesheet.** The native Text component's `css` property accepted `* { margin: 0; line-height: 1.45; }`, not a bare inline declaration such as `margin:0;`. The selector is scoped by that component, not a document-wide override. Use Heading's `hasNoMargin` when supported rather than compensating for its default spacing elsewhere.
+- **Host sizing and child layout are different layers.** A container's `overrides.layout.default.styles` controls its children; its own `styles.default` controls participation in the parent layout. Apply flex basis/min-width to the host when needed. For a scrollable, height-bounded detail panel, prevent long child sections from shrinking into each other (`flex-shrink: 0` on those children) and put overflow on the intended scroll container.
+- **Measure controls after layout settles.** External labels can align while their input fields do not. In the verified composition, native Input required explicit host `display:block; margin:0` to align with the dropdowns. Check bounding rectangles of the actual controls at target widths. Do not preserve experimental negative-margin offsets when an explicit layout rule resolves the cause.
+- **Prefer local theme variables for a native control.** Inspect the rendered component's supported CSS variables and scope overrides to the owned placement. Keep hover/focus/selected contrast coherent. Do not modify a shared theme merely to restyle one page's navigation.
+
+### View navigation must follow page state
+
+Test both a direct navigation click and a programmatic change from a shortcut, count drilldown, or return-from-record flow. The active visual and accessible state must agree with the displayed content.
+
+The installed native Tabs component was a viewport, not an ordinary button collection. A working builder-generated example used `MACROPONENT_VIEWPORT`, top-level `items`, and matching slotted containers in `overrides.composition`; supplying only `propertyValues.items` rendered no tabs. Reuse a same-instance builder-generated structure rather than inventing viewport metadata.
+
+In one manually composed page, tabs rendered and emitted selection, but the active underline stayed on the initial view despite content changes and attempted `selectedTab` bindings. The root cause was not established: do not generalize this into a platform defect or prescribe those attempted bindings as a fix. If this happens, inspect the full viewport contract and bound state before repeated deployments. A verified simpler alternative was a row of native Buttons controlled by shared page state, with `aria-pressed` string values and local theme variables. Keep its semantics as navigation buttons; do not label it an ARIA tablist without implementing the associated tab/panel keyboard contract.
+
 ## Rendered Validation
 
 Before editing, capture a baseline screenshot and identify the exact component boundaries. After editing, verify:

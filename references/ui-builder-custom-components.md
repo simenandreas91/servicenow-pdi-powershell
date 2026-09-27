@@ -525,6 +525,19 @@ const view = (state, {dispatch}) => (
 
 Do not substitute React-style `onClick`, raw `onclick`, a delegated `data-*` router, or an additional Now component package merely to make an ordinary button clickable. A real HTML button already supplies keyboard Enter/Space behavior; retain visible focus and an accurate accessible name.
 
+For SVG, test the JSX-to-vnode boundary before building a full graph. With the installed ui-core/Snabbdom 24.1.1 packages in an Australia workspace, bare JSX geometry/class properties did not produce the required SVG attributes; the renderer's `attr-*` convention did:
+
+```jsx
+<svg attr-viewBox="0 0 800 500" attr-role="img" attr-aria-label="Dependencies">
+    <rect attr-x={20} attr-y={20} attr-width={160} attr-height={56}
+        attr-class="dependency-node" />
+</svg>
+```
+
+Verify this against the project's installed renderer, not a React example. A useful regression check compiles JSX with the installed Babel/renderer configuration and asserts the resulting vnode attributes; also inspect actual SVG geometry in the deployed workspace. Pure graph-model tests cannot detect missing DOM attributes.
+
+ARIA values are strings, even when they represent booleans. In the observed native Button `configAria` binding, boolean `true` produced an empty `aria-pressed` attribute; `String(isSelected)` produced `"true"`/`"false"` and the correct accessible pressed state. Check the rendered attribute and accessibility state when binding selection.
+
 Do not copy an `onConnect` signature from memory or an old tutorial. In one installed ui-core version, treating the lifecycle arguments as `(host, helpers)` instead of the renderer's actual `(rootNode, dispatch, next)` contract created a request-animation-frame loop that waited forever for the wrong nested shadow root. Top-level `onConnect` was also deprecated in that toolchain. Inspect the installed package source/types and a release-matched framework example before implementing lifecycle code. Prefer the supported framework lifecycle actions such as `SEISMIC_COMPONENT_RENDERED` and `SEISMIC_COMPONENT_DISCONNECTED`, or verified `hook-*`/`ref` contracts, for imperative roots. Never start observers, listeners, render loops, or Three.js resources from `view`.
 
 For an imperative Three.js component:
@@ -562,6 +575,8 @@ Before browser authoring, confirm the application scope and intended in-progress
 UI Builder property editors display static defaults such as `[]` until a real data resource is bound; deploying the component does not retrieve table data automatically. Standard bounded record-query resources are preferred when they can supply the contract. Bind only the necessary fields, stable natural keys, and resolved live `sys_id` values.
 
 At the component boundary, accept the shapes actually produced by the target data resource: depending on the resource and binding, a collection may arrive as an array, a JSON string, or a wrapper such as `result`/`records`. Normalize once, then report duplicates, missing parents, inconsistent placements, and unknown choices as partial/invalid data rather than throwing in mesh construction. A custom endpoint is not justified merely because six related collections require six bounded standard resources.
+
+Refreshing a custom broker does not necessarily refresh a native record list on the same page. Where the installed list exposes `refreshRequested`, bind its documented payload to the shared refresh state as well as refreshing the broker. One verified native list accepted `{timestamp: api.state.refresh}`. Confirm that both detail data and list rows refresh after a native action; a changed page timestamp alone proves neither. See `servicenow-ui-design.md` for native layout and controlled view-selection lessons.
 
 ### Interpret browser automation carefully
 
