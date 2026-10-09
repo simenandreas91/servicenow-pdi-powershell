@@ -1,0 +1,34 @@
+{
+  "workNote": "6fcea08a9fb703d044f07b7c1724ab54",
+  "storyId": "fd7ac57f9fa70f5044f07b7c1724ab7b",
+  "verified": true,
+  "attachments": [
+    {
+      "sys_id": "c2cea04661b38f90beda3c9620f352e4",
+      "verified": true,
+      "bytes": 136517,
+      "file_name": "STRY0011747_TEST_20261009_01_Incident_modal.jpg"
+    },
+    {
+      "sys_id": "9acee84a9fb703d044f07b7c1724ab03",
+      "verified": true,
+      "bytes": 132276,
+      "file_name": "STRY0011747_TEST_20261009_02_Incident_task_attachments.jpg"
+    },
+    {
+      "sys_id": "3ecee04661b38f90beda3c9620f35201",
+      "verified": true,
+      "bytes": 138068,
+      "file_name": "STRY0011747_TEST_20261009_03_RITM_modal.jpg"
+    },
+    {
+      "sys_id": "c7cea08a9fb703d044f07b7c1724ab2d",
+      "verified": true,
+      "bytes": 136919,
+      "file_name": "STRY0011747_TEST_20261009_04_Catalog_task_attachments.jpg"
+    }
+  ],
+  "story": "STRY0011747",
+  "stateUnchanged": true,
+  "createdOn": "2026-10-09 07:40:05"
+}

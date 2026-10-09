@@ -1,0 +1,25 @@
+{
+  "result": {
+    "size_bytes": "132276",
+    "file_name": "STRY0011747_TEST_20261009_02_Incident_task_attachments.jpg",
+    "sys_mod_count": "2",
+    "average_image_color": "",
+    "image_width": "1718",
+    "sys_updated_on": "2026-10-09 07:40:02",
+    "sys_tags": "",
+    "table_name": "rm_story",
+    "sys_id": "9acee84a9fb703d044f07b7c1724ab03",
+    "image_height": "1214",
+    "sys_updated_by": "simen.knudsen@varenergi.no",
+    "download_link": "https://varenergi.service-now.com/api/now/attachment/9acee84a9fb703d044f07b7c1724ab03/file",
+    "content_type": "image/jpeg",
+    "sys_created_on": "2026-10-09 07:40:01",
+    "size_compressed": "98169",
+    "compressed": "true",
+    "state": "available",
+    "table_sys_id": "fd7ac57f9fa70f5044f07b7c1724ab7b",
+    "chunk_size_bytes": "700000",
+    "hash": "ac49d9cc74397c8e8f67c86152039b4a6ef40e52dd2413ee10bb23c0c2028455",
+    "sys_created_by": "simen.knudsen@varenergi.no"
+  }
+}

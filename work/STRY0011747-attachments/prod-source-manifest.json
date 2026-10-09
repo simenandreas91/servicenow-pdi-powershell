@@ -1,0 +1,47 @@
+[
+  {
+    "application": "global",
+    "name": "STRY0011747 - Create supplier task",
+    "update_set": "8197a695443b8bd0965df1f9b81ff347"
+  },
+  {
+    "application": "49aff4bb733320103e366238edf6a70f",
+    "name": "STRY0011747 - Incident supplier task action",
+    "update_set": "bfa7aed9a173cbd0731ec2034ae9349f"
+  },
+  {
+    "application": "ff5e8e53c3a53010965e070e9140ddb2",
+    "name": "STRY0011747 - RITM supplier task action",
+    "update_set": "6db7221da173cbd0731ec2034ae93455"
+  },
+  {
+    "application": "global",
+    "name": "STRY0011747 - Supplier task modal fields and work notes",
+    "update_set": "82d7a61da173cbd0731ec2034ae934d3"
+  },
+  {
+    "application": "49aff4bb733320103e366238edf6a70f",
+    "name": "STRY0011747 - Incident supplier task modal fields",
+    "update_set": "ebd72a1da173cbd0731ec2034ae9341c"
+  },
+  {
+    "application": "ff5e8e53c3a53010965e070e9140ddb2",
+    "name": "STRY0011747 - RITM supplier task modal fields",
+    "update_set": "11e76a1da173cbd0731ec2034ae934bc"
+  },
+  {
+    "application": "global",
+    "name": "STRY0011747 - Always copy supplier task attachments",
+    "update_set": "7fe6a846a1f30314731ec2034ae9345d"
+  },
+  {
+    "application": "49aff4bb733320103e366238edf6a70f",
+    "name": "STRY0011747 - Incident supplier attachments read only",
+    "update_set": "97f62c46a1f30314731ec2034ae93470"
+  },
+  {
+    "application": "ff5e8e53c3a53010965e070e9140ddb2",
+    "name": "STRY0011747 - RITM supplier attachments read only",
+    "update_set": "6607a8ca44ffcfd0965df1f9b81ff386"
+  }
+]

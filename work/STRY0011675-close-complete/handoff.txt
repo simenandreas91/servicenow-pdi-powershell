@@ -1,0 +1,31 @@
+STRY0011675 — Close Complete prominence
+Delivered to TEST on 9 October 2026.
+Story: https://varenergi.service-now.com/rm_story.do?sys_id=c792682a9f2b035044f07b7c1724abac
+
+Cause and change
+The earlier change applied Primary styling to a shared Close split-button group. When an open HR task blocked Close Complete, the group displayed Close Incomplete with that Primary styling. This was reproduced in DEV.
+The shared group membership in the HR case Record Page layout is now inactive. Two independent layout items and memberships reuse the existing closure form-action wrappers: Close Complete is Primary and Close Incomplete is Secondary. Five configuration records were captured in Agent Workspace for HR Case Management (sn_hr_agent_ws). Existing closure conditions, scripts and event handlers were preserved.
+
+Delivery
+Update set: STRY0011675 - Dedicated Close Complete primary action
+DEV source: 006374c2fc7b4fd0b21498f72c3642a3 (Complete)
+TEST retrieved: 82d73c86a1b70314731ec2034ae93446 (Committed)
+TEST local: 8fd734c644b30314965df1f9b81ff314 (Complete)
+TEST link: https://varenergitest.service-now.com/sys_remote_update_set.do?sys_id=82d73c86a1b70314731ec2034ae93446
+All five transported payloads matched their source; zero preview problems and seven Info commit-log entries. The five installed records match DEV. No PROD configuration changes or story journal/state updates were made for this story.
+
+Validation
+DEV and TEST: eligible cases show a dedicated Primary Close Complete button and Secondary Close Incomplete button, with no closure split button. An open HR task hides Close Complete while Close Incomplete stays Secondary. In TEST, the Ready state shows Start Work and neither closure action; Start Work restores the eligible closure actions.
+The existing Close Incomplete dialog opened and cancelled without closing the TEST case. A non-admin HR case-handler account used Close Complete to close disposable cases in DEV and TEST to Closed Complete. The existing resolution-notes flow was exercised. Closed cases show neither closure action.
+TEST screenshots: TEST_Close_Complete_primary.jpg and TEST_Open_Task_Incomplete_secondary.jpg.
+Temporary cases, blocking HR tasks, test SLA and queued test emails were removed. Browser identities and developer preferences were restored. The daily work-log entry was recorded.
+
+Retest
+In TEST HR Agent Workspace, use an eligible Work in Progress case assigned or delegated to the handler, with no open HR tasks or pending approvals and no suspended SLA. Confirm that Close Complete has the Primary appearance and Close Incomplete the Secondary appearance. On a case with an open HR task, Close Complete should remain unavailable and Close Incomplete should remain Secondary.
+
+Rollback
+Back out the TEST update set after approval, or deactivate its four new layout records and restore the previous shared-group membership's active value from before-membership.json. Configuration backout does not undo case closures. All cases closed during these tests were disposable and have been removed.
+
+Work note (ready to paste)
+
+Fixed the latest Close Complete visibility feedback in HR Agent Workspace. Close Complete is now a dedicated Primary button and Close Incomplete is a separate Secondary button. The shared split-button presentation has been removed from the HR case layout, preserving the existing closure conditions and behavior. Update set STRY0011675 - Dedicated Close Complete primary action (Agent Workspace for HR Case Management) is committed in TEST with a clean preview and commit log. DEV/TEST validation passed, including non-admin case closure, the Close Incomplete dialog/cancel path, an open HR task blocking completion while Close Incomplete stays Secondary, and the existing Ready/Start Work flow. Test records and queued test notifications were cleaned up. Ready for TEST retesting.

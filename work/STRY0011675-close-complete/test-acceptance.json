@@ -1,0 +1,26 @@
+{
+  "closedCompleteButtons": 0,
+  "splitButtonAbsent": true,
+  "closedIncompleteButtons": 0,
+  "readyCompleteButtons": 0,
+  "incompleteStyle": "secondary",
+  "nonAdmin": true,
+  "passed": true,
+  "incompleteCancelPreservedCase": true,
+  "readyIncompleteButtons": 0,
+  "closedCase": {
+    "sys_id": "da18fcc644b30314965df1f9b81ff301",
+    "number": "HRC0001398",
+    "sys_updated_by": "TEST_HRA_01",
+    "active": "false",
+    "state": "3",
+    "u_inquiry_category": "other",
+    "close_notes": "There wasn't enough activity for Now Assist to generate resolution notes."
+  },
+  "identityRestored": true,
+  "primaryStyle": "primary",
+  "openTaskIncompleteStyle": "secondary",
+  "startWorkReturnsEligibleButtons": true,
+  "incompleteDialog": "Close Incomplete",
+  "openTaskCompleteButtons": 0
+}

@@ -207,6 +207,15 @@ Practical encoded template fields by task type:
 - `action_url`: use an OOTB/vendor integration template with `integrating_system=<system>`; arbitrary new `action_url` templates may be blocked by Business Rule validation.
 - `create_JA_plan`: set `hr_task_type=create_JA_plan` and Journey Accelerator plan fields when required; `auto_create_plan=false` creates a manager-facing create/review action.
 
+### Group-only assignment and portal success messages
+
+Observed on Australia Patch 6; inspect the installed implementation before changing it.
+
+- A fulfiller template with an assignment group and no `assigned_to` can still receive an individual through the HR Core **Auto Assign** Business Rule. Trace that rule and the assignment utility on a newly generated task. If group-only assignment is required, use a narrowly conditioned exclusion for the intended parent service and group, retaining normal assignment elsewhere and allowing later manual assignment. A blank template assignee alone is not proof.
+- An intake green banner can come from case auto-assignment rather than the producer's own UI. The observed case path honors `skip_auto_assign`; setting it before `createCaseFromProducer` and in the service's case template suppressed that message. This also skips automatic assignment, so use it only when the intended case assignment remains correct and verify the generated case.
+- Employee Center task completion/skip success messages can originate in `sn_hr_sp.hr_TaskTicket`. Trace the specific `addInfoMessage` branches before editing widgets or hiding all alerts with CSS. If customization is needed, guard only the requested service's success messages, preserve errors and security checks, and regression-check an unrelated service. Editing this ServiceNow-owned include can invalidate its existing execute caller privilege; see `debugging.md` → **Restricted Caller Access**.
+- Portal behavior requires portal tests. An API producer submission or server-side task update does not prove that banners, task details and navigation behave correctly for the end-user persona.
+
 HR task template due dates:
 - Official HRSD docs describe HR task template **Due date** as either `Based on task assignment date` or `Based on parent case table`; reminders can also be populated from the template with `set_reminder`, `email_template`, `when_to_send`, and `interval`.
 - The PDI stores the due-date mode and offset directly on `sn_hr_core_template`: `use_assignment_date`, `due_date_source`, `date_offset_type`, `date_offset_quantity`, and `date_offset_units`. Valid offset choices observed: `date_offset_type=before|on|after`; `date_offset_units=hours|days|weeks|months`.

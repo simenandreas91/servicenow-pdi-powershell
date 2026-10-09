@@ -1,0 +1,26 @@
+[
+  {
+    "update_set": "dae8d902fcff4fd0b21498f72c36426e",
+    "field": "script",
+    "table": "sys_script_include",
+    "name": "STRY0011747 - Supplier tasks without parent attachments",
+    "id": "7f8e943075b7c3d0d8cbd4f6ea767020",
+    "scope": "global"
+  },
+  {
+    "update_set": "13e81d02fcff4fd0b21498f72c364250",
+    "field": "client_script",
+    "table": "sys_declarative_action_assignment",
+    "name": "STRY0011747 - Incident supplier modal without attachments",
+    "id": "aebe183075b7c3d0d8cbd4f6ea76708c",
+    "scope": "49aff4bb733320103e366238edf6a70f"
+  },
+  {
+    "update_set": "5cf855ce75fb4fd0d8cbd4f6ea767028",
+    "field": "client_script",
+    "table": "sys_declarative_action_assignment",
+    "name": "STRY0011747 - RITM supplier modal without attachments",
+    "id": "b1ce14b4fcb7c3d0b21498f72c3642df",
+    "scope": "ff5e8e53c3a53010965e070e9140ddb2"
+  }
+]

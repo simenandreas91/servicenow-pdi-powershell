@@ -76,6 +76,8 @@ Test both a direct navigation click and a programmatic change from a shortcut, c
 
 The installed native Tabs component was a viewport, not an ordinary button collection. A working builder-generated example used `MACROPONENT_VIEWPORT`, top-level `items`, and matching slotted containers in `overrides.composition`; supplying only `propertyValues.items` rendered no tabs. Reuse a same-instance builder-generated structure rather than inventing viewport metadata.
 
+For native record tabs with related-list templates and contextual panels, follow the [authored-order, selection and sidebar-state contracts](workspace-configuration.md#native-record-tab-and-contextual-sidebar-contracts). These need structural preservation and browser interaction checks in addition to visual styling.
+
 In one manually composed page, tabs rendered and emitted selection, but the active underline stayed on the initial view despite content changes and attempted `selectedTab` bindings. The root cause was not established: do not generalize this into a platform defect or prescribe those attempted bindings as a fix. If this happens, inspect the full viewport contract and bound state before repeated deployments. A verified simpler alternative was a row of native Buttons controlled by shared page state, with `aria-pressed` string values and local theme variables. Keep its semantics as navigation buttons; do not label it an ARIA tablist without implementing the associated tab/panel keyboard contract.
 
 ## Rendered Validation
@@ -91,7 +93,7 @@ Before editing, capture a baseline screenshot and identify the exact component b
 - the intended non-admin persona can complete the task and an unauthorized persona cannot expose protected data;
 - record readback, update-set or source capture, cache refresh where needed, and behavior-level evidence are complete.
 
-Use the in-app browser for visual proof. API record verification alone cannot establish layout, responsive behavior, accessibility, or interaction quality.
+Use an available browser in the actual workspace for visual proof. API record verification alone cannot establish layout, responsive behavior, accessibility, or interaction quality.
 
 ## Official Sources
 

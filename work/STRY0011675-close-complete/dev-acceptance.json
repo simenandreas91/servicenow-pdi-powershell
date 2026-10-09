@@ -1,0 +1,26 @@
+{
+  "incompleteStyle": "secondary",
+  "openTaskBlocksComplete": true,
+  "openTaskIncompleteStyle": "secondary",
+  "passed": true,
+  "preferencesRestored": true,
+  "nonAdminClosure": {
+    "sys_id": "467538ce75b74fd0d8cbd4f6ea76707f",
+    "number": "HRC0001300",
+    "sys_updated_by": "TEST_HRA_01",
+    "active": "false",
+    "state": "3",
+    "close_notes": "Validated STRY0011675 as a non-admin HR case handler on a disposable DEV case."
+  },
+  "primaryStyle": "primary",
+  "adminClosure": {
+    "sys_id": "d162bc0a75b74fd0d8cbd4f6ea767022",
+    "number": "HRC0001299",
+    "active": "false",
+    "state": "3",
+    "u_inquiry_category": "other",
+    "close_notes": "Validated STRY0011675 closure action presentation on a disposable DEV case."
+  },
+  "splitButtonAbsent": true,
+  "capturedRecords": 5
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "sys_id": "2fc8688661738f90beda3c9620f3525a",
+    "sys_updated_by": "system",
+    "log": "Starting update load from database for update set STRY0011747 - Incident supplier task modal fields in scope Incident Management for Service Operations Workspace, first pass = false",
+    "sys_created_on": "2026-10-09 07:13:53",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:13:53",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "e3c8688661738f90beda3c9620f35225",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "a7c8688661738f90beda3c9620f3525f",
+    "sys_updated_by": "system",
+    "log": "Loading update 1 of 1 from database: sys_declarative_action_assignment_aebe183075b7c3d0d8cbd4f6ea76708c with update date 09.10.2026 09:13:53",
+    "sys_created_on": "2026-10-09 07:13:53",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:13:53",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "e3c8688661738f90beda3c9620f35225",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "a7c8688661738f90beda3c9620f35266",
+    "sys_updated_by": "system",
+    "log": "Finished update load from database",
+    "sys_created_on": "2026-10-09 07:13:53",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:13:53",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "e3c8688661738f90beda3c9620f35225",
+    "sys_created_by": "system",
+    "status": "Info"
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "sys_id": "08f6a846a1f30314731ec2034ae93481",
+    "sys_updated_by": "system",
+    "log": "Loading update 1 of 1 from database: sys_script_include_7f8e943075b7c3d0d8cbd4f6ea767020 with update date 09.10.2026 09:05:43",
+    "sys_created_on": "2026-10-09 07:05:43",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:05:43",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "7fe6a846a1f30314731ec2034ae9345d",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "40f6a846a1f30314731ec2034ae93486",
+    "sys_updated_by": "system",
+    "log": "Finished update load from database",
+    "sys_created_on": "2026-10-09 07:05:44",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:05:44",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "7fe6a846a1f30314731ec2034ae9345d",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "f7e6a846a1f30314731ec2034ae93463",
+    "sys_updated_by": "system",
+    "log": "Starting update load from database for update set STRY0011747 - Always copy supplier task attachments in scope Global, first pass = false",
+    "sys_created_on": "2026-10-09 07:05:43",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:05:43",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "7fe6a846a1f30314731ec2034ae9345d",
+    "sys_created_by": "system",
+    "status": "Info"
+  }
+]

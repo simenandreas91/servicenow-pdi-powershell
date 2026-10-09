@@ -1,0 +1,23 @@
+{
+  "ui_action": "",
+  "action_type": "declarative_action",
+  "declarative_action": "6f6d08b30089b110f8771aca91531114",
+  "sys_mod_count": "1",
+  "active": "true",
+  "description": "",
+  "sys_updated_on": "2023-09-09 18:02:52",
+  "sys_tags": "",
+  "sys_class_name": "sys_ux_form_action",
+  "sys_id": "0e829b1b5371301009d3ddeeff7b123b",
+  "sys_package": "ff837553a1112010db4143775de96b71",
+  "sys_update_name": "sys_ux_form_action_0e829b1b5371301009d3ddeeff7b123b",
+  "sys_updated_by": "admin",
+  "sys_created_on": "2021-08-11 17:02:35",
+  "name": "Close Complete",
+  "specificity": "20",
+  "sys_name": "Close Complete",
+  "sys_scope": "ff837553a1112010db4143775de96b71",
+  "sys_created_by": "admin",
+  "table": "sn_hr_core_case",
+  "sys_policy": ""
+}

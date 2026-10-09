@@ -1,0 +1,16 @@
+{
+  "result": {
+    "status": "0",
+    "status_label": "Pending",
+    "status_message": "",
+    "status_detail": "",
+    "error": "",
+    "links": {
+      "progress": {
+        "id": "1fd82c0e9f7703d044f07b7c1724aba5",
+        "url": "https://varenergi.service-now.com/api/sn_cicd/progress/1fd82c0e9f7703d044f07b7c1724aba5"
+      }
+    },
+    "percent_complete": 0
+  }
+}

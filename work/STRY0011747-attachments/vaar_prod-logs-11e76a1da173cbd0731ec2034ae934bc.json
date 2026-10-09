@@ -1,0 +1,41 @@
+[
+  {
+    "sys_id": "b1d8a80e9f7703d044f07b7c1724abef",
+    "sys_updated_by": "system",
+    "log": "Starting update load from database for update set STRY0011747 - RITM supplier task modal fields in scope Request Management for Service Operations Workspace, first pass = false",
+    "sys_created_on": "2026-10-09 07:14:01",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:14:01",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "a1d8a80e9f7703d044f07b7c1724abeb",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "b5d8e80e9f7703d044f07b7c1724ab13",
+    "sys_updated_by": "system",
+    "log": "Finished update load from database",
+    "sys_created_on": "2026-10-09 07:14:02",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:14:02",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "a1d8a80e9f7703d044f07b7c1724abeb",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "f5d8e80e9f7703d044f07b7c1724ab0c",
+    "sys_updated_by": "system",
+    "log": "Loading update 1 of 1 from database: sys_declarative_action_assignment_b1ce14b4fcb7c3d0b21498f72c3642df with update date 09.10.2026 09:14:01",
+    "sys_created_on": "2026-10-09 07:14:02",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 07:14:02",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "a1d8a80e9f7703d044f07b7c1724abeb",
+    "sys_created_by": "system",
+    "status": "Info"
+  }
+]

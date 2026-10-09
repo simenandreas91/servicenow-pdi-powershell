@@ -1,0 +1,92 @@
+[
+  {
+    "local": "39a8208661738f90beda3c9620f352de",
+    "count": 8,
+    "source": "8197a695443b8bd0965df1f9b81ff347",
+    "logs": 10,
+    "name": "STRY0011747 - Create supplier task",
+    "remote": "c058665d61bb0b90beda3c9620f3522d",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "81b8248661738f90beda3c9620f35252",
+    "count": 4,
+    "source": "bfa7aed9a173cbd0731ec2034ae9349f",
+    "logs": 6,
+    "name": "STRY0011747 - Incident supplier task action",
+    "remote": "71582a5d61bb0b90beda3c9620f3521a",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "03b8e00e9f7703d044f07b7c1724ab67",
+    "count": 4,
+    "source": "6db7221da173cbd0731ec2034ae93455",
+    "logs": 6,
+    "name": "STRY0011747 - RITM supplier task action",
+    "remote": "f348265d61bb0b90beda3c9620f35223",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "35c8a40e9f7703d044f07b7c1724ab2b",
+    "count": 2,
+    "source": "82d7a61da173cbd0731ec2034ae934d3",
+    "logs": 4,
+    "name": "STRY0011747 - Supplier task modal fields and work notes",
+    "remote": "ac58a65d61bb0b90beda3c9620f35206",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "e3c8688661738f90beda3c9620f35225",
+    "count": 1,
+    "source": "ebd72a1da173cbd0731ec2034ae9341c",
+    "logs": 3,
+    "name": "STRY0011747 - Incident supplier task modal fields",
+    "remote": "3e586a5d61bb0b90beda3c9620f352fe",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "a1d8a80e9f7703d044f07b7c1724abeb",
+    "count": 1,
+    "source": "11e76a1da173cbd0731ec2034ae934bc",
+    "logs": 3,
+    "name": "STRY0011747 - RITM supplier task modal fields",
+    "remote": "4248225d61bb0b90beda3c9620f35231",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "23d8e88661738f90beda3c9620f352eb",
+    "count": 1,
+    "source": "7fe6a846a1f30314731ec2034ae9345d",
+    "logs": 3,
+    "name": "STRY0011747 - Always copy supplier task attachments",
+    "remote": "11182c4a9f7703d044f07b7c1724abcb",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "ee99244a61738f90beda3c9620f35232",
+    "count": 1,
+    "source": "97f62c46a1f30314731ec2034ae93470",
+    "logs": 3,
+    "name": "STRY0011747 - Incident supplier attachments read only",
+    "remote": "0e186c4a9f7703d044f07b7c1724ab72",
+    "state": "committed",
+    "previewProblems": 0
+  },
+  {
+    "local": "dcc9ecce9f7703d044f07b7c1724abd7",
+    "count": 1,
+    "source": "6607a8ca44ffcfd0965df1f9b81ff386",
+    "logs": 3,
+    "name": "STRY0011747 - RITM supplier attachments read only",
+    "remote": "f218ac4a9f7703d044f07b7c1724ab68",
+    "state": "committed",
+    "previewProblems": 0
+  }
+]

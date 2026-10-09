@@ -1,0 +1,27 @@
+[
+  {
+    "fields": 11,
+    "table": "sys_ux_form_action_layout_item",
+    "id": "50637c8a75b74fd0d8cbd4f6ea76701b"
+  },
+  {
+    "fields": 8,
+    "table": "sys_ux_m2m_action_layout_item",
+    "id": "2c6374c2fc7b4fd0b21498f72c3642fc"
+  },
+  {
+    "fields": 11,
+    "table": "sys_ux_form_action_layout_item",
+    "id": "e863f08a75b74fd0d8cbd4f6ea76706b"
+  },
+  {
+    "fields": 8,
+    "table": "sys_ux_m2m_action_layout_item",
+    "id": "b8637c8a75b74fd0d8cbd4f6ea767025"
+  },
+  {
+    "fields": 8,
+    "table": "sys_ux_m2m_action_layout_item",
+    "id": "2459ae435322301009d3ddeeff7b1259"
+  }
+]

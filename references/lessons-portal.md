@@ -43,6 +43,8 @@ For image rollback, restore only the changed topic fields and remove only the ad
 
 ## Employee Center Header And Topic Navigation
 
+- After renaming topics, verify the rendered navigation separately from homepage cards and Topic Header data. Employee Center Navigation can reuse old names from session client-data keys `taxonomy_topic_menu_items` and `taxonomy_quick_link_topic_items` even after a page reload. Compare those entries' taxonomy and topic IDs with fresh topic records before changing configuration. A bounded refresh of the affected session's cached names can resolve the mismatch without editing the shared widget; verify fresh Taxonomy API names as well. Page API responses may defer the header's asynchronous data and therefore do not prove its visible labels.
+
 - Trace the live portal to its header, menu instance and nested widgets before changing a similarly named widget. The upper utility navigation and lower taxonomy navigation can be rendered by different components. `sp_instance_menu` / `sp_rectangle_menu_item` configuration alone does not establish where a link appears; inspect the Employee Center Menu options and the header's rendering path. Additional-option keys only work when code reads them.
 - Removing a taxonomy dropdown is a navigation presentation change, not a taxonomy hierarchy change. Keep the parent/child relationships and connect the parent link to `?id=emp_taxonomy_topic&topic_id=<resolved parent sys_id>`. Preserve the topic page's child-topic component and access/content filtering. Verify desktop and mobile navigation as well as the destination page.
 

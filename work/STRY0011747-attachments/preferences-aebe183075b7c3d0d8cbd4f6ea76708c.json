@@ -1,0 +1,27 @@
+{
+  "instance": "https://varenergidev.service-now.com",
+  "user_name": "simen.knudsen@varenergi.no",
+  "user_sys_id": "38c17f3fcc980310b214a0b7a2acbbef",
+  "scope_sys_id": "49aff4bb733320103e366238edf6a70f",
+  "captured_at": "2026-10-09T09:00:22.1305285+02:00",
+  "preferences": [
+    {
+      "name": "apps.current_app",
+      "existed": true,
+      "sys_id": "c44f97d5fc734bd0b21498f72c36420b",
+      "value": "d4ac3fff5b311200a4656ede91f91af2"
+    },
+    {
+      "name": "sys_update_set",
+      "existed": true,
+      "sys_id": "c84f97d5fc734bd0b21498f72c36420c",
+      "value": "f116a58821018f10d8cb70a2b1956aa4"
+    },
+    {
+      "name": "updateSetForScope49aff4bb733320103e366238edf6a70f",
+      "existed": true,
+      "sys_id": "7e362691fc7b0bd0b21498f72c36420c",
+      "value": "7e362691fc7b0bd0b21498f72c364209"
+    }
+  ]
+}

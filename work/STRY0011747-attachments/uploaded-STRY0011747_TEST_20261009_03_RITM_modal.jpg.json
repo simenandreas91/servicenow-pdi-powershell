@@ -1,0 +1,25 @@
+{
+  "result": {
+    "size_bytes": "138068",
+    "file_name": "STRY0011747_TEST_20261009_03_RITM_modal.jpg",
+    "sys_mod_count": "2",
+    "average_image_color": "",
+    "image_width": "1718",
+    "sys_updated_on": "2026-10-09 07:40:03",
+    "sys_tags": "",
+    "table_name": "rm_story",
+    "sys_id": "3ecee04661b38f90beda3c9620f35201",
+    "image_height": "1214",
+    "sys_updated_by": "simen.knudsen@varenergi.no",
+    "download_link": "https://varenergi.service-now.com/api/now/attachment/3ecee04661b38f90beda3c9620f35201/file",
+    "content_type": "image/jpeg",
+    "sys_created_on": "2026-10-09 07:40:03",
+    "size_compressed": "99156",
+    "compressed": "true",
+    "state": "available",
+    "table_sys_id": "fd7ac57f9fa70f5044f07b7c1724ab7b",
+    "chunk_size_bytes": "700000",
+    "hash": "6cd1e08f7013ce1b7a46f6d6d9bc297ac097184791227ca35cf81cde3e4e3bb8",
+    "sys_created_by": "simen.knudsen@varenergi.no"
+  }
+}

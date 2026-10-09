@@ -1,0 +1,32 @@
+[
+  {
+    "previewProblems": 0,
+    "name": "STRY0011747 - Always copy supplier task attachments",
+    "logs": 3,
+    "count": 1,
+    "source": "40b5ec0e75374fd0d8cbd4f6ea767047",
+    "state": "committed",
+    "local": "7fe6a846a1f30314731ec2034ae9345d",
+    "remote": "bda6e88a44ffcfd0965df1f9b81ff30e"
+  },
+  {
+    "previewProblems": 0,
+    "name": "STRY0011747 - Incident supplier attachments read only",
+    "logs": 3,
+    "count": 1,
+    "source": "1db56006fcf74fd0b21498f72c36420a",
+    "state": "committed",
+    "local": "97f62c46a1f30314731ec2034ae93470",
+    "remote": "92f62c46a1f30314731ec2034ae93410"
+  },
+  {
+    "previewProblems": 0,
+    "name": "STRY0011747 - RITM supplier attachments read only",
+    "logs": 3,
+    "count": 1,
+    "source": "e2b56006fcf74fd0b21498f72c3642af",
+    "state": "committed",
+    "local": "6607a8ca44ffcfd0965df1f9b81ff386",
+    "remote": "f50768ca44ffcfd0965df1f9b81ff39b"
+  }
+]

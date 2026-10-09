@@ -1,0 +1,25 @@
+{
+  "result": {
+    "status": "2",
+    "status_label": "Successful",
+    "status_message": "1 update sets retrieved and previewed.  ",
+    "status_detail": "",
+    "error": "",
+    "links": {
+      "progress": {
+        "id": "b5f6e846a1f30314731ec2034ae934e2",
+        "url": "https://varenergitest.service-now.com/api/sn_cicd/progress/b5f6e846a1f30314731ec2034ae934e2"
+      },
+      "source": {
+        "id": "ca8ba864834347107832b2f49dda1e03",
+        "url": "https://varenergitest.service-now.com/api/now/table/sys_update_set_source/ca8ba864834347107832b2f49dda1e03"
+      }
+    },
+    "percent_complete": 100,
+    "remote_update_set_id": "92f62c46a1f30314731ec2034ae93410",
+    "was_previewed": "true",
+    "has_preview_problem": "false",
+    "preview_problem_count": "",
+    "preview_problem_url": ""
+  }
+}

@@ -1,0 +1,36 @@
+STRY0011747 — delivery completed 9 October 2026
+
+Story: https://varenergi.service-now.com/rm_story.do?sys_id=fd7ac57f9fa70f5044f07b7c1724ab7b
+
+Latest feedback implemented:
+The Include attachments checkbox in the Incident and RITM Service Operations Workspace modals is selected and read-only. SupplierTaskAjax always copies all existing parent attachments to the newly created incident_task or sc_task, regardless of whether an old client submits false or omits the attachment parameter.
+
+New DEV update sets:
+Global: STRY0011747 - Always copy supplier task attachments (40b5ec0e75374fd0d8cbd4f6ea767047)
+Incident Management for Service Operations Workspace: STRY0011747 - Incident supplier attachments read only (1db56006fcf74fd0b21498f72c36420a)
+Request Management for Service Operations Workspace: STRY0011747 - RITM supplier attachments read only (e2b56006fcf74fd0b21498f72c3642af)
+All three sets contain the PROD story number and direct link in their descriptions. One intended customer update was captured in each scope. DEV application/update-set preferences were restored and verified.
+
+Transport:
+The three new sets were committed in TEST. The six earlier story sets were already committed there.
+All nine story sets were then committed in PROD in dependency/version order after approval. All retrieved packages matched their TEST source payloads; previews had zero problems; all 41 commit-log entries were Info. The final 13 intended configuration records match the final TEST source fields. Four legacy u_supplier dictionary/label records were already absent from PROD and remain absent.
+PROD retrieved sets remain Committed. The nine resulting local sets were set to Ignore after validation to avoid later transfer/reapplication after a clone.
+Exact transport identifiers and final states are saved in prod-final-states.json and vaar_prod-promotion.json in this directory.
+
+Validation:
+DEV and TEST: non-admin ITIL creation on Incident and RITM with two attachments, false and omitted attachment parameters, and zero attachments; copied file contents and sizes match; edited title/description, assignment, impact/urgency/priority, comments and work notes preserved; denied personas and invalid suppliers rejected with no child task. Temporary test records and attachments were removed; impersonation identity restored.
+TEST Workspace: both modals rendered with the attachment checkbox selected and disabled. Actual GlideAjax submissions created INCTASK0010032 and SCTASK0010016, each with both matching attachments and the supplied work note. These synthetic parents/children and attachments were removed after verification. Screenshots are retained locally.
+PROD: exact installed configuration validated; all 12 returned supplier groups are active and have the supplier_hub type. No Incident or RITM records were available through the API/server query, and the active Incident UI list showed no records, so no PROD record-form or task-creation test was performed.
+
+Dependencies / remaining business validation:
+Supplier Hub integration tables and active outbound supplier rules are present in DEV but absent from TEST and PROD. Supplier transmission is therefore not verified by this release; integration delivery was excluded in the earlier story work note.
+When saved Incident/RITM records are available in PROD, validate Create Supplier Task in SOW, edit the inherited fields, submit with an approved supplier group, and confirm that every existing parent attachment is on the child task. Validate actual supplier transmission separately after the integration is deployed.
+
+Rollback:
+Disable the two customer-owned supplier-task action assignments first to stop new use. If rollback is approved, back out the committed sets in reverse order, checking dependencies and restoring the before-values in prod-before.json. Update-set backout does not undo business task records or supplier transmissions. This release's PROD actions were configuration transport and update-set bookkeeping; no production Incident/RITM test records were created.
+
+Daily work-log entry recorded for STRY0011747 on 9 October 2026.
+
+Work note (ready to paste)
+
+Implemented the latest attachment feedback for Create Supplier Task on Incident and RITM in Service Operations Workspace. Include attachments is now selected and read-only, and all existing parent attachments are copied automatically to the child task. The three attachment-fix update sets were committed in TEST, and all nine STRY0011747 update sets were committed in PROD with clean previews and commit logs. DEV/TEST non-admin and negative tests passed, including multiple/no attachments and false/omitted attachment parameters; both TEST Workspace submissions copied both attachments successfully. PROD installed configuration matches the verified source. No Incident/RITM records were available for a PROD form/task-creation check. Supplier Hub outbound integration is absent from TEST and PROD and remains a separate dependency for supplier-transmission validation.

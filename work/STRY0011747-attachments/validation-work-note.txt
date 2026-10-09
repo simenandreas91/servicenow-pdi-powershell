@@ -1,0 +1,12 @@
+TEST validation completed in Service Operations Workspace on 9 October 2026.
+
+Incident INC0010096 created Incident Task INCTASK0010036.
+RITM0010099 created Catalog Task SCTASK0010020.
+
+On both modals, Include attachments is selected and read-only. Each parent had two existing files, supplier-validation-1.txt and supplier-validation-2.txt. Both files were copied automatically to each child task, with matching names, sizes and contents. Edited short description/description, caller information, supplier assignment, impact/urgency/priority, parent comments and Work notes to Supplier were verified on the created tasks.
+
+Additional TEST checks passed for a non-admin ITIL user, no attachments, and false/omitted attachment parameters. Unauthorized access and invalid suppliers were rejected without creating a task.
+
+Four screenshots are attached: the Incident and RITM modals showing the selected, disabled attachment checkbox, and the created Incident Task/Catalog Task showing both copied attachments and journal entries.
+
+Supplier transmission was not tested because the outbound integration is absent from TEST. Temporary records and attachments used for validation were removed after verification.

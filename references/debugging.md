@@ -76,6 +76,12 @@ Choice values commonly needed:
 - `status=2`: Allowed.
 
 Verification:
-- Test from the caller scope where possible, for example with Xplore scoped to the caller application and a minimal `GlideRecord`/API operation against the denied target.
-- Confirm the row is captured in the intended scoped update set. If it is valid runtime data but does not auto-capture, switch current update set to the intended scope and save it from Global with `GlideUpdateManager2().saveRecord(gr)`.
+- Test from the actual caller artifact/channel where possible. A scoped Xplore probe can help, but a direct Xplore call has a different caller identity from a portal Script Include; its denial does not prove the portal caller is denied. Do not grant extra probe access merely to make that test pass.
+- Confirm the row is captured in the intended scoped update set. If a legitimate application file misses natural capture, diagnose the miss, select its owning application scope/update set, and use `Save-ServiceNowCustomerUpdate.ps1` to recapture it. Verify the payload's final status and delivery scope.
 - Avoid broad scope-to-scope RCA rows unless the runtime error and source artifact require them; prefer table-specific or source-specific grants.
+
+### Invalidation after editing a caller
+
+Editing a Script Include can invalidate an existing source-specific execute privilege (`status=3`, observed Invalidated). In the HR task portal, editing `hr_TaskTicket` invalidated its existing call to `hr_ActivityUtils`, causing task details to stop loading. Inspect the exact existing source/target/operation row and reauthorize the same narrow privilege when the modified call remains authorized; do not replace it with a broad grant.
+
+Invalidation can be captured automatically in a different current/default set, while restoring Allowed (`status=2`) may fail to capture naturally. Audit both changes, recapture the final Allowed row in the target application's delivery set, and apply it after the caller customization. Exclude stray invalidation updates from delivery; do not move/delete update XML to conceal them. Recheck the real portal call after the permission is restored.

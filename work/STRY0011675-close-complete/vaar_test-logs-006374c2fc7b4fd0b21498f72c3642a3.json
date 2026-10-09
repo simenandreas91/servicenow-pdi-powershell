@@ -1,0 +1,93 @@
+[
+  {
+    "sys_id": "07d734c644b30314965df1f9b81ff37e",
+    "sys_updated_by": "system",
+    "log": "Loading update 1 of 5 from database: sys_ux_form_action_layout_item_50637c8a75b74fd0d8cbd4f6ea76701b with update date 09.10.2026 10:19:39",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "0fd734c644b30314965df1f9b81ff39d",
+    "sys_updated_by": "system",
+    "log": "Finished update load from database",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "8fd734c644b30314965df1f9b81ff378",
+    "sys_updated_by": "system",
+    "log": "Starting update load from database for update set STRY0011675 - Dedicated Close Complete primary action in scope Agent Workspace for HR Case Management, first pass = false",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "8fd734c644b30314965df1f9b81ff38a",
+    "sys_updated_by": "system",
+    "log": "Loading update 4 of 5 from database: sys_ux_m2m_action_layout_item_2c6374c2fc7b4fd0b21498f72c3642fc with update date 09.10.2026 10:19:39",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "c3d734c644b30314965df1f9b81ff383",
+    "sys_updated_by": "system",
+    "log": "Loading update 2 of 5 from database: sys_ux_form_action_layout_item_e863f08a75b74fd0d8cbd4f6ea76706b with update date 09.10.2026 10:19:39",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "c3d734c644b30314965df1f9b81ff386",
+    "sys_updated_by": "system",
+    "log": "Loading update 3 of 5 from database: sys_ux_m2m_action_layout_item_2459ae435322301009d3ddeeff7b1259 with update date 09.10.2026 10:19:39",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  },
+  {
+    "sys_id": "c7d734c644b30314965df1f9b81ff39a",
+    "sys_updated_by": "system",
+    "log": "Loading update 5 of 5 from database: sys_ux_m2m_action_layout_item_b8637c8a75b74fd0d8cbd4f6ea767025 with update date 09.10.2026 10:19:39",
+    "sys_created_on": "2026-10-09 08:19:39",
+    "sys_mod_count": "0",
+    "sys_updated_on": "2026-10-09 08:19:39",
+    "sys_tags": "",
+    "update_source": "",
+    "update_set": "8fd734c644b30314965df1f9b81ff314",
+    "sys_created_by": "system",
+    "status": "Info"
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "result": {
+    "size_bytes": "136517",
+    "file_name": "STRY0011747_TEST_20261009_01_Incident_modal.jpg",
+    "sys_mod_count": "2",
+    "average_image_color": "",
+    "image_width": "1718",
+    "sys_updated_on": "2026-10-09 07:40:00",
+    "sys_tags": "",
+    "table_name": "rm_story",
+    "sys_id": "c2cea04661b38f90beda3c9620f352e4",
+    "image_height": "1214",
+    "sys_updated_by": "simen.knudsen@varenergi.no",
+    "download_link": "https://varenergi.service-now.com/api/now/attachment/c2cea04661b38f90beda3c9620f352e4/file",
+    "content_type": "image/jpeg",
+    "sys_created_on": "2026-10-09 07:39:59",
+    "size_compressed": "99881",
+    "compressed": "true",
+    "state": "available",
+    "table_sys_id": "fd7ac57f9fa70f5044f07b7c1724ab7b",
+    "chunk_size_bytes": "700000",
+    "hash": "5d4ef952cc7a00869c78337c79fea51a0e6298157a2b7af613369ee933ac037a",
+    "sys_created_by": "simen.knudsen@varenergi.no"
+  }
+}

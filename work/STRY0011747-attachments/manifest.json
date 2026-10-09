@@ -1,0 +1,29 @@
+[
+  {
+    "id": "7f8e943075b7c3d0d8cbd4f6ea767020",
+    "field": "script",
+    "capture": "sys_script_include_7f8e943075b7c3d0d8cbd4f6ea767020",
+    "table": "sys_script_include",
+    "update_set": "40b5ec0e75374fd0d8cbd4f6ea767047",
+    "name": "STRY0011747 - Always copy supplier task attachments",
+    "scope": "global"
+  },
+  {
+    "id": "aebe183075b7c3d0d8cbd4f6ea76708c",
+    "field": "client_script",
+    "capture": "sys_declarative_action_assignment_aebe183075b7c3d0d8cbd4f6ea76708c",
+    "table": "sys_declarative_action_assignment",
+    "update_set": "1db56006fcf74fd0b21498f72c36420a",
+    "name": "STRY0011747 - Incident supplier attachments read only",
+    "scope": "49aff4bb733320103e366238edf6a70f"
+  },
+  {
+    "id": "b1ce14b4fcb7c3d0b21498f72c3642df",
+    "field": "client_script",
+    "capture": "sys_declarative_action_assignment_b1ce14b4fcb7c3d0b21498f72c3642df",
+    "table": "sys_declarative_action_assignment",
+    "update_set": "e2b56006fcf74fd0b21498f72c3642af",
+    "name": "STRY0011747 - RITM supplier attachments read only",
+    "scope": "ff5e8e53c3a53010965e070e9140ddb2"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "source": "006374c2fc7b4fd0b21498f72c3642a3",
+  "logs": 7,
+  "local": "8fd734c644b30314965df1f9b81ff314",
+  "name": "STRY0011675 - Dedicated Close Complete primary action",
+  "state": "committed",
+  "count": 5,
+  "previewProblems": 0,
+  "remote": "82d73c86a1b70314731ec2034ae93446"
+}
