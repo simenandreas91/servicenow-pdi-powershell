@@ -8,7 +8,7 @@ description: Develop, diagnose, validate, and deliver ServiceNow changes in Sime
 ## Scope and authority
 
 - Resolve the target environment, artifact, application scope, channel/persona, acceptance criteria, and delivery model from the request and available evidence. Review/diagnosis is read-only unless a fix is requested.
-- Read `references/environment-routing.md` before connecting; verify returned instance and user. PDI defaults only to demonstrations/safe reproduction. PROD requires explicit authorization for the exact write; DEV/PDI authority never transfers.
+- Read `references/environment-routing.md` before connecting; verify returned instance and user. PDI defaults only to demonstrations/safe reproduction. PROD requires explicit authorization for the exact write; the standing Vår Energi story-handoff authorization is defined in `references/story-delivery.md`. DEV/PDI authority otherwise never transfers.
 - When Simen requests `PDI_2`, use `-Profile pdi_2` with this skill folder's `.env` explicitly for all live helpers. It is a separate instance from `pdi`; never substitute the original PDI or assume its installed capabilities are shared.
 - Read `references/safety-checklists.md` before production writes, deletes, bulk repair/import, ACL/role changes, credentials/SSO/OAuth/MID changes, plugins, real external side effects, or edits to ServiceNow-owned artifacts. Establish targets, blast radius, rollback, and stopping condition.
 - Resolve write targets live by stable keys. Reference sys_ids are historical observations, not portable constants. Preserve unrelated work and developer preferences.
@@ -52,7 +52,7 @@ For update-set work:
 - Use one cohesive in-progress set per scope. No Default, casual scope mixing, `clean/final` duplicates, reopening completed sets, or moving `sys_update_xml` to disguise a context mistake. Correct context and recapture.
 - Check each slice with `Confirm-ServiceNowUpdateCapture.ps1` or `Get-ServiceNowUpdateSetSummary.ps1`. Force capture with `Save-ServiceNowCustomerUpdate.ps1` only after diagnosing missed natural capture for a legitimate application file.
 - `Remove-ServiceNowArtifactWithDeleteCapture.ps1` requires an explicitly approved deletion of a proven customer artifact. Backout does not reverse runtime data.
-- Complete/export/promote only when requested. Read `references/update-set-promotion.md` before promotion; resolve preview conflicts and retest on the target.
+- Complete/export/promote only when requested or covered by the standing Vår Energi story-delivery workflow. That workflow includes DEV completion and TEST promotion; configuration deployment to PROD and XML downloads require a separate request. Read `references/update-set-promotion.md` before promotion; resolve preview conflicts and retest on the target.
 - For a requested batch completion and XML download, follow `references/update-set-batch-export.md` directly. It covers the native hierarchy exporter, UI-session authentication, and package verification; the single-set export helper does not export children.
 
 ## Reference router
@@ -87,7 +87,7 @@ Paths below are under `references/`. Choose by task; do not bulk-load adjacent h
 
 ## Local conventions
 
-`implement this story "<number>"`: PROD supplies requirements; implement/validate in DEV and prepare the final work note. It does not authorize posting notes, state changes, PROD writes, completion/export/deployment, plugin installation, deletion, or other high-impact work. Follow `story-delivery.md`.
+For Vår Energi, `implement this story "<number>"` or approval to implement a story includes the standard delivery: implement/test in DEV, complete all related update sets, retrieve/preview/commit them in TEST, validate TEST, post a short work note with one or two screenshots on the source PROD story, set it to Ready for testing, and assign it to its creator. Follow `references/story-delivery.md` without a routine approval pause. A review/plan request remains read-only; explicit DEV-only or other narrower instructions override this default. Configuration deployment to PROD and other high-impact actions require separate authorization. For other environments, implementation defaults to DEV validation and a ready-to-paste work note unless the user requests delivery.
 
 After ordinary work, edit this skill only for an evidence-backed, reusable lesson that changes future decisions; consolidate rather than append history. Exclude secrets, customer data, transient IDs, and one-off outcomes. Validate changed skill/helpers. Skill maintenance does not authorize instance writes, publishing, commits, pushes, or installation.
 

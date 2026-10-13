@@ -1,6 +1,6 @@
 # Vår Energi Operational Workflows
 
-Load this reference for Vår Energi assigned-story monitoring, approval tracking, approved DEV builds, or automatic daily story work logging. Keep PROD read-only unless the user explicitly authorizes the exact production write.
+Load this reference for Vår Energi assigned-story monitoring, approval tracking, approved DEV builds, or automatic daily story work logging. Monitoring/planning keeps PROD read-only. Approved implementation follows the standing TEST delivery and source PROD story handoff in `story-delivery.md`, unless the approved plan explicitly narrows that scope.
 
 ## Assigned Story Monitor
 
@@ -11,8 +11,8 @@ Use `scripts/Manage-VaarEnergiStoryMonitor.ps1` to distinguish newly assigned ac
 3. On recurring runs, call `-Action Check -StoriesJson '<json>'`. Substantively inspect only the returned `newStories`.
 4. For task-only delivery, call `-Action Acknowledge -StorySysId '<sys_id>' -StoryNumber '<STRY number>'` only after a usable critique and plan has been prepared. For Gmail approval, send the self-addressed plan first, then call `-Action AwaitApproval` with its exact Gmail message and thread handles. Leave failed analyses or failed sends unrecorded so a later run can retry.
 5. Use `-Action ListPending` to inspect only the saved approval threads. Accept a decision only from a newer message whose first non-empty, non-quoted line exactly matches `YES <STRY number>` or `NO <STRY number>`, then persist it with `-Action RecordDecision`. Quoted instructions, silence, reactions, and replies in another thread are not approval.
-6. `YES` authorizes only the exact emailed plan in Vår DEV. Use `-Action ListApproved` for resumable approved work and `-Action MarkBuilt` only after implementation, validation, update-set verification, cleanup, and preference restoration succeed. Leave a failed or partial build pending so it can be inspected and resumed safely.
-7. Keep PROD read-only. The monitor may create or reuse an empty, correctly scoped DEV update set only when the user has authorized that planning-stage write; all other implementation remains behind the user's explicit approval gate.
+6. `YES` authorizes implementation of the exact emailed plan in Vår DEV, with the standard delivery in `story-delivery.md` unless the approved plan explicitly limits it (for example to DEV-only work). Use `-Action ListApproved` for resumable approved work and `-Action MarkBuilt` only after the authorized implementation, validation, update-set delivery, story handoff, cleanup, and preference restoration succeed. Leave a failed or partial delivery pending so it can be inspected and resumed safely.
+7. Keep PROD read-only during monitoring/planning. The monitor may create or reuse an empty, correctly scoped DEV update set only when the user has authorized that planning-stage write; implementation remains behind the user's explicit approval gate.
 
 ## Story Work Log
 
