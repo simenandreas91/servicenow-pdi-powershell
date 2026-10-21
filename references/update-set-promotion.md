@@ -74,7 +74,7 @@ Commit only after the clean preview is evidenced and the intended count matches.
 - Confirm `sys_remote_update_set.state=committed` and capture its update time.
 - Resolve the resulting local `sys_update_set` and query `sys_update_set_log` by that local ID, not the retrieved remote ID. On Australia the useful fields are `update_set,status,log` (not `level,message,type`). Inspect the full commit log, requiring no unresolved Error/Warning entries or unsafe-edit warnings. Missing fields in a restricted-field response do not prove a clean log; inspect one full record or the dictionary when the schema is uncertain.
 - Compare the resulting local customer-update count/types with the source package.
-- After a successful PROD commit and validation, set the exact resulting local PROD `sys_update_set.state` to `ignore` so a later clone does not make the completed set eligible for transfer or reapplication. Keep the retrieved `sys_remote_update_set` in `committed`; do not use Ignore as a substitute for preview, commit, validation, or rollback. For a batch, follow the platform rule to Ignore only the parent and leave its children Complete so the hierarchy is preserved.
+- After a successful PROD commit and validation, leave the resulting local PROD `sys_update_set.state` as `complete`, including both parent and child sets in a batch. Do not set committed PROD update sets to `ignore`. Keep the retrieved `sys_remote_update_set` in `committed`.
 
 ## 6. Validate The Target
 
